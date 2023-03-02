@@ -2,6 +2,7 @@ import React, {createContext, useState, useEffect, useContext} from 'react'
 import * as auth from '../services/auth'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import api from '../services/api'
+import {logout, ReponseUser} from "../services/auth";
 
 
 interface Props {
@@ -10,11 +11,12 @@ interface Props {
 
 interface AuthContextData {
     signed: boolean;
-    user: object | null;
+    user: ReponseUser | null;
 
-    signIn(): Promise<void>;
+    signIn(email: string, password: string): Promise<void>;
 
     signOut(): void;
+
     loading: boolean;
 }
 
@@ -22,41 +24,56 @@ const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
 
 export const AuthProvider: React.FC<Props> = ({children}) => {
-    const [user, setUser] = useState<Object | null>(null);
+    const [user, setUser] = useState<ReponseUser | null>(null);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         async function loadStorageData() {
             setLoading(true)
-            const storageUser = await AsyncStorage.getItem('@UNAADEBAuth:user')
-            const storageToken = await AsyncStorage.getItem('@UNAADEBAuth:token')
-            if (storageUser && storageToken) {
+            const user = await AsyncStorage.getItem('@UNAADEBAuth:user')
+            const access_token = await AsyncStorage.getItem('@UNAADEBAuth:access_token')
 
-                api.defaults.headers['Authorization'] = `Bearer ${storageToken}`;
+            //todo: usar o expires e refresh_token
+            //const refresh_token = await AsyncStorage.getItem('@UNAADEBAuth:refresh_token')
+            //const expires = await AsyncStorage.getItem('@UNAADEBAuth:expires')
 
-                setUser(JSON.parse(storageUser));
+            if (user && access_token) {
+                api.defaults.headers['Authorization'] = `Bearer ${access_token}`;
+
+                //todo: salvar usuário
+                setUser(JSON.parse(user));
                 setLoading(false)
             }
+
             setLoading(false)
         }
-
         loadStorageData();
     }, [])
 
-    async function signIn() {
-        const response = await auth.signIn()
-        const {token, user} = response;
+    async function signIn(email: string, password: string) {
+        const response = await auth.signIn(email, password)
+        const {access_token, refresh_token, expires} = response;
+        await AsyncStorage.setItem('@UNAADEBAuth:access_token', access_token)
+        await AsyncStorage.setItem('@UNAADEBAuth:refresh_token', refresh_token)
+        await AsyncStorage.setItem('@UNAADEBAuth:expires', String(expires))
 
-        setUser(user)
-
+        //todo: salvar usuário
+        // setUser(JSON.parse(storageUser))
+        const user = await getUserAuthenticate(access_token);
         await AsyncStorage.setItem('@UNAADEBAuth:user', JSON.stringify(user))
-        await AsyncStorage.setItem('@UNAADEBAuth:token', token)
+        setUser(user)
     }
 
-    function signOut() {
-        AsyncStorage.clear().then(() => {
-            setUser(null)
-        })
+    async function getUserAuthenticate(access_token: string) {
+        const user = await auth.getUser(access_token)
+        return user;
+    }
+
+    async function signOut() {
+        const refresh_token = await AsyncStorage.getItem('@UNAADEBAuth:refresh_token')
+        await logout(refresh_token)
+        await AsyncStorage.clear()
+        setUser(null)
     }
 
     return (
@@ -68,7 +85,7 @@ export const AuthProvider: React.FC<Props> = ({children}) => {
 
 export default AuthContext;
 
-export function useAuth(){
+export function useAuth() {
     const context = useContext(AuthContext)
     return context;
 }

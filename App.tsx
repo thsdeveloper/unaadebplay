@@ -1,17 +1,22 @@
-import {useState} from "react";
-import {StatusBar} from 'expo-status-bar';
-import {StyleSheet, Text, View} from 'react-native';
+import {StyleSheet} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
+import {NativeBaseProvider} from "native-base";
 import Routes from './src/routes';
 import {AuthProvider} from './src/contexts/auth';
+import {AlertProvider} from "./src/contexts/alert";
+import 'react-native-gesture-handler';
 
 export default function App() {
     return (
-        <NavigationContainer>
-            <AuthProvider>
-                <Routes/>
-            </AuthProvider>
-        </NavigationContainer>
+        <NativeBaseProvider>
+            <AlertProvider>
+                <NavigationContainer>
+                    <AuthProvider>
+                        <Routes/>
+                    </AuthProvider>
+                </NavigationContainer>
+            </AlertProvider>
+        </NativeBaseProvider>
     );
 }
 
