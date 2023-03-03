@@ -1,4 +1,4 @@
-import Dashboard from '../pages/Dashboard';
+import Dashboard from '../pages/app/Dashboard';
 import {createDrawerNavigator} from '@react-navigation/drawer'
 
 const Drawer = createDrawerNavigator();

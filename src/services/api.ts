@@ -6,23 +6,6 @@ import {ResponseDirectusAPI} from "./auth";
 const api = axios.create({
     baseURL: 'https://yio4ceoc.directus.app',
 })
-// api.interceptors.response.use(
-//     response => response,
-//     error => {
-//         flashMessage();
-//         return Promise.reject(error);
-//     }
-// );
-
-// const flashMessage = () => {
-//     return showMessage({
-//         message: 'Erro',
-//         description: 'Ocorreu um erro ao processar a requisição.',
-//         type: 'danger',
-//         icon: 'danger',
-//     });
-// };
-//
 
 api.interceptors.request.use(async (config) => {
     const access_token = await getAccessToken();
@@ -37,7 +20,6 @@ api.interceptors.response.use(
     (response) => response,
     async (err) => {
         const originalConfig = err.config;
-
         if (originalConfig.url !== "/auth/login" && err.response) {
             // Access Token was expired
             if (err.response.status === 401 && !originalConfig._retry) {
@@ -48,7 +30,6 @@ api.interceptors.response.use(
                         refresh_token: refresh,
                         mode: 'json'
                     });
-                    console.log('THIAGO', res)
                     const { access_token, refresh_token, expires }: ResponseDirectusAPI = res.data.data;
                     await setTokenStorage(access_token, refresh_token, expires)
                     return api(originalConfig);
@@ -60,29 +41,6 @@ api.interceptors.response.use(
         return Promise.reject(err);
     }
 );
-
-// api.interceptors.response.use(
-//     (response) => response,
-//     (error) => {
-//         if (error.response.status === 401) {
-//             getRefreshToken().then(refresh_token => {
-//                 if (refresh_token) {
-//                     return axios.post(`https://yio4ceoc.directus.app/auth/refresh`, {refresh_token})
-//                         .then((res) => {
-//                             console.log('refresh: access_token', res.data.data.access_token)
-//                             console.log('refresh: refresh_token', res.data.data.refresh_token)
-//                             console.log('refresh: expires', res.data.data.expires)
-//
-//                             setTokenStorage(res.data.data.access_token, res.data.data.refresh_token, res.data.data.data.expires)
-//                             error.config.headers.Authorization = `Bearer ${res.data.data.access_token}`;
-//                             return api(error.config);
-//                         });
-//                 }
-//             })
-//         }
-//         return Promise.reject(error);
-//     }
-// );
 
 const getAccessToken = async () => {
     try {

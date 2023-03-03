@@ -1,33 +1,89 @@
-import Dashboard from '../pages/Dashboard';
+import Dashboard from '../pages/app/Dashboard';
 import ForgetPassword from '../pages/ForgetPassword';
-import {MaterialIcons} from '@expo/vector-icons'
-
-
+import About from "../pages/app/About";
+import {MaterialIcons, FontAwesome5, FontAwesome} from '@expo/vector-icons'
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs'
+import {createNativeStackNavigator} from "@react-navigation/native-stack";
+import Contact from "../pages/app/Contact";
+import Settings from "../pages/app/Settings";
+import News from "../pages/app/News";
 
-const DashboardStack = createBottomTabNavigator();
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+function DashboardScreen() {
+    return (
+        <Stack.Navigator>
+            <Stack.Screen name="Home" component={Dashboard} options={{headerShown: false}} />
+            <Stack.Screen name="Contact" component={Contact} options={{headerShown: false}} />
+            <Stack.Screen name="About" component={About} />
+        </Stack.Navigator>
+    );
+}
+
+function NewsScreen() {
+    return (
+        <Stack.Navigator screenOptions={{
+            title: 'Ultimas notícias'
+        }}>
+            <Stack.Screen name="newss" component={News} />
+        </Stack.Navigator>
+    );
+}
+
+function SettingsScreen() {
+    return (
+        <Stack.Navigator>
+            <Stack.Screen name="Settings" component={Settings} />
+        </Stack.Navigator>
+    );
+}
+
+
+
 
 function TabRoutes() {
     return (
-        <DashboardStack.Navigator>
-            <DashboardStack.Screen name="Dashboard" component={Dashboard} options={
+        <Tab.Navigator>
+            <Tab.Screen name="Dashboard" component={DashboardScreen} options={
                 {
                     title: 'UNAADEB',
-                    tabBarLabel: 'Home',
+                    headerStyle: {
+                        backgroundColor: 'red',
+                    },
+                    headerTintColor: 'blue',
+                    tabBarLabel: 'UNAADEB 2023',
                     tabBarIcon: ({color, size}) => (
-                        <MaterialIcons name={'home'} color={color} size={size} />
+                        <FontAwesome5 name={'fire'} color={color} size={size} />
                     )
                 }
             }/>
-            <DashboardStack.Screen name="ForgetPassword" component={ForgetPassword} options={
+            <Tab.Screen name="News" component={NewsScreen} options={
                 {
-                    tabBarLabel: 'Redefinir senha',
+                    headerShown: false,
+                    tabBarLabel: 'Notícias',
                     tabBarIcon: ({color, size}) => (
-                        <MaterialIcons name={'add'} color={color} size={size} />
+                        <FontAwesome5 name={'newspaper'} color={color} size={size} />
                     )
                 }
             }/>
-        </DashboardStack.Navigator>
+            <Tab.Screen name="SettingsScreen" component={SettingsScreen} options={
+                {
+                    tabBarLabel: 'Agenda',
+                    tabBarIcon: ({color, size}) => (
+                        <FontAwesome name={'calendar'} color={color} size={size} />
+                    )
+                }
+            }/>
+            <Tab.Screen name="media" component={SettingsScreen} options={
+                {
+                    tabBarLabel: 'Configurações',
+                    tabBarIcon: ({color, size}) => (
+                        <MaterialIcons name={'settings'} color={color} size={size} />
+                    )
+                }
+            }/>
+        </Tab.Navigator>
     );
 }
 

@@ -1,9 +1,9 @@
 import React, {useState} from "react";
 import {View, StyleSheet} from "react-native";
 import {Box, Button, Heading, Text, FlatList, HStack, Avatar, VStack, Spacer, ScrollView} from "native-base";
-import {useAuth} from "../../contexts/auth";
-import api from "../../services/api";
-import {ReponseUser} from "../../services/auth";
+import {useAuth} from "../../../contexts/auth";
+import api from "../../../services/api";
+import {ReponseUser} from "../../../services/auth";
 
 const styles = StyleSheet.create({
     container: {flex: 1, justifyContent: 'center'}
@@ -48,10 +48,10 @@ export default function Dashboard({navigation}: { navigation: any }) {
     const ListUsers = () => {
 
         return <Box p={4}>
-            <Heading fontSize="xl" p="4" pb="3">
-                Inbox
+            <Heading fontSize="xl" pb="3">
+                Membros
             </Heading>
-            <FlatList data={users} renderItem={({item}) =>
+            <FlatList data={users} horizontal={false} h={'300'} renderItem={({item}) =>
                 <Box borderBottomWidth="1" _dark={{borderColor: "muted.50"}} borderColor="muted.800" pl={["0", "4"]}
                      pr={["0", "5"]} py="2">
                     <HStack space={[2, 3]} justifyContent="space-between">
@@ -81,8 +81,6 @@ export default function Dashboard({navigation}: { navigation: any }) {
             } keyExtractor={item => item.id}/>
         </Box>;
     };
-
-
     return (
         <View style={styles.container}>
             <Example/>

@@ -2,10 +2,10 @@ import React from "react";
 import { View, StyleSheet, Text } from "react-native";
 import {Link} from "native-base";
 
-export default function Contact({navigation}: { navigation: any }) {
+export default function Settings({navigation}: { navigation: any }) {
     return (
         <View style={styles.center}>
-            <Text>This is the contact screen</Text>
+            <Text>Bem vindo a tela de configuraçoe</Text>
             <Link _text={{
                 fontSize: "xs",
                 fontWeight: "500",

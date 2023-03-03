@@ -41,13 +41,9 @@ export async function signIn(email: string, password: string): Promise<ResponseD
     }
 }
 
-export async function getUser(access_token: string): Promise<ReponseUser>{
+export async function getUser(): Promise<ReponseUser>{
     try {
-        const response = await api.get(`https://yio4ceoc.directus.app/users/me`, {
-            headers: {
-                Authorization: `Bearer ${access_token}`
-            }
-        });
+        const response = await api.get(`/users/me`);
         return response.data.data;
     } catch (error) {
         throw error;
