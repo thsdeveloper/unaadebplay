@@ -4,10 +4,10 @@ import {yupResolver} from '@hookform/resolvers/yup'
 import {Button} from '../../components/Button'
 import {useAuth} from "../../contexts/auth";
 import {Input} from '../../components/input'
-import {Box, Center, Heading, HStack, Link, VStack, Text, StatusBar, Image} from "native-base";
+import {Box, Center, Heading, HStack, Link, VStack, Text, StatusBar, Image, useToast} from "native-base";
 import * as Yup from 'yup';
 import AlertContext from "../../contexts/alert";
-
+import {handleErrors} from "../../utils/directus";
 
 const signInSchema = Yup.object({
     email: Yup.string().email('Digite um email válido').required('Email é obrigatório'),
@@ -21,26 +21,34 @@ export default function SignIn({navigation}: { navigation: any }) {
     const {signed, signIn} = useAuth();
     const [loading, setLoading] = useState(false);
     const alert = useContext(AlertContext)
+    const toast = useToast()
 
 
 
-    const {control, handleSubmit, formState: {errors}} = useForm<FormDataProps>({
+    const {control, handleSubmit, formState: {errors, isValid}} = useForm<FormDataProps>({
         resolver: yupResolver(signInSchema)
     });
 
 
     async function handleSignIn(data: FormDataProps) {
-        alert.error('Erro ao carregar agenda')
         setLoading(true)
-        const response = await signIn(data.email, data.password).catch(() => {
-            alert.error('Erro ao carregar agenda')
-        });
-        setLoading(false)
+        try {
+            const response = await signIn(data.email, data.password);
+            setLoading(false)
+        } catch (error: any) {
+            console.log('error', error)
+            const message = handleErrors(error.response.data.errors);
+            console.log('message', message)
+            toast.show({
+                title: message,
+                bgColor: 'red.500'
+            });
+            setLoading(false)
+        }
     }
 
     return (
         <Center flex={1} px="3" bgColor={'#0E1647'}>
-            <StatusBar backgroundColor="#0E1647"/>
             <Center w="100%">
                 <Box safeArea p="2" py="8" w="90%" maxW="290">
                     <Heading size="2xl" fontWeight="600" color="blue.100" _dark={{
@@ -93,6 +101,7 @@ export default function SignIn({navigation}: { navigation: any }) {
                                 colorScheme="indigo"
                                 onPress={handleSubmit(handleSignIn)}
                                 isLoading={loading}
+                                isDisabled={!isValid}
                                 isLoadingText="Aguarde..."/>
 
 

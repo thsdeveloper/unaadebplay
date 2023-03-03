@@ -1,9 +1,9 @@
 import React, {useEffect, useState} from "react";
 import {View, StyleSheet, Text, ActivityIndicator} from "react-native";
-import {AspectRatio, Box, Center, Heading, HStack, Link, Stack, FlatList, Image} from "native-base";
+import {AspectRatio, Box, Center, Heading, HStack, Skeleton, Link, Stack, FlatList, Image, VStack} from "native-base";
 import HTML from 'react-native-render-html';
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../../../services/api";
+import {getImageData} from "../../../utils/directus";
 
 export default function News({navigation}: { navigation: any }) {
     const [news, setNews] = useState([]);
@@ -35,32 +35,12 @@ export default function News({navigation}: { navigation: any }) {
     const CardNews = ({item}: any) => {
         const [image, setImage] = useState(null);
 
-        async function getImageData(url: string): Promise<string> {
-            const response = await api.get(url, { responseType: 'blob' });
-            const reader = new FileReader();
-            reader.readAsDataURL(response.data);
-            return new Promise((resolve, reject) => {
-                reader.onloadend = () => {
-                    const base64data = reader.result;
-                    resolve(base64data as string);
-                };
-                reader.onerror = reject;
-            });
-        }
+
+
         useEffect(() => {
             async function loadImage() {
                 const base64data = await getImageData(`/assets/${item.image}`);
                 setImage(base64data)
-
-                // const response = await api.get(`/assets/${item.image}`, {
-                //     responseType: 'blob',
-                // });
-                // const reader = new FileReader();
-                // reader.readAsDataURL(response.data);
-                // reader.onloadend = () => {
-                //     const base64data = reader.result;
-                //     setImage(base64data);
-                // };
             }
 
             loadImage();
@@ -111,7 +91,8 @@ export default function News({navigation}: { navigation: any }) {
                                 The Silicon Valley of India.
                             </Text>
                         </Stack>
-                            <HTML source={{ html: item.content }} />
+                        <Text>{item.content}</Text>
+                            {/*<HTML source={{ html: item.content }} />*/}
                         <HStack alignItems="center" space={4} justifyContent="space-between">
                             <HStack alignItems="center">
                                 <Text color="coolGray.600" _dark={{
@@ -130,7 +111,33 @@ export default function News({navigation}: { navigation: any }) {
     if (isLoading) {
         return (
             <View style={styles.center}>
-                <ActivityIndicator size="large" color="#0000ff"/>
+                <VStack w="90%" maxW="400" borderWidth="1" space={8} overflow="hidden" rounded="md" _dark={{
+                    borderColor: "coolGray.500"
+                }} _light={{
+                    borderColor: "coolGray.200"
+                }}>
+                    <Skeleton h="40" />
+                    <Skeleton.Text px="4" />
+                    <Skeleton px="4" my="4" rounded="md" startColor="primary.100" />
+                </VStack>
+                <VStack w="90%" maxW="400" borderWidth="1" space={8} overflow="hidden" rounded="md" _dark={{
+                    borderColor: "coolGray.500"
+                }} _light={{
+                    borderColor: "coolGray.200"
+                }}>
+                    <Skeleton h="40" />
+                    <Skeleton.Text px="4" />
+                    <Skeleton px="4" my="4" rounded="md" startColor="primary.100" />
+                </VStack>
+                <VStack w="90%" maxW="400" borderWidth="1" space={8} overflow="hidden" rounded="md" _dark={{
+                    borderColor: "coolGray.500"
+                }} _light={{
+                    borderColor: "coolGray.200"
+                }}>
+                    <Skeleton h="40" />
+                    <Skeleton.Text px="4" />
+                    <Skeleton px="4" my="4" rounded="md" startColor="primary.100" />
+                </VStack>
             </View>
         );
     }

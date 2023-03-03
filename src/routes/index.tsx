@@ -2,7 +2,7 @@ import React from "react";
 import {useAuth} from "../contexts/auth";
 
 import AuthRoutes from "./auth.routes";
-import TabRoutes from "./tab.routes";
+import DrawerRoutes from "./drawer.routes";
 
 
 import {ActivityIndicator, View} from "react-native";
@@ -20,7 +20,7 @@ function Routes() {
     }
 
 
-    return signed ? <TabRoutes/> : <AuthRoutes/>;
+    return signed ? <DrawerRoutes/> : <AuthRoutes/>;
 }
 
 export default Routes;

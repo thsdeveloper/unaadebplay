@@ -1,7 +1,6 @@
 import axios from 'axios'
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {ResponseDirectusAPI} from "./auth";
-// import { showMessage, hideMessage } from 'react-native-flash-message';
 
 const api = axios.create({
     baseURL: 'https://yio4ceoc.directus.app',
@@ -20,7 +19,8 @@ api.interceptors.response.use(
     (response) => response,
     async (err) => {
         const originalConfig = err.config;
-        if (originalConfig.url !== "/auth/login" && err.response) {
+        console.log('originalConfig.url', originalConfig.url)
+        if (originalConfig.url !== "https://yio4ceoc.directus.app/auth/login" && err.response) {
             // Access Token was expired
             if (err.response.status === 401 && !originalConfig._retry) {
                 originalConfig._retry = true;
