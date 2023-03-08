@@ -1,7 +1,7 @@
 import React, {createContext, useState, useEffect, useContext} from 'react'
 import * as auth from '../services/auth'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import {logout, ReponseUser} from "../services/auth";
+import {logout, ReponseUser, UserUnaadeb} from "../services/auth";
 
 
 interface Props {
@@ -13,6 +13,7 @@ interface AuthContextData {
     user: ReponseUser | null;
 
     signIn(email: string, password: string): Promise<void>;
+    signUp(user: UserUnaadeb): Promise<void>;
 
     signOut(): void;
 
@@ -60,6 +61,17 @@ export const AuthProvider: React.FC<Props> = ({children}) => {
         setUser(user)
     }
 
+    async function signUp(user: UserUnaadeb) {
+        const response = await auth.signUp(user)
+        console.log('responseCreateUser', response)
+
+        // const {access_token, refresh_token, expires} = response;
+        //
+        // const user = await auth.getUser();
+        // await AsyncStorage.setItem('@UNAADEBAuth:user', JSON.stringify(user))
+        // setUser(user)
+    }
+
     async function signOut() {
         const refresh_token = await AsyncStorage.getItem('@UNAADEBAuth:refresh_token')
         await logout(refresh_token)
@@ -68,7 +80,7 @@ export const AuthProvider: React.FC<Props> = ({children}) => {
     }
 
     return (
-        <AuthContext.Provider value={{signed: !!user, user, signIn, signOut, loading}}>
+        <AuthContext.Provider value={{signed: !!user, user, signIn, signUp, signOut, loading}}>
             {children}
         </AuthContext.Provider>
     )

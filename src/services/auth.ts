@@ -6,6 +6,12 @@ export interface ResponseDirectusAPI{
     refresh_token: string;
 }
 
+export interface UserUnaadeb{
+    email: string
+    password: string
+    role: string
+}
+
 export interface ReponseUser{
     id: string,
     first_name: string,
@@ -36,6 +42,22 @@ export async function signIn(email: string, password: string): Promise<ResponseD
             refresh_token: response.data.data.refresh_token,
             expires: response.data.data.expires,
         };
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function signUp(user: UserUnaadeb): Promise<boolean>{
+    try {
+        const response = await api.post(`https://yio4ceoc.directus.app/users`,
+            {
+                ...user,
+                status: 'inactive',
+                role: '522f813f-ed01-4b52-ae6b-34d64134e334'
+            });
+
+        console.log('responseUser', response)
+        return true;
     } catch (error) {
         throw error;
     }

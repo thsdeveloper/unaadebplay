@@ -59,7 +59,7 @@ export default function SignIn({navigation}: { navigation: any }) {
                     <Heading mt="1" _dark={{
                         color: "warmGray.200"
                     }} color="blue.200" fontWeight="medium" size="xs">
-                        Junte-se a milhares de adolescentes com propósitos
+                        Junte-se a milhares de adolescentes com propósitos! Vem com a gente!
                     </Heading>
 
                     <VStack space={3} mt="5">
@@ -97,6 +97,7 @@ export default function SignIn({navigation}: { navigation: any }) {
                         </Link>
 
                         <Button title={'Entrar'}
+                                height={12}
                                 mt="2"
                                 colorScheme="indigo"
                                 onPress={handleSubmit(handleSignIn)}
@@ -111,10 +112,10 @@ export default function SignIn({navigation}: { navigation: any }) {
                             }}>
                                 É um novo usuário?{" "}
                             </Text>
-                            <Link _text={{
+                            <Link h={'2'} _text={{
                                 color: "blue.300",
                                 fontWeight: "medium",
-                                fontSize: "sm"
+                                fontSize: "sm",
                             }} onPress={() => navigation.navigate('SignUp')}>
                                 Cadastre-se
                             </Link>

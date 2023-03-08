@@ -67,7 +67,8 @@ function TabRoutes() {
             },
             tabBarActiveTintColor: Colors.text,
             // headerTransparent: true,
-            headerTintColor: 'red', tabBarStyle: {
+            headerTintColor: 'red',
+            tabBarStyle: {
                 // height: 100,
                 // // position: 'absolute',
                 // bottom: 10,
