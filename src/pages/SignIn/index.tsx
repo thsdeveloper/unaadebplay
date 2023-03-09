@@ -112,7 +112,7 @@ export default function SignIn({navigation}: { navigation: any }) {
                             }}>
                                 É um novo usuário?{" "}
                             </Text>
-                            <Link h={'2'} _text={{
+                            <Link h={'30'} _text={{
                                 color: "blue.300",
                                 fontWeight: "medium",
                                 fontSize: "sm",
