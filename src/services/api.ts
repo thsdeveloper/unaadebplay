@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {ResponseDirectusAPI} from "./auth";
 
 const api = axios.create({
-    baseURL: 'https://yio4ceoc.directus.app',
+    baseURL: 'https://back-unaadeb.onrender.com',
 })
 
 api.interceptors.request.use(async (config) => {
@@ -20,13 +20,13 @@ api.interceptors.response.use(
     async (err) => {
         const originalConfig = err.config;
         console.log('originalConfig.url', originalConfig.url)
-        if (originalConfig.url !== "https://yio4ceoc.directus.app/auth/login" && err.response) {
+        if (originalConfig.url !== "https://back-unaadeb.onrender.com/auth/login" && err.response) {
             // Access Token was expired
             if (err.response.status === 401 && !originalConfig._retry) {
                 originalConfig._retry = true;
                 try {
                     const refresh = await getRefreshToken();
-                    const res = await axios.post("https://yio4ceoc.directus.app/auth/refresh", {
+                    const res = await axios.post("https://back-unaadeb.onrender.com/auth/refresh", {
                         refresh_token: refresh,
                         mode: 'json'
                     });

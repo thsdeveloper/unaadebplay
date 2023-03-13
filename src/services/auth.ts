@@ -36,7 +36,7 @@ export interface ReponseUser{
 
 export async function signIn(email: string, password: string): Promise<ResponseDirectusAPI>{
     try {
-        const response = await api.post(`https://yio4ceoc.directus.app/auth/login`, {email: email, password: password});
+        const response = await api.post(`https://back-unaadeb.onrender.com/auth/login`, {email: email, password: password});
         return {
             access_token: response.data.data.access_token,
             refresh_token: response.data.data.refresh_token,
@@ -49,7 +49,7 @@ export async function signIn(email: string, password: string): Promise<ResponseD
 
 export async function signUp(user: UserUnaadeb): Promise<boolean>{
     try {
-        const response = await api.post(`https://yio4ceoc.directus.app/users`,
+        const response = await api.post(`https://back-unaadeb.onrender.com/users`,
             {
                 ...user,
                 status: 'inactive',
