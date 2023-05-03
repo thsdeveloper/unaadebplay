@@ -11,7 +11,7 @@ import {handleErrors} from "../../utils/directus";
 
 const signInSchema = Yup.object({
     email: Yup.string().email('Digite um email válido').required('Email é obrigatório'),
-    password: Yup.string().min(4, 'Senha deve ter no mínimo 8 caracteres').required('Senha é obrigatória'),
+    password: Yup.string().min(4, 'Senha deve ter no mínimo 4 caracteres').required('Senha é obrigatória'),
 })
 
 type FormDataProps = Yup.InferType<typeof signInSchema>;
@@ -48,7 +48,7 @@ export default function SignIn({navigation}: { navigation: any }) {
     }
 
     return (
-        <Center flex={1} px="3" bgColor={'#0E1647'}>
+        <Center flex={1} px="8" bgColor={'#0E1647'}>
             <Center w="100%">
                 <Box safeArea p="2" py="8" w="90%" maxW="290">
                     <Heading size="2xl" fontWeight="600" color="blue.100" _dark={{
@@ -69,6 +69,7 @@ export default function SignIn({navigation}: { navigation: any }) {
                             name={'email'}
                             render={({field: {onChange}}) => (
                                 <Input
+                                    color={"blue.100"}
                                     placeholder={'Seu e-mail'}
                                     onChangeText={onChange}
                                     errorMessage={errors.email?.message}
@@ -79,6 +80,7 @@ export default function SignIn({navigation}: { navigation: any }) {
 
                         <Controller control={control} name={'password'} render={({field: {onChange}}) => (
                             <Input
+                                color={"blue.100"}
                                 placeholder={'Sua senha'}
                                 onChangeText={onChange}
                                 errorMessage={errors.password?.message}
@@ -102,7 +104,6 @@ export default function SignIn({navigation}: { navigation: any }) {
                                 colorScheme="indigo"
                                 onPress={handleSubmit(handleSignIn)}
                                 isLoading={loading}
-                                isDisabled={!isValid}
                                 isLoadingText="Aguarde..."/>
 
 

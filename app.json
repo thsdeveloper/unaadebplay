@@ -32,6 +32,8 @@
       "package": "br.com.unaadeb.undaadebplay",
       "versionCode": 2
     },
-    "ios": {}
+    "ios": {
+      "bundleIdentifier": "br.com.unaadeb.undaadebplay"
+    }
   }
 }

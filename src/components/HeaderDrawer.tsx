@@ -28,7 +28,7 @@ export function HeaderDrawer(props) {
             <Box>
                 <Flex alignItems={'center'} direction="row" safeArea
                       borderBottomWidth={'2'} borderBottomColor={'lightBlue.900'}>
-                    <Avatar size={"lg"} source={{uri: avatar}} mr={4} ml={4}>
+                    <Avatar size={"lg"} source={{uri: avatar}} mr={4} ml={4} backgroundColor={'white'}>
                         <Avatar.Badge bg="green.500" />
                     </Avatar>
                     <Box>

@@ -13,4 +13,5 @@ export const ERROR_MESSAGES: Record<string, string> = {
     ROUTE_NOT_FOUND: "Este endpoint não existe",
     SERVICE_UNAVAILABLE: "Não foi possível usar o serviço externo",
     UNPROCESSABLE_ENTITY: "Você tentou fazer algo ilegal",
+    RECORD_NOT_UNIQUE: "Usuário já cadastrado com esses dados",
 };

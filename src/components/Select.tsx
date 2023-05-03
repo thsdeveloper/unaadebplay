@@ -1,29 +1,46 @@
-import {Select as NativeBaseSelect, ISelectProps, FormControl} from 'native-base'
+import React from 'react';
+import {Select, VStack, FormControl, Box} from 'native-base';
 
-type SelectProps = ISelectProps & {
-    options: string[];
-    selectedValue: string;
-    onValueChange: (value: string) => void;
-    errorMessage?: string | null;
+interface CustomSelectProps {
+    options: any[];
+    labelKey: string;
+    valueKey: string;
+    placeholder: string;
+    errorMessage?: string;
+    onValueChange: (value: any) => void;
+    selectedValue?: any;
 }
 
-export function Select({options = [], selectedValue, onValueChange, errorMessage = null, isInvalid, ...rest}: SelectProps) {
-    const invalid = !!errorMessage || isInvalid;
+export const CustomSelect: React.FC<CustomSelectProps> = ({
+                                                              options,
+                                                              labelKey,
+                                                              valueKey,
+                                                              placeholder,
+                                                              errorMessage,
+                                                              onValueChange,
+                                                              selectedValue
+                                                          }) => {
     return (
-        <FormControl isInvalid={invalid}>
-            <NativeBaseSelect
-                placeholder="Select"
-                selectedValue={selectedValue}
-                onValueChange={onValueChange}
-                {...rest}>
-                {options.map((option) => (
-                    <NativeBaseSelect.Item label={option} value={option} key={option} />
-                ))}
-            </NativeBaseSelect>
-            <FormControl.ErrorMessage>
-                {errorMessage}
-            </FormControl.ErrorMessage>
-        </FormControl>
-    )
-}
-
+        <VStack width="100%">
+            <FormControl isInvalid={!!errorMessage}>
+                <Box>
+                    <Select
+                        fontSize={'md'}
+                        placeholder={placeholder}
+                        onValueChange={onValueChange}
+                        selectedValue={selectedValue}
+                    >
+                        {options.map((option, index) => (
+                            <Select.Item
+                                key={index}
+                                label={option[labelKey]}
+                                value={option[valueKey]}
+                            />
+                        ))}
+                    </Select>
+                </Box>
+                <FormControl.ErrorMessage>{errorMessage}</FormControl.ErrorMessage>
+            </FormControl>
+        </VStack>
+    );
+};

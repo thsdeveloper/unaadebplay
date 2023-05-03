@@ -11,12 +11,10 @@ export function Input({errorMessage = null, isInvalid, ...rest}: Props) {
     return (
         <FormControl isInvalid={invalid}>
             <NativeBaseInput
-                color={"blue.100"}
-                fontSize={'14'}
-                placeholderTextColor={'#fff'}
+                fontSize={'md'}
                 isInvalid={invalid}
                 _invalid={{
-                    borderWidth: 2
+                    borderWidth: 1
                 }}
                 {...rest}/>
             <FormControl.ErrorMessage>
