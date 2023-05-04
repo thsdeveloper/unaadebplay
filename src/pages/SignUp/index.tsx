@@ -1,48 +1,51 @@
 import * as React from "react";
-import {useWindowDimensions, FlatList} from 'react-native';
+import {useWindowDimensions, FlatList, StyleSheet} from 'react-native';
 import {
-    Box,
     Heading,
     VStack,
-    FormControl,
     Text,
-    Center,
     KeyboardAvoidingView,
-    NativeBaseProvider,
     useToast,
     Checkbox,
-    CheckIcon,
-    ScrollView,
     Pressable,
     Modal,
-    HStack, Flex,
+    Flex, Box, AspectRatio, View,
 } from "native-base";
 import RenderHtml from 'react-native-render-html';
 import * as Yup from "yup";
 import {Controller, useForm} from "react-hook-form";
 import {yupResolver} from "@hookform/resolvers/yup/dist/yup";
-import {handleErrors} from "../../utils/directus";
+import {emailExists, handleErrors} from "../../utils/directus";
 import {loadSectors, SectorItem} from "../../services/sector";
 import {useContext, useEffect, useState} from "react";
 import {Button} from '../../components/Button'
-import {CustomSelect, Select} from '../../components/Select'
+import {CustomSelect} from '../../components/Select'
 import {Input} from '../../components/input'
-import {useAuth} from "../../contexts/auth";
 import {Platform} from "react-native";
-import {NewsItem} from "../../services/news";
-import {createUser, UserData} from "../../services/user";
+import {createUser, getUsers, UserData} from "../../services/user";
 import {AxiosError} from "axios";
 import {getItems} from "../../services/items";
 import {LegalDocuments} from "../../types/LegalDocuments";
 import ConfigContext from "../../contexts/ConfigContext";
 import TranslationContext from "../../contexts/TranslationContext";
 import CheckboxCustom from "../../components/Checkbox";
+import {Image} from "../../components/Image";
 
 
 const signUpSchema = Yup.object({
     first_name: Yup.string().trim().min(2, 'O primeiro nome deve ter pelo menos 2 caracteres').required('O primeiro nome é obrigatório'),
     last_name: Yup.string().trim().min(2, 'O sobrenome deve ter pelo menos 2 caracteres').required('O sobrenome é obrigatório'),
-    email: Yup.string().email('Digite um email válido').required('Email é obrigatório'),
+    email: Yup.string()
+        .email('Digite um email válido')
+        .required('Email é obrigatório')
+        .test(
+            'check-email-exists',
+            'Este e-mail já está cadastrado',
+            async (value) => {
+                const exists = await emailExists(value);
+                return !exists; // retornar true se o e-mail NÃO existir
+            }
+        ),
     password: Yup.string().min(4, 'Senha deve ter no mínimo 4 caracteres').required('Senha é obrigatória'),
     sector: Yup.string().required('Escolha seu setor'),
     password_confirmed: Yup.string().oneOf([Yup.ref('password'), null], 'As senhas não coincidem.'),
@@ -55,8 +58,9 @@ const FormSigUpUser = () => {
     const window = useWindowDimensions();
     const contentWidth = window.width;
 
+    //Informacoes de configuracoes
     const config = useContext(ConfigContext);
-    const { t } = useContext(TranslationContext);
+    const {t} = useContext(TranslationContext);
 
     const [loading, setLoading] = useState(false);
     const [sectors, setSectors] = useState<SectorItem[]>([]);
@@ -91,21 +95,24 @@ const FormSigUpUser = () => {
     });
 
     async function handleSignUp(data: FormDataProps) {
+        data.acceptTerms
         setLoading(true)
-        console.log('DATA:>>>>>>', data)
 
         const user: UserData = {
+            location: "aa",
             ...data,
-            title: "Membro Unaadeb",
-            description: "Membro oficial da UNAADEB Brasília",
+            title: t('member_unaadeb'),
+            description: t('member_description'),
             tags: null,
             avatar: null,
-            language: "en-US",
+            language: "pt-BR",
             theme: "auto",
             tfa_secret: null,
             status: "active",
-            role: "a972c36f-490f-4ebd-9908-0f4b72676023",
+            role: config.id_role_default
         }
+
+        console.log('suserXXX', user)
 
         try {
             await createUser(user);
@@ -126,13 +133,18 @@ const FormSigUpUser = () => {
     const keyExtractor = (_: any, index: number) => index.toString();
 
     const renderItem = () => (
-        <VStack p={4}>
-            <Heading size="2xl" color="gray.800" fontWeight="semibold" px={4} pt={4}>
-                {t('title_sign_in')}
-            </Heading>
-            <Heading mt="1" color="gray.500" fontWeight="medium" size="xs" px={4}>
+        <VStack p={4} pt={8}>
+            <Box>
+                <Image assetId={config.project_logo}
+                       alt={'title'}
+                       size="xs"
+                       width="100%"
+                       resizeMode="contain"/>
+            </Box>
+            <Heading mt="1" textAlign={"center"} color="gray.500" fontWeight="medium" size="xs" px={4}>
                 {t('description_sign_up')}
             </Heading>
+
             <VStack space={3} mt="5" p={4}>
                 <Controller
                     control={control}
@@ -218,8 +230,8 @@ const FormSigUpUser = () => {
                     control={control}
                     name="acceptTerms"
                     defaultValue={false}
-                    rules={{ required: 'Você deve aceitar os termos e condições.' }}
-                    render={({ field: { onChange, value } }) => {
+                    rules={{required: 'Você deve aceitar os termos e condições.'}}
+                    render={({field: {onChange, value}}) => {
                         return (
                             <Checkbox.Group>
                                 <Flex flexDirection="row">

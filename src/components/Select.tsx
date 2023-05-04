@@ -23,8 +23,8 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
     return (
         <VStack width="100%">
             <FormControl isInvalid={!!errorMessage}>
-                <Box>
                     <Select
+                        width="100%"
                         fontSize={'md'}
                         placeholder={placeholder}
                         onValueChange={onValueChange}
@@ -38,7 +38,6 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                             />
                         ))}
                     </Select>
-                </Box>
                 <FormControl.ErrorMessage>{errorMessage}</FormControl.ErrorMessage>
             </FormControl>
         </VStack>

@@ -30,7 +30,7 @@
     },
     "android": {
       "package": "br.com.unaadeb.undaadebplay",
-      "versionCode": 2
+      "versionCode": 4
     },
     "ios": {
       "bundleIdentifier": "br.com.unaadeb.undaadebplay"
