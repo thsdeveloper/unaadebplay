@@ -94,34 +94,22 @@ const FormSigUpUser = () => {
         mode: 'all'
     });
 
-    async function handleSignUp(data: FormDataProps) {
-        data.acceptTerms
+    async function handleSignUp(dataUserForm: FormDataProps) {
         setLoading(true)
 
-        const user: UserData = {
-            location: "aa",
-            ...data,
+        const user = {
+            ...dataUserForm,
             title: t('member_unaadeb'),
             description: t('member_description'),
-            tags: null,
-            avatar: null,
-            language: "pt-BR",
-            theme: "auto",
-            tfa_secret: null,
-            status: "active",
-            role: config.id_role_default
+            role: config.id_role_default,
         }
-
-        console.log('suserXXX', user)
-
         try {
             await createUser(user);
-            toast.show({title: `Usuário ${user.first_name} cadastrado com sucesso`, bgColor: 'green.500'});
-        } catch (error: unknown) {
+            toast.show({ title: `Usuário ${user.first_name} cadastrado com sucesso`, bgColor: 'green.500' });
+        } catch (error) {
             if (error instanceof AxiosError) {
-                // @ts-ignore
                 const message = handleErrors(error.response.data.errors);
-                toast.show({title: message, bgColor: 'red.500'});
+                toast.show({ title: message, bgColor: 'red.500' });
             } else {
                 // Trate outros tipos de erros, se necessário
             }
