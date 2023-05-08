@@ -1,6 +1,6 @@
 import { GenericItem } from '../services/items';
 
-export interface LegalDocuments extends GenericItem {
+export interface LegalDocumentsTypes extends GenericItem {
     title: string;
     content: string;
     date_updated: string;

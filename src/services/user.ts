@@ -1,38 +1,9 @@
 import api from "./api";
-import {ReponseUser} from "./auth";
 import {AxiosResponse} from "axios";
+import {UserTypes} from "../types/UserTypes";
+import {GlobalQueryParams} from "../types/GlobalQueryParamsTypes";
 
-export interface GlobalQueryParams {
-    limit?: number;
-    offset?: number;
-    sort?: string;
-    fields?: string[];
-    filter?: any;
-}
-
-export interface UserData {
-    id?: string,
-    first_name: string,
-    last_name: string,
-    email: string,
-    password: string,
-    location: string,
-    title: string,
-    description: string,
-    tags?: string[] | null,
-    avatar: string | null,
-    language: string,
-    theme: string,
-    tfa_secret: string | null,
-    status: string,
-    role: string,
-    token?: string,
-    last_access?: string,
-    last_page?: string
-    sector: string
-}
-
-export async function getUserId(id: string): Promise<ReponseUser>{
+export async function getUserId(id: string): Promise<UserTypes>{
     try {
         const response = await api.get(`/users/${id}`);
         return response.data.data;
@@ -41,7 +12,7 @@ export async function getUserId(id: string): Promise<ReponseUser>{
     }
 }
 
-export async function createUser(data: UserData): Promise<AxiosResponse<any> | null> {
+export async function createUser(data: UserTypes): Promise<AxiosResponse<any> | null> {
     try {
         return await api.post('/users', data);
     } catch (error) {
@@ -50,7 +21,7 @@ export async function createUser(data: UserData): Promise<AxiosResponse<any> | n
     }
 }
 
-export async function getUsers(params?: GlobalQueryParams):Promise<UserData[]> {
+export async function getUsers(params?: GlobalQueryParams):Promise<UserTypes[]> {
     try {
         const response = await api.get('/users', {
             params,
@@ -61,3 +32,21 @@ export async function getUsers(params?: GlobalQueryParams):Promise<UserData[]> {
         throw error;
     }
 }
+
+export const emailExists = async (email: string): Promise<boolean> => {
+    const queryParams: GlobalQueryParams = {
+        filter: {
+            email: {
+                _eq: email,
+            },
+        },
+    };
+
+    try {
+        const users = await getUsers(queryParams); // substitua pela sua chamada de API
+        return users.length === 1;
+    } catch (error) {
+        console.error('Erro ao verificar e-mail:', error);
+        return false;
+    }
+};

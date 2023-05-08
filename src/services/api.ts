@@ -1,6 +1,6 @@
 import axios from 'axios'
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {handleErrors} from "../utils/directus";
+import {ERROR_MESSAGES} from "../constants/errorMessages";
 
 
 const api = axios.create({
@@ -18,20 +18,21 @@ api.interceptors.request.use(async (config) => {
 
 const handleErrorsAxios = async (error: any) => {
     const originalConfig = error.config;
+    console.log(`originalConfig`, originalConfig)
     const loginUrl = 'https://back-unaadeb.onrender.com/auth/login';
 
     if (originalConfig.url !== loginUrl && error.response) {
-        // const message = handleErrors(error.response.data.errors);
-        // console.log('ERRO0', message)
+        const message = handleErrors(error.response.data.errors);
+        console.log('Intercepto >', message)
 
         // Access Token was expired
         if (error.response.status === 401 && !originalConfig._retry) {
+            console.warn('Refresh Token >', !originalConfig._retry)
             originalConfig._retry = true;
             try {
                 const refresh = await getRefreshToken();
                 const res = await axios.post('https://back-unaadeb.onrender.com/auth/refresh', {
                     refresh_token: refresh,
-                    mode: 'json',
                 });
 
                 const { access_token, refresh_token, expires } = res.data.data;
@@ -51,8 +52,7 @@ api.interceptors.response.use((response) => response, handleErrorsAxios);
 
 const getAccessToken = async () => {
     try {
-        const accessToken = await AsyncStorage.getItem('@UNAADEBAuth:access_token');
-        return accessToken;
+        return await AsyncStorage.getItem('@UNAADEBAuth:access_token');
     } catch (error) {
         console.error(error);
     }
@@ -76,6 +76,13 @@ const setTokenStorage = async (access_token: string, refresh_token: string, expi
         console.error(error);
     }
 };
+
+export function handleErrors(errors: any[]) {
+    return errors.map((error) => {
+        const code = error.extensions?.code || 'UNKNOWN';
+        return ERROR_MESSAGES[code] || 'Ocorreu um erro desconhecido.';
+    });
+}
 
 
 export default api;

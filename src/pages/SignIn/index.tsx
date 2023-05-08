@@ -2,12 +2,11 @@ import {useContext, useState} from "react";
 import {useForm, Controller} from 'react-hook-form'
 import {yupResolver} from '@hookform/resolvers/yup'
 import {Button} from '../../components/Button'
-import {useAuth} from "../../contexts/auth";
+import {useAuth} from "../../contexts/AuthContext";
 import {Input} from '../../components/input'
 import {Box, Center, Heading, HStack, Link, VStack, Text, StatusBar, Image, useToast} from "native-base";
 import * as Yup from 'yup';
 import AlertContext from "../../contexts/alert";
-import {handleErrors} from "../../utils/directus";
 
 const signInSchema = Yup.object({
     email: Yup.string().email('Digite um email válido').required('Email é obrigatório'),
@@ -24,7 +23,6 @@ export default function SignIn({navigation}: { navigation: any }) {
     const toast = useToast()
 
 
-
     const {control, handleSubmit, formState: {errors, isValid}} = useForm<FormDataProps>({
         resolver: yupResolver(signInSchema)
     });
@@ -33,16 +31,8 @@ export default function SignIn({navigation}: { navigation: any }) {
     async function handleSignIn(data: FormDataProps) {
         setLoading(true)
         try {
-            const response = await signIn(data.email, data.password);
-            setLoading(false)
-        } catch (error: any) {
-            console.log('error', error)
-            const message = handleErrors(error.response.data.errors);
-            console.log('message', message)
-            toast.show({
-                title: message,
-                bgColor: 'red.500'
-            });
+            await signIn(data.email, data.password);
+        } finally {
             setLoading(false)
         }
     }
@@ -54,7 +44,7 @@ export default function SignIn({navigation}: { navigation: any }) {
                     <Heading size="2xl" fontWeight="600" color="blue.100" _dark={{
                         color: "warmGray.50"
                     }}>
-                       UNAADEB Play
+                        UNAADEB Play
                     </Heading>
                     <Heading mt="1" _dark={{
                         color: "warmGray.200"

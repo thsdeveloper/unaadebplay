@@ -1,5 +1,5 @@
 import * as React from "react";
-import {useWindowDimensions, FlatList, StyleSheet} from 'react-native';
+import {useWindowDimensions, FlatList} from 'react-native';
 import {
     Heading,
     VStack,
@@ -9,7 +9,7 @@ import {
     Checkbox,
     Pressable,
     Modal,
-    Flex, Box, AspectRatio, View,
+    Flex, Box
 } from "native-base";
 import RenderHtml from 'react-native-render-html';
 import * as Yup from "yup";
@@ -22,14 +22,15 @@ import {Button} from '../../components/Button'
 import {CustomSelect} from '../../components/Select'
 import {Input} from '../../components/input'
 import {Platform} from "react-native";
-import {createUser, getUsers, UserData} from "../../services/user";
+import {createUser} from "../../services/user";
 import {AxiosError} from "axios";
 import {getItems} from "../../services/items";
-import {LegalDocuments} from "../../types/LegalDocuments";
+import {LegalDocumentsTypes} from "../../types/LegalDocumentsTypes";
 import ConfigContext from "../../contexts/ConfigContext";
 import TranslationContext from "../../contexts/TranslationContext";
 import CheckboxCustom from "../../components/Checkbox";
 import {Image} from "../../components/Image";
+import {useAuth} from "../../contexts/AuthContext";
 
 
 const signUpSchema = Yup.object({
@@ -57,6 +58,7 @@ type FormDataProps = Yup.InferType<typeof signUpSchema>;
 const FormSigUpUser = () => {
     const window = useWindowDimensions();
     const contentWidth = window.width;
+    const {signed, signIn} = useAuth();
 
     //Informacoes de configuracoes
     const config = useContext(ConfigContext);
@@ -65,7 +67,7 @@ const FormSigUpUser = () => {
     const [loading, setLoading] = useState(false);
     const [sectors, setSectors] = useState<SectorItem[]>([]);
 
-    const [legalDocuments, setLegalDocuments] = useState<LegalDocuments[]>([]);
+    const [legalDocuments, setLegalDocuments] = useState<LegalDocumentsTypes[]>([]);
     const [activeDocument, setActiveDocument] = useState<"terms" | "privacy" | null>(null);
 
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -77,7 +79,7 @@ const FormSigUpUser = () => {
         loadSectors(setSectors, setIsLoading, setError);
 
         async function fetchData() {
-            const infosLegalDocuments = await getItems<LegalDocuments>('legal_documents');
+            const infosLegalDocuments = await getItems<LegalDocumentsTypes>('legal_documents');
             setLegalDocuments(infosLegalDocuments)
             // Faça algo com os usuários aqui, por exemplo, atualize o estado
         }
@@ -104,8 +106,12 @@ const FormSigUpUser = () => {
             role: config.id_role_default,
         }
         try {
-            await createUser(user);
-            toast.show({ title: `Usuário ${user.first_name} cadastrado com sucesso`, bgColor: 'green.500' });
+            const response = await createUser(user);
+            if(response?.status === 200){
+                //Realiza o login do usuario
+                await signIn(dataUserForm.email, dataUserForm.password);
+                toast.show({ title: `Usuário ${user.first_name} cadastrado com sucesso`, bgColor: 'green.500' });
+            }
         } catch (error) {
             if (error instanceof AxiosError) {
                 const message = handleErrors(error.response.data.errors);

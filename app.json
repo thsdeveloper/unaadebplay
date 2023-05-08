@@ -3,6 +3,7 @@
     "name": "UnaadebPlay",
     "slug": "unaadebplay",
     "version": "1.0.2",
+    "scheme": "unaadebplay",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -33,7 +34,8 @@
       "versionCode": 4
     },
     "ios": {
-      "bundleIdentifier": "br.com.unaadeb.undaadebplay"
+      "bundleIdentifier": "br.com.unaadeb.undaadebplay",
+      "buildNumber": "1.0.0"
     }
   }
 }

@@ -1,55 +1,46 @@
-import React, {useEffect, useState} from "react";
-import {View, StyleSheet} from "react-native";
+import React, {useContext, useEffect, useState} from "react";
+import {View, StyleSheet, RefreshControl} from "react-native";
 import {Box, Button, Heading, Text, FlatList, HStack, Avatar, VStack, Spacer, ScrollView} from "native-base";
-import {useAuth} from "../../../contexts/auth";
-import api from "../../../services/api";
-import {ReponseUser} from "../../../services/auth";
-import {ItemListUser} from "../../../components/ItemListUser";
+import BannerCarousel from "../../../components/BannerCarousel";
+import {getItems} from "../../../services/items";
+import {BannerTypes} from "../../../types/BannerTypes";
+import TranslationContext from "../../../contexts/TranslationContext";
 
 const styles = StyleSheet.create({
     container: {flex: 1, justifyContent: 'center'}
 })
 
 export default function Dashboard({navigation}: { navigation: any }) {
-    const [users, setUsers] = useState<ReponseUser[]>([])
+    const [refreshing, setRefreshing] = useState(false);
+    const [banners, setBanners] = useState<BannerTypes[]>([]);
+    const {t} = useContext(TranslationContext);
 
-    async function handleGetUsers() {
-        const {data} = await api.get('/users')
-        console.log('response', data.data)
-        setUsers(data.data)
+
+    useEffect(() => {
+            loadBanners()
+    }, []);
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await loadBanners();
+        setRefreshing(false);
+    };
+
+    const loadBanners = async () => {
+        const response = await getItems<BannerTypes>('banners');
+        setBanners(response);
     }
 
-
-    const Example = () => {
-        return (
-            <Box alignItems="center">
-                <Box p={8}>
-                    <Button onPress={handleGetUsers}>Buscar usuários</Button>
-                </Box>
-
-                <Box p={8}>
-                    <Button onPress={() => navigation.navigate('About')}>Buscar usuários</Button>
-                </Box>
-            </Box>
-        );
-    };
-
-
-    const ListUsers = () => {
-
-        return <Box p={4}>
-            <Heading fontSize="xl" pb="3">
-                Membros
-            </Heading>
-            <FlatList data={users} horizontal={false} h={'300'} renderItem={({item}) =>
-                <ItemListUser user={item} />}
-                      keyExtractor={item => item.id} />
-        </Box>;
-    };
     return (
-        <View style={styles.container}>
-            <Example/>
-            <ListUsers/>
-        </View>
+        <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} title={t('text_search')} />}>
+            <Box p={2}>
+                <Text fontWeight={'medium'} fontSize={'lg'}>
+                    Descubra o que está rolando!
+                </Text>
+            </Box>
+            <Box>
+                <BannerCarousel banners={banners} />
+            </Box>
+        </ScrollView>
     );
 }

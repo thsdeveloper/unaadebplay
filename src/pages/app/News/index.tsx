@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import {RefreshControl} from "react-native";
 import {
     Box,
@@ -10,6 +10,7 @@ import {
 import {loadNews, NewsItem} from "../../../services/news";
 import {Button} from "../../../components/Button";
 import {CardNews} from "../../../components/CardNews";
+import TranslationContext from "../../../contexts/TranslationContext";
 
 interface NewsProps {
     navigation: any;
@@ -21,6 +22,8 @@ export default function News({navigation}: NewsProps) {
     const [refreshing, setRefreshing] = useState<boolean>(false);
     const [error, setError] = useState<string>('');
     const toast = useToast();
+    const {t} = useContext(TranslationContext);
+
 
     const handleRefresh = async () => {
         setRefreshing(true);
@@ -69,7 +72,7 @@ export default function News({navigation}: NewsProps) {
                 <CardNews post={item}/>
             } keyExtractor={(item: NewsItem) => item.id.toString()} refreshControl={
                 <RefreshControl
-                    title={'Buscando...'}
+                    title={t('text_search')}
                     refreshing={refreshing}
                     onRefresh={handleRefresh}
                 />

@@ -1,7 +1,7 @@
 import {NavigationContainer} from '@react-navigation/native';
 import {NativeBaseProvider, StatusBar} from "native-base";
 import Routes from './src/routes';
-import {AuthProvider} from './src/contexts/auth';
+import {AuthProvider} from './src/contexts/AuthContext';
 import {AlertProvider} from "./src/contexts/alert";
 import 'react-native-gesture-handler';
 import {ConfigProvider} from "./src/contexts/ConfigContext";
