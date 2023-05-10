@@ -6,6 +6,7 @@ import {AlertProvider} from "./src/contexts/alert";
 import 'react-native-gesture-handler';
 import {ConfigProvider} from "./src/contexts/ConfigContext";
 import {TranslationProvider} from "./src/contexts/TranslationContext";
+import {AudioPlayerProvider} from "./src/contexts/AudioPlayerContext";
 
 export default function App() {
     return (
@@ -16,7 +17,9 @@ export default function App() {
                     <AuthProvider>
                         <ConfigProvider>
                             <TranslationProvider>
-                                <Routes/>
+                                <AudioPlayerProvider>
+                                    <Routes/>
+                                </AudioPlayerProvider>
                             </TranslationProvider>
                         </ConfigProvider>
                     </AuthProvider>

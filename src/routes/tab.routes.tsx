@@ -12,6 +12,10 @@ import Contact from "../pages/app/Contact";
 import Settings from "../pages/app/Settings";
 
 import News from "../pages/app/News";
+import BannerDetails from "../pages/app/Dashboard/BannerDetails";
+import RepertoireListScreen from "../pages/app/Dashboard/RepertoireListScreen";
+import React from "react";
+import GlobalAudioPlayer from "../components/GlobalAudioPlayer";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -28,11 +32,14 @@ function DrawerRoutes() {
 
 function DashboardScreen() {
     return (
-        <Stack.Navigator>
-            <Stack.Screen name="Home" component={Dashboard} options={{headerShown: false}}/>
-            <Stack.Screen name="Contact" component={Contact} options={{headerShown: false}}/>
-            <Stack.Screen name="About" component={About}/>
-        </Stack.Navigator>
+        <>
+            <Stack.Navigator>
+                <Stack.Screen name="Home" component={Dashboard} options={{headerShown: false}}/>
+                <Stack.Screen name="Contact" component={Contact} options={{headerShown: false}}/>
+                <Stack.Screen name="BannerDetails" component={BannerDetails} options={{headerShown: false}}/>
+                <Stack.Screen name="RepertoireList" component={RepertoireListScreen} options={{headerShown: false}}/>
+            </Stack.Navigator>
+        </>
     );
 }
 
@@ -59,65 +66,67 @@ function SettingsScreen() {
 
 function TabRoutes() {
     return (
-        <Tab.Navigator screenOptions={{
-            tabBarIconStyle: {
-              borderStyle: "solid",
-                backgroundColor: 'red',
-                color: 'red'
-            },
-            tabBarActiveTintColor: Colors.text,
-            // headerTransparent: true,
-            headerTintColor: 'red',
-            tabBarStyle: {
-                // height: 100,
-                // // position: 'absolute',
-                // bottom: 10,
-                // // right: 16,
-                // // left: 16,
-                // borderRadius: 16,
-                // padding: 10,
-                backgroundColor: Colors.secundary,
-                borderColor: 'red',
-            },
-        }}>
-            <Tab.Screen name="Dashboard" component={DashboardScreen} options={
-                {
-                    headerShown: false,
-                    // tabBarShowLabel: false,
-                    tabBarLabel: 'UNAADEB',
-                    tabBarIcon: ({color, size}) => (
-                        <FontAwesome5 name={'fire'} color={color} size={size}/>
-                    )
-                }
-            }/>
-            <Tab.Screen name="News" component={NewsScreen} options={
-                {
-                    headerShown: false,
-                    tabBarLabel: 'Notícias',
-                    tabBarIcon: ({color, size}) => (
-                        <FontAwesome5 name={'newspaper'} color={color} size={size}/>
-                    )
-                }
-            }/>
-            <Tab.Screen name="SettingsScreen" component={SettingsScreen} options={
-                {
-                    headerShown: false,
-                    tabBarLabel: 'Agenda',
-                    tabBarIcon: ({color, size}) => (
-                        <FontAwesome name={'calendar'} color={color} size={size}/>
-                    )
-                }
-            }/>
-            <Tab.Screen name="media" component={SettingsScreen} options={
-                {
-                    headerShown: false,
-                    tabBarLabel: 'Configurações',
-                    tabBarIcon: ({color, size}) => (
-                        <MaterialIcons name={'settings'} color={color} size={size}/>
-                    )
-                }
-            }/>
-        </Tab.Navigator>
+        <>
+            <Tab.Navigator screenOptions={{
+                tabBarIconStyle: {
+                    borderStyle: "solid",
+                    backgroundColor: 'red',
+                    color: 'red'
+                },
+                tabBarActiveTintColor: Colors.text,
+                // headerTransparent: true,
+                headerTintColor: 'red',
+                tabBarStyle: {
+                    // height: 100,
+                    // // position: 'absolute',
+                    // bottom: 10,
+                    // // right: 16,
+                    // // left: 16,
+                    // borderRadius: 16,
+                    // padding: 10,
+                    backgroundColor: Colors.secundary,
+                    borderColor: 'red',
+                },
+            }}>
+                <Tab.Screen name="Dashboard" component={DashboardScreen} options={
+                    {
+                        headerShown: false,
+                        // tabBarShowLabel: false,
+                        tabBarLabel: 'UNAADEB',
+                        tabBarIcon: ({color, size}) => (
+                            <FontAwesome5 name={'fire'} color={color} size={size}/>
+                        )
+                    }
+                }/>
+                <Tab.Screen name="News" component={NewsScreen} options={
+                    {
+                        headerShown: false,
+                        tabBarLabel: 'Notícias',
+                        tabBarIcon: ({color, size}) => (
+                            <FontAwesome5 name={'newspaper'} color={color} size={size}/>
+                        )
+                    }
+                }/>
+                <Tab.Screen name="SettingsScreen" component={SettingsScreen} options={
+                    {
+                        headerShown: false,
+                        tabBarLabel: 'Agenda',
+                        tabBarIcon: ({color, size}) => (
+                            <FontAwesome name={'calendar'} color={color} size={size}/>
+                        )
+                    }
+                }/>
+                <Tab.Screen name="media" component={SettingsScreen} options={
+                    {
+                        headerShown: false,
+                        tabBarLabel: 'Configurações',
+                        tabBarIcon: ({color, size}) => (
+                            <MaterialIcons name={'settings'} color={color} size={size}/>
+                        )
+                    }
+                }/>
+            </Tab.Navigator>
+        </>
     );
 }
 

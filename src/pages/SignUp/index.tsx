@@ -15,14 +15,13 @@ import RenderHtml from 'react-native-render-html';
 import * as Yup from "yup";
 import {Controller, useForm} from "react-hook-form";
 import {yupResolver} from "@hookform/resolvers/yup/dist/yup";
-import {emailExists, handleErrors} from "../../utils/directus";
 import {loadSectors, SectorItem} from "../../services/sector";
 import {useContext, useEffect, useState} from "react";
 import {Button} from '../../components/Button'
 import {CustomSelect} from '../../components/Select'
 import {Input} from '../../components/input'
 import {Platform} from "react-native";
-import {createUser} from "../../services/user";
+import {createUser, emailExists} from "../../services/user";
 import {AxiosError} from "axios";
 import {getItems} from "../../services/items";
 import {LegalDocumentsTypes} from "../../types/LegalDocumentsTypes";
@@ -31,6 +30,7 @@ import TranslationContext from "../../contexts/TranslationContext";
 import CheckboxCustom from "../../components/Checkbox";
 import {Image} from "../../components/Image";
 import {useAuth} from "../../contexts/AuthContext";
+import {handleErrors} from "../../services/api";
 
 
 const signUpSchema = Yup.object({
@@ -128,13 +128,15 @@ const FormSigUpUser = () => {
 
     const renderItem = () => (
         <VStack p={4} pt={8}>
-            <Box>
+            <Box alignItems="center" justifyContent="center">
                 <Image assetId={config.project_logo}
                        alt={'title'}
                        size="xs"
-                       width="100%"
+                       width={400}
+                       height={80}
                        resizeMode="contain"/>
             </Box>
+
             <Heading mt="1" textAlign={"center"} color="gray.500" fontWeight="medium" size="xs" px={4}>
                 {t('description_sign_up')}
             </Heading>

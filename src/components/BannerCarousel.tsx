@@ -6,15 +6,18 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BannerTypes } from '../types/BannerTypes';
 import { Image } from './Image';
 import PaginationDots from "./PaginationDots";
+import { NavigationProp, ParamListBase } from '@react-navigation/native';
+
 
 const { width: screenWidth } = Dimensions.get('window');
 
 interface PropsBanners {
-    banners: BannerTypes[]
+    banners: BannerTypes[],
+    navigation: NavigationProp<ParamListBase>;
 }
 
 
-const BannerCarousel = ({banners}: PropsBanners) => {
+const BannerCarousel = ({banners, navigation}: PropsBanners) => {
     const [loading, setLoading] = useState(true);
     const [activeIndex, setActiveIndex] = useState(0);
 
@@ -27,7 +30,8 @@ const BannerCarousel = ({banners}: PropsBanners) => {
 
     const handleBannerPress = (item: BannerTypes) => {
         // Adicione a lógica de navegação aqui para redirecionar o usuário para uma tela específica
-        console.log(`Banner clicado: ${item.title}`);
+        navigation.navigate('BannerDetails', { id: item.id });
+        console.log(`Banner sdsdf sdclicado: ${item.title}`);
     };
 
 

@@ -22,8 +22,7 @@ const handleErrorsAxios = async (error: any) => {
     const loginUrl = 'https://back-unaadeb.onrender.com/auth/login';
 
     if (originalConfig.url !== loginUrl && error.response) {
-        const message = handleErrors(error.response.data.errors);
-        console.log('Intercepto >', message)
+        // const message = handleErrors(error.response.data.errors);
 
         // Access Token was expired
         if (error.response.status === 401 && !originalConfig._retry) {

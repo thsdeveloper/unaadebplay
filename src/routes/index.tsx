@@ -3,6 +3,7 @@ import {useAuth} from "../contexts/AuthContext";
 
 import AuthRoutes from "./auth.routes";
 import DrawerRoutes from "./drawer.routes";
+import GlobalAudioPlayer from "../components/GlobalAudioPlayer";
 
 
 import {ActivityIndicator, View} from "react-native";
@@ -20,7 +21,11 @@ function Routes() {
     }
 
 
-    return signed ? <DrawerRoutes/> : <AuthRoutes/>;
+    return signed ? (
+        <>
+            <DrawerRoutes/>
+        </>
+    ) : <AuthRoutes/>;
 }
 
 export default Routes;

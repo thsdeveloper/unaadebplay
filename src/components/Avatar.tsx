@@ -1,32 +1,34 @@
-import {Avatar as NativeBaseAvatar, IAvatarProps} from 'native-base'
+import {Avatar as NativeBaseAvatar, IAvatarProps, IImageProps, Skeleton} from 'native-base'
 import {useEffect, useState} from "react";
-import {getImageData} from "../utils/directus";
+import {getImageData} from "../services/AssetsService";
 
 type Props = IAvatarProps & {
-    assetId?: string | undefined;
-}
+    assetId: string | undefined;
+    width: number;
+    height: number;
+};
 
-export function Avatar({assetId = undefined, ...rest}: Props) {
+export function Avatar({ assetId = undefined, width, height, ...rest }: Props) {
     const [image, setImage] = useState<string | undefined>(undefined);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if(assetId){
-            async function loadImage() {
-                try {
-                    const base64data = await getImageData(`/assets/${assetId}`);
-                    setImage(base64data)
-                }catch (e){
-
-                }
+        async function loadImage() {
+            try {
+                const base64data = await getImageData(`/assets/${assetId}`);
+                setImage(base64data);
+            } catch (e) {
+                setImage('https://www.madeireiraestrela.com.br/images/joomlart/demo/default.jpg');
+            } finally {
+                setLoading(false);
             }
-            loadImage();
         }
-
+        loadImage();
     }, []);
 
-    return (
-        <NativeBaseAvatar source={{uri: image}} {...rest}>
-            TH
-        </NativeBaseAvatar>
-    )
+    return loading ? (
+        <Skeleton width={width} height={height} />
+    ) : (
+        <NativeBaseAvatar width={width} height={height} source={{ uri: image }} {...rest} />
+    );
 }

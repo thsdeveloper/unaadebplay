@@ -1,6 +1,5 @@
 import { Image as NativeBaseImage, IImageProps, Skeleton } from 'native-base';
 import { useEffect, useState } from 'react';
-import colors from '../constants/colors';
 import { getImageData } from '../services/AssetsService';
 
 type Props = IImageProps & {

@@ -1,4 +1,4 @@
-import {View, Avatar, Text, Icon, Box, Flex, Button} from 'native-base'
+import {Text, Icon, Box, Flex, Button} from 'native-base'
 import {DrawerContentScrollView} from "@react-navigation/drawer";
 import React, {useContext, useEffect, useState} from "react";
 import {useAuth} from "../contexts/AuthContext";
@@ -6,6 +6,7 @@ import {relativeTime} from "../utils/directus";
 import {AntDesign} from "@expo/vector-icons";
 import ConfigContext from "../contexts/ConfigContext";
 import {getImageData} from "../services/AssetsService";
+import {Avatar} from "./Avatar";
 
 export function HeaderDrawer(props) {
     const {signOut, user} = useAuth()
@@ -23,6 +24,7 @@ export function HeaderDrawer(props) {
             const base64data = await getImageData(`/assets/${avatarId}`);
             setAvatar(base64data)
         }
+
         loadImage();
     }, []);
 
@@ -33,11 +35,11 @@ export function HeaderDrawer(props) {
     return (
         <DrawerContentScrollView {...props}>
             <Box>
-                <Flex alignItems={'center'} direction="row" safeArea
-                      borderBottomWidth={'2'} borderBottomColor={'lightBlue.900'}>
-                    <Avatar size={"lg"} source={{uri: avatar}} mr={4} ml={4} backgroundColor={'white'}>
-                        <Avatar.Badge bg="green.500" />
-                    </Avatar>
+                <Flex alignItems={'center'} direction="row" safeArea borderBottomWidth={'2'}
+                      borderBottomColor={'lightBlue.900'}>
+                    <Box p={4}>
+                        <Avatar assetId={user?.avatar} height={50} width={50}/>
+                    </Box>
                     <Box>
                         <Text color={"text.300"} fontWeight={'bold'}>{user?.first_name}</Text>
                         <Text color={"text.400"} fontSize={'xs'}>{user?.email}</Text>
@@ -46,7 +48,7 @@ export function HeaderDrawer(props) {
                 </Flex>
                 <Box>
                     <Button variant={'link'} colorScheme={'danger'} leftIcon={
-                        <Icon as={AntDesign} name="logout" size="sm" />
+                        <Icon as={AntDesign} name="logout" size="sm"/>
                     } onPress={handleSignOut}>Sair da Aplicação</Button>
                 </Box>
             </Box>

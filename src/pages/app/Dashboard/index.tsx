@@ -1,10 +1,12 @@
 import React, {useContext, useEffect, useState} from "react";
 import {View, StyleSheet, RefreshControl} from "react-native";
-import {Box, Button, Heading, Text, FlatList, HStack, Avatar, VStack, Spacer, ScrollView} from "native-base";
+import {Box, Button, Heading, Text, FlatList, HStack, Avatar, VStack, Spacer, ScrollView, Stack} from "native-base";
 import BannerCarousel from "../../../components/BannerCarousel";
 import {getItems} from "../../../services/items";
 import {BannerTypes} from "../../../types/BannerTypes";
 import TranslationContext from "../../../contexts/TranslationContext";
+import {Ionicons} from "@expo/vector-icons";
+import colors from "../../../constants/colors";
 
 const styles = StyleSheet.create({
     container: {flex: 1, justifyContent: 'center'}
@@ -33,13 +35,25 @@ export default function Dashboard({navigation}: { navigation: any }) {
 
     return (
         <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} title={t('text_search')} />}>
-            <Box p={2}>
+            <Stack space={"sm"} p={2} direction={"row"} alignItems={"center"}>
+                <Ionicons
+                    name={'notifications'}
+                    size={20}
+                    color={colors.secundary}
+                />
                 <Text fontWeight={'medium'} fontSize={'lg'}>
                     Descubra o que está rolando!
                 </Text>
-            </Box>
+            </Stack>
             <Box>
-                <BannerCarousel banners={banners} />
+                <BannerCarousel banners={banners} navigation={navigation} />
+            </Box>
+            <Box flex={1} alignItems="center" justifyContent="center">
+                <VStack space={5}>
+                    <Button onPress={() => navigation.navigate('RepertoireList')}>
+                        Ver Lista de Repertórios
+                    </Button>
+                </VStack>
             </Box>
         </ScrollView>
     );

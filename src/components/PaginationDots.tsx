@@ -5,7 +5,7 @@ import colors from "../constants/colors";
 const PaginationDots = ({ data, activeIndex }) => {
     return (
         <HStack space={2} alignItems="center" justifyContent="center" mt={4}>
-        {data.map((_, index) => (
+        {data && data.map((_, index) => (
                 <Circle
                     key={index}
             size={2}

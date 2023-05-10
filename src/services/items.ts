@@ -1,17 +1,17 @@
 import api from "./api";
 
 export interface GenericItem {
-    id: number;
-    // Campos comuns entre todos os itens podem ser adicionados aqui
+    id: string;
 }
 
-export async function getItems<T extends GenericItem>(collectionName: string): Promise<T[]> {
+export async function getItems<T extends GenericItem>(collectionName: string,  params?: Record<string, unknown>): Promise<T[]> {
     try {
-        const response = await api.get(`/items/${collectionName}`);
+        const response = await api.get(`/items/${collectionName}`, {
+            params: params,
+        });
         return response.data.data;
     } catch (error) {
         console.error('Error fetching items:', error);
-        throw error;
     }
 }
 
