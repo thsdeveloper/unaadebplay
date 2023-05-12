@@ -1,6 +1,6 @@
 import React, {useState, useEffect, useContext} from 'react';
 import {FlatList, TouchableOpacity} from 'react-native';
-import {Box, Text, VStack, HStack, Divider, Spinner, Stack} from 'native-base';
+import {Box, Text, VStack, HStack, Divider, Spinner, Stack, Skeleton, Center} from 'native-base';
 import {getItems} from '../../../services/items';
 import {RepertoriesTypes} from '../../../types/RepertoriesTypes';
 import {getAssetURI} from "../../../services/AssetsService";
@@ -10,30 +10,35 @@ import { FontAwesome } from '@expo/vector-icons';
 import colors from "../../../constants/colors";
 import {useAudioPlayer} from "../../../contexts/AudioPlayerContext";
 import GlobalAudioPlayer from "../../../components/GlobalAudioPlayer";
+import SkeletonItem from "../../../components/SkeletonItem";
+
 
 const RepertoireListScreen = () => {
     const [repertoires, setRepertoires] = useState<RepertoriesTypes>();
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingItemList, setIsLoadingItemList] = useState(false);
+    const [isLoadingList, setIsLoadingList] = useState(false);
     const {t} = useContext(TranslationContext);
     const { setAudioURI, setAlbum } = useAudioPlayer();
 
     useEffect(() => {
         const loadRepertories = async () => {
+            setIsLoadingList(true)
             const response = await getItems<RepertoriesTypes>('repertorios', {
                 fields: '*.*,mp3.*',
             });
             setRepertoires(response);
+            setIsLoadingList(false)
         };
 
         loadRepertories();
     }, []);
 
     const handleAudioPress = async (album: RepertoriesTypes) => {
-        setIsLoading(true);
+        setIsLoadingItemList(true);
         const uri = await getAssetURI(album.mp3.id);
         setAudioURI(uri);
         setAlbum(album);
-        setIsLoading(false);
+        setIsLoadingItemList(false);
     };
 
     const renderItem = ({item}: { item: RepertoriesTypes }) => (
@@ -67,12 +72,17 @@ const RepertoireListScreen = () => {
                 <Text color={colors.secundary} fontSize={"lg"} fontWeight={"bold"}>{t('text_repertoire')}</Text>
             </Stack>
 
-            <FlatList
-                data={repertoires}
-                renderItem={renderItem}
-                keyExtractor={(item) => item.id}
-            />
-            {isLoading && (
+            {isLoadingList ? (
+                <SkeletonItem count={5} />
+            ) : (
+                <FlatList
+                    data={repertoires}
+                    renderItem={renderItem}
+                    keyExtractor={(item) => item.id}
+                />
+            )}
+
+            {isLoadingItemList  && (
                 <Box
                     position="absolute"
                     top={0}
@@ -87,7 +97,6 @@ const RepertoireListScreen = () => {
                     <Spinner accessibilityLabel="Loading posts" color="white"/>
                 </Box>
             )}
-            <GlobalAudioPlayer />
         </Box>
     );
 };

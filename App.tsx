@@ -7,6 +7,7 @@ import 'react-native-gesture-handler';
 import {ConfigProvider} from "./src/contexts/ConfigContext";
 import {TranslationProvider} from "./src/contexts/TranslationContext";
 import {AudioPlayerProvider} from "./src/contexts/AudioPlayerContext";
+import React from "react";
 
 export default function App() {
     return (

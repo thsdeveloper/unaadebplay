@@ -4,6 +4,7 @@ import TabRoutes from '../routes/tab.routes'
 import Colors from "../constants/colors";
 import React, {useContext} from "react";
 import AuthContext from "../contexts/AuthContext";
+import GlobalAudioPlayer from "../components/GlobalAudioPlayer";
 
 const Drawer = createDrawerNavigator();
 
@@ -12,6 +13,7 @@ function DrawerRoutes() {
     const {user} = useContext(AuthContext)
     return (
         <>
+
             <Drawer.Navigator drawerContent={props => <HeaderDrawer {...props} />} screenOptions={{
                 headerTintColor: Colors.text,
                 headerStyle: {

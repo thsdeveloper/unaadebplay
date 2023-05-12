@@ -16,7 +16,6 @@ interface PropsBanners {
     navigation: NavigationProp<ParamListBase>;
 }
 
-
 const BannerCarousel = ({banners, navigation}: PropsBanners) => {
     const [loading, setLoading] = useState(true);
     const [activeIndex, setActiveIndex] = useState(0);
@@ -30,8 +29,7 @@ const BannerCarousel = ({banners, navigation}: PropsBanners) => {
 
     const handleBannerPress = (item: BannerTypes) => {
         // Adicione a lógica de navegação aqui para redirecionar o usuário para uma tela específica
-        navigation.navigate('BannerDetails', { id: item.id });
-        console.log(`Banner sdsdf sdclicado: ${item.title}`);
+        navigation.navigate(item.page_route, { id: item.id });
     };
 
 

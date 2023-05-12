@@ -10,4 +10,5 @@ export interface RepertoriesTypes extends GenericItem {
     mp3: FilesTypes;
     category: string[]
     content: string
+    color: string
 }

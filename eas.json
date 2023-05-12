@@ -2,11 +2,6 @@
   "cli": {
     "version": ">= 3.7.2"
   },
-  "updates": {
-    "enabled": true,
-    "fallbackToCacheTimeout": 0,
-    "checkAutomatically": "ON_LOAD"
-  },
   "build": {
     "development": {
       "developmentClient": true,

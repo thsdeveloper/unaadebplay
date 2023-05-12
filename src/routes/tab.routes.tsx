@@ -67,6 +67,8 @@ function SettingsScreen() {
 function TabRoutes() {
     return (
         <>
+            <GlobalAudioPlayer />
+
             <Tab.Navigator screenOptions={{
                 tabBarIconStyle: {
                     borderStyle: "solid",

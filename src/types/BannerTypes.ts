@@ -6,5 +6,6 @@ export interface BannerTypes extends GenericItem {
     sort: number | null;
     date_created: Date | null;
     image: string;
-    description?: string;
+    description: string;
+    page_route: string;
 }

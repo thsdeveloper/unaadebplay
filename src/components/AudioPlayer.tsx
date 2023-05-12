@@ -1,18 +1,29 @@
-import React, {useState, useEffect, useContext} from 'react';
-import {TouchableOpacity, StyleSheet, Animated, Easing, Dimensions, ImageBackground} from 'react-native';
-import {Box, HStack, Text, IconButton, Slider, Flex, VStack} from 'native-base';
+import React, {useState, useEffect, useContext, useCallback} from 'react';
+import {
+    TouchableOpacity,
+    StyleSheet,
+    Animated,
+    Easing,
+    Dimensions,
+    ImageBackground,
+    useWindowDimensions
+} from 'react-native';
+import {Box, HStack, Text, IconButton, Slider, VStack, ScrollView, Image} from 'native-base';
 import {AntDesign, MaterialIcons} from '@expo/vector-icons';
 import {LinearGradient} from 'expo-linear-gradient';
 import {Audio} from 'expo-av';
 import {useAudioPlayer} from "../contexts/AudioPlayerContext";
 
-import {Image} from "./Image";
 import ConfigContext from "../contexts/ConfigContext";
+import colors from "../constants/colors";
+import {Sound} from "expo-av/build/Audio/Sound";
+import { useFocusEffect } from '@react-navigation/native';
+
 
 const {height: screenHeight} = Dimensions.get('window');
 
 const AudioPlayer = ({audioURI, onClose}) => {
-    const [sound, setSound] = useState(null);
+    const [sound, setSound] = useState<Sound>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [position, setPosition] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -22,15 +33,26 @@ const AudioPlayer = ({audioURI, onClose}) => {
     const config = useContext(ConfigContext);
 
     useEffect(() => {
-        if (audioURI) {
-            playSound();
-        }
+        loadSound();
+
         return () => {
             if (sound) {
                 sound.unloadAsync();
             }
         };
     }, [audioURI]);
+
+    useFocusEffect(
+        React.useCallback(() => {
+            const onUnload = async () => {
+                if (sound) {
+                    await sound.unloadAsync();
+                }
+            };
+
+            return () => onUnload();
+        }, [sound])
+    );
 
     const toggleExpanded = () => {
         setIsExpanded(!isExpanded);
@@ -43,106 +65,157 @@ const AudioPlayer = ({audioURI, onClose}) => {
     };
 
 
-    async function playSound() {
+    const loadSound = useCallback(async () => {
         if (sound) {
             await sound.unloadAsync();
         }
 
-        console.log('Loading Sound');
-        const {sound: newSound} = await Audio.Sound.createAsync(
-            {uri: audioURI},
-            { shouldPlay: true, staysActiveInBackground: true },
-        );
-        setSound(newSound);
+        try {
+            const { sound: newSound } = await Audio.Sound.createAsync(
+                { uri: audioURI },
+                { shouldPlay: true, staysActiveInBackground: true },
+            );
 
-        newSound.setOnPlaybackStatusUpdate((status) => {
-            setPosition(status.positionMillis);
-            setDuration(status.durationMillis);
-        });
+            console.log('Audio loaded successfully');  // log for debugging
 
-        console.log('Playing Sound');
-        await newSound.playAsync();
-        setIsPlaying(true);
-    }
+            setSound(newSound);
+            setIsPlaying(true);
 
-    async function pauseSound() {
-        if (sound) {
-            await sound.pauseAsync();
-            setIsPlaying(false);
+            newSound.setOnPlaybackStatusUpdate((status) => {
+                setPosition(status.positionMillis);
+                setDuration(status.durationMillis);
+            });
+        } catch (error) {
+            console.error('Error loading audio', error);  // log error for debugging
         }
-    }
+    }, [audioURI]);
 
-    async function stopSound() {
+
+
+    const playPauseSound = useCallback(async () => {
+        if (sound) {
+            if (isPlaying) {
+                await sound.pauseAsync();
+            } else {
+                await sound.playAsync();
+            }
+            setIsPlaying(!isPlaying);
+        }
+    }, [sound, isPlaying]);
+
+    const stopSound = useCallback(async () => {
         if (sound) {
             await sound.unloadAsync();
             setIsPlaying(false);
             setPosition(0);
             onClose();
         }
-    }
+    }, [sound, onClose]);
 
     async function handleSliderValueChange(value) {
         if (sound) {
-            await sound.setPositionAsync(value);
-            setPosition(value);
+            await sound.setPositionAsync(value * 1000);
+            setPosition(value * 1000);
         }
     }
+
+    const duracao = Math.round(duration / 1000)
+    const posicao = Math.round(position / 1000)
+
+    const window = useWindowDimensions();
+    const contentWidth = window.width;
+    const gradientColors = ['rgba(0,0,0,1.0)', 'rgba(0,0,0,0.9)', 'rgba(0,0,0,0.8)'];
+
 
     return (
         <Animated.View style={{height: heightAnimation}}>
             <ImageBackground
                 source={{uri: `${config.url_api}/assets/${album?.image_cover.filename_disk}`}} // Altere para a URL correta da imagem
-                style={[styles.container, {height: '100%'}]}
+                style={{height: '100%'}}
                 resizeMode="cover"
             >
-                <LinearGradient
-                    // Transparente no início e no final, escuro no centro
-                    colors={['rgba(0,0,0,1.0)', 'rgba(0,0,0,0.9)', 'rgba(0,0,0,0.8)']}
-                    style={{height: '100%'}}
-                >
+                <LinearGradient colors={gradientColors} style={{height: '100%'}}>
 
                     {/* Render your additional options here when expanded */}
                     {isExpanded && (
-                        <Box>
-                            <Box>
-                                <HStack space={4}>
-                                    <IconButton icon={<AntDesign name="down" size={24} color="white"/>}
-                                                onPress={toggleExpanded}/>
-                                    <IconButton
-                                        icon={<MaterialIcons name="close" size={24} color="white"/>}
-                                        onPress={stopSound}
-                                    />
-                                </HStack>
-                                <VStack alignItems="center">
-                                    <Image width={300} height={300} assetId={album?.image_cover.id} />
-                                </VStack>
-                            </Box>
+                        <>
+                            <HStack space={4} justifyContent={"space-between"}>
+                                <IconButton icon={<AntDesign name="down" size={24} color="white"/>}
+                                            onPress={toggleExpanded}/>
+                                <IconButton
+                                    icon={<MaterialIcons name="close" size={24} color="white"/>}
+                                    onPress={stopSound}
+                                />
+                            </HStack>
+                            <ScrollView>
+                                <Box>
+                                    <VStack alignItems="center">
+                                        <Image source={{uri: `${config.url_api}/assets/${album?.image_cover.id}`}} alt="Alternate Text" size="2xl"/>
+                                    </VStack>
+                                </Box>
+                                <Box pt={2}>
+                                    <Text fontSize={"2xl"} color={colors.text}
+                                          textAlign={"center"}>{album?.title}</Text>
+                                    <Text color={colors.text}
+                                          textAlign={"center"}>{album?.artist} - {album?.category[0]}</Text>
+                                </Box>
+                                <Box>
+                                    <HStack space={2} justifyContent="center" alignItems={"center"}
+                                            alignContent={'center'} textAlign={"center"}>
+                                        <Text color={colors.text}>{posicao}</Text>
 
-                            <Text>{album?.title}</Text>
-                            <Text>{album?.content}</Text>
-                            <Text color="white">{position / 1000}s / {duration / 1000}s</Text>
-                        </Box>
+                                        <Slider
+                                            w="3/4"
+                                            minValue={0}
+                                            maxValue={duracao}
+                                            value={posicao}
+                                            onChangeEnd={handleSliderValueChange}
+                                            step={1}
+                                        >
+                                            <Slider.Track>
+                                                <Slider.FilledTrack/>
+                                            </Slider.Track>
+                                            <Slider.Thumb/>
+                                        </Slider>
+
+                                        <Text color={colors.text}>{duracao}</Text>
+                                    </HStack>
+                                </Box>
+                                <HStack justifyContent="center" p={4}>
+                                    <TouchableOpacity onPress={playPauseSound}>
+                                        <Box backgroundColor={colors.text} rounded={"full"} p={2}>
+                                            <MaterialIcons
+                                                name={isPlaying ? 'pause' : 'play-arrow'}
+                                                size={40}
+                                                color={colors.accent}
+                                            />
+                                        </Box>
+                                    </TouchableOpacity>
+                                </HStack>
+                            </ScrollView>
+                        </>
                     )}
                     {/* Rest of the AudioPlayer layout */}
                     {!isExpanded && (
                         <TouchableOpacity onPress={toggleExpanded} activeOpacity={1}>
-                            <Box style={styles.container}>
+                            <Box>
                                 <HStack space={4} alignItems={"center"} pr={4}>
                                     <Box>
-                                        <Image width={16} height={16} assetId={album?.image_cover.id}/>
+                                        <Image source={{uri: `${config.url_api}/assets/${album?.image_cover.id}`}} alt="Alternate Text" size="16"/>
                                     </Box>
                                     <VStack flex={1} justifyContent="center">
                                         <Text color="white" fontWeight={"bold"}>{album?.title}</Text>
                                         <Text color="white">{album?.artist}</Text>
                                     </VStack>
                                     <VStack alignItems="center">
-                                        <TouchableOpacity onPress={isPlaying ? pauseSound : playSound}>
+                                        <TouchableOpacity onPress={playPauseSound}>
                                             <MaterialIcons
                                                 name={isPlaying ? 'pause' : 'play-arrow'}
                                                 size={40}
                                                 color="white"
                                             />
                                         </TouchableOpacity>
+
                                     </VStack>
                                 </HStack>
                             </Box>
@@ -153,11 +226,5 @@ const AudioPlayer = ({audioURI, onClose}) => {
         </Animated.View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        // backgroundColor: '#1DB954',
-    },
-});
 
 export default AudioPlayer;

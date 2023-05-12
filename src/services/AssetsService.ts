@@ -15,12 +15,10 @@ export async function getImageData(url: string): Promise<unknown> {
 
 export async function getAssetURI(fileId: string): Promise<string | null> {
     try {
-        console.log('getAssetURI Inicio')
         const response = await api.get(`/assets/${fileId}`);
-        console.log('getAssetURI >', response)
         return response.request.responseURL;
     } catch (error) {
-        console.error('Error fetching asset URI:', error.data.erros);
+        console.error('Error fetching asset URI:');
         return null;
     }
 }

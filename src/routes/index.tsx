@@ -3,7 +3,6 @@ import {useAuth} from "../contexts/AuthContext";
 
 import AuthRoutes from "./auth.routes";
 import DrawerRoutes from "./drawer.routes";
-import GlobalAudioPlayer from "../components/GlobalAudioPlayer";
 
 
 import {ActivityIndicator, View} from "react-native";

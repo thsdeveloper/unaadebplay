@@ -48,13 +48,16 @@ export default function Dashboard({navigation}: { navigation: any }) {
             <Box>
                 <BannerCarousel banners={banners} navigation={navigation} />
             </Box>
-            <Box flex={1} alignItems="center" justifyContent="center">
-                <VStack space={5}>
-                    <Button onPress={() => navigation.navigate('RepertoireList')}>
-                        Ver Lista de Repertórios
-                    </Button>
-                </VStack>
-            </Box>
+            <Stack space={"sm"} p={2} direction={"row"} alignItems={"center"}>
+                <Ionicons
+                    name={'notifications'}
+                    size={20}
+                    color={colors.secundary}
+                />
+                <Text fontWeight={'medium'} fontSize={'lg'}>
+                    Conheça a coordenação geral
+                </Text>
+            </Stack>
         </ScrollView>
     );
 }

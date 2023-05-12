@@ -30,8 +30,8 @@
       "url": "https://u.expo.dev/7a5a2114-b085-4afe-b2c7-a3cfec041131"
     },
     "android": {
-      "package": "br.com.unaadeb.undaadebplay",
-      "versionCode": 4
+      "package": "com.unaadebplay",
+      "versionCode": 3
     },
     "ios": {
       "bundleIdentifier": "br.com.unaadeb.undaadebplay",
