@@ -4,6 +4,8 @@ import axios from "axios";
 import api, {handleErrors} from "../services/api";
 import {UserTypes} from "../types/UserTypes";
 import {useToast} from "native-base";
+import AlertContext from "./AlertContext";
+import {showMessage} from "react-native-flash-message";
 
 interface Props {
     children: React.ReactNode;
@@ -25,6 +27,8 @@ const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 export const AuthProvider: React.FC<Props> = ({ children }) => {
     const [user, setUser] = useState<UserTypes | null>(null);
     const [loading, setLoading] = useState(false);
+    const alert = useContext(AlertContext)
+
     const toast = useToast()
 
     useEffect(() => {
@@ -58,8 +62,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             setUser(user);
 
         } catch (error) {
-            const message = handleErrors(error.response.data.errors);
-            toast.show({title: message, bgColor: 'red.500'});
+            const message = await handleErrors(error.response.data.errors);
+            alert.error(message)
         }
 
     }
@@ -68,7 +72,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         try {
             await api.post('/auth/password/request', {
                 email: email,
-                reset_url: "unaadebplay://reset-password"
+                reset_url: "https://unaadeb.app.br/reset-password"
             });
         } catch (error) {
             throw error;

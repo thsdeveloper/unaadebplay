@@ -16,6 +16,7 @@ import BannerDetails from "../pages/app/Dashboard/BannerDetails";
 import RepertoireListScreen from "../pages/app/Dashboard/RepertoireListScreen";
 import React from "react";
 import GlobalAudioPlayer from "../components/GlobalAudioPlayer";
+import FlashMessage from "react-native-flash-message";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -67,6 +68,7 @@ function SettingsScreen() {
 function TabRoutes() {
     return (
         <>
+            <FlashMessage position="top"/>
             <GlobalAudioPlayer />
 
             <Tab.Navigator screenOptions={{

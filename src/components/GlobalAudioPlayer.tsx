@@ -3,16 +3,16 @@ import {useAudioPlayer} from "../contexts/AudioPlayerContext";
 import AudioPlayer from "./AudioPlayer";
 
 const GlobalAudioPlayer = () => {
-    const { audioURI, setAudioURI } = useAudioPlayer();
+    const { albumID, setAlbumID } = useAudioPlayer();
 
-    if (!audioURI) {
+    if (!albumID) {
         return null;
     }
 
     return (
         <AudioPlayer
-            audioURI={audioURI}
-            onClose={() => setAudioURI(null)}
+            albumID={albumID}
+            onClose={() => setAlbumID(null)}
         />
     );
 };

@@ -15,9 +15,11 @@ export async function getItems<T extends GenericItem>(collectionName: string,  p
     }
 }
 
-export async function getItem<T extends GenericItem>(collectionName: string, id: number): Promise<T> {
+export async function getItem<T extends GenericItem>(collectionName: string, id: number, params?: Record<string, unknown>): Promise<T> {
     try {
-        const response = await api.get(`/items/${collectionName}/${id}`);
+        const response = await api.get(`/items/${collectionName}/${id}`, {
+            params: params,
+        });
         return response.data.data;
     } catch (error) {
         console.error(`Error fetching item with id ${id}:`, error);

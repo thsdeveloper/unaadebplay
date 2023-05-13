@@ -31,6 +31,8 @@ import CheckboxCustom from "../../components/Checkbox";
 import {Image} from "../../components/Image";
 import {useAuth} from "../../contexts/AuthContext";
 import {handleErrors} from "../../services/api";
+import colors from "../../constants/colors";
+import AlertContext from "../../contexts/AlertContext";
 
 
 const signUpSchema = Yup.object({
@@ -73,7 +75,7 @@ const FormSigUpUser = () => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string>('');
     const [isTermsModalVisible, setIsTermsModalVisible] = useState(false);
-    const toast = useToast()
+    const alert = useContext(AlertContext)
 
     useEffect(() => {
         loadSectors(setSectors, setIsLoading, setError);
@@ -81,7 +83,6 @@ const FormSigUpUser = () => {
         async function fetchData() {
             const infosLegalDocuments = await getItems<LegalDocumentsTypes>('legal_documents');
             setLegalDocuments(infosLegalDocuments)
-            // Faça algo com os usuários aqui, por exemplo, atualize o estado
         }
 
         fetchData();
@@ -108,16 +109,15 @@ const FormSigUpUser = () => {
         try {
             const response = await createUser(user);
             if(response?.status === 200){
-                //Realiza o login do usuario
                 await signIn(dataUserForm.email, dataUserForm.password);
-                toast.show({ title: `Usuário ${user.first_name} cadastrado com sucesso`, bgColor: 'green.500' });
+                alert.success(`Usuário ${user.first_name} cadastrado com sucesso`)
             }
         } catch (error) {
             if (error instanceof AxiosError) {
                 const message = handleErrors(error.response.data.errors);
-                toast.show({ title: message, bgColor: 'red.500' });
+                alert.error(message)
             } else {
-                // Trate outros tipos de erros, se necessário
+                alert.error('Error: 748, Entre em contato com o administrador!')
             }
         } finally {
             setLoading(false)
@@ -127,19 +127,19 @@ const FormSigUpUser = () => {
     const keyExtractor = (_: any, index: number) => index.toString();
 
     const renderItem = () => (
-        <VStack p={4} pt={8}>
-            <Box alignItems="center" justifyContent="center">
+        <VStack>
+            <Box backgroundColor={colors.accent} borderRadius={10} p={4} mt={2}>
                 <Image assetId={config.project_logo}
                        alt={'title'}
-                       size="xs"
-                       width={400}
-                       height={80}
+                       width={'100%'}
+                       height={'10'}
                        resizeMode="contain"/>
+                <Heading mt="1" textAlign={"center"} color="gray.100" fontWeight="medium" size="xs" px={4}>
+                    {t('description_sign_up')}
+                </Heading>
             </Box>
 
-            <Heading mt="1" textAlign={"center"} color="gray.500" fontWeight="medium" size="xs" px={4}>
-                {t('description_sign_up')}
-            </Heading>
+
 
             <VStack space={3} mt="5" p={4}>
                 <Controller

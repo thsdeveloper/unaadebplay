@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { MessageType} from "react-native-flash-message"
+import { MessageType, showMessage} from "react-native-flash-message"
 
 interface AlertContextData {
     type: MessageType
@@ -33,16 +33,31 @@ const AlertProvider: React.FC<AlertProviderProps> = ({ children }: AlertProvider
                     setMessage(text)
                     setAlertType('success')
                     time && setDuration(time)
+                    showMessage({
+                        message: text,
+                        type: 'success',
+                        duration: time || duration,
+                    });
                 },
                 error: (text: string, time?: number) => {
                     setMessage(text)
                     setAlertType('danger')
                     time && setDuration(time)
+                    showMessage({
+                        message: text,
+                        type: 'danger',
+                        duration: time || duration,
+                    });
                 },
                 warning: (text: string, time?: number) => {
                     setMessage(text)
                     setAlertType('warning')
                     time && setDuration(time)
+                    showMessage({
+                        message: text,
+                        type: 'warning',
+                        duration: time || duration,
+                    });
                 },
                 clear: () => {
                     setMessage('')

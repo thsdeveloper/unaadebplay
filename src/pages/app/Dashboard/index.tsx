@@ -1,12 +1,13 @@
 import React, {useContext, useEffect, useState} from "react";
-import {View, StyleSheet, RefreshControl} from "react-native";
-import {Box, Button, Heading, Text, FlatList, HStack, Avatar, VStack, Spacer, ScrollView, Stack} from "native-base";
+import {StyleSheet, RefreshControl} from "react-native";
+import {Box, Text, ScrollView, Stack} from "native-base";
 import BannerCarousel from "../../../components/BannerCarousel";
 import {getItems} from "../../../services/items";
 import {BannerTypes} from "../../../types/BannerTypes";
 import TranslationContext from "../../../contexts/TranslationContext";
 import {Ionicons} from "@expo/vector-icons";
 import colors from "../../../constants/colors";
+import AlertContext from "../../../contexts/AlertContext";
 
 const styles = StyleSheet.create({
     container: {flex: 1, justifyContent: 'center'}
@@ -16,6 +17,7 @@ export default function Dashboard({navigation}: { navigation: any }) {
     const [refreshing, setRefreshing] = useState(false);
     const [banners, setBanners] = useState<BannerTypes[]>([]);
     const {t} = useContext(TranslationContext);
+    const alert = useContext(AlertContext);
 
 
     useEffect(() => {

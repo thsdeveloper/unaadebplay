@@ -76,12 +76,19 @@ const setTokenStorage = async (access_token: string, refresh_token: string, expi
     }
 };
 
-export function handleErrors(errors: any[]) {
-    return errors.map((error) => {
-        const code = error.extensions?.code || 'UNKNOWN';
+export function handleErrors(errors: any[]): string {
+    // Verifique se a matriz de erros não está vazia
+    if (errors.length > 0) {
+        // Pegue o primeiro erro
+        const firstError = errors[0];
+        const code = firstError.extensions?.code || 'UNKNOWN';
+        // Retorne a mensagem de erro correspondente
         return ERROR_MESSAGES[code] || 'Ocorreu um erro desconhecido.';
-    });
+    }
+    // Retorne uma mensagem de erro padrão se a matriz de erros estiver vazia
+    return 'Nenhum erro especificado.';
 }
+
 
 
 export default api;

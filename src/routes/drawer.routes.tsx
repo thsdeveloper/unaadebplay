@@ -5,6 +5,7 @@ import Colors from "../constants/colors";
 import React, {useContext} from "react";
 import AuthContext from "../contexts/AuthContext";
 import GlobalAudioPlayer from "../components/GlobalAudioPlayer";
+import FlashMessage from "react-native-flash-message";
 
 const Drawer = createDrawerNavigator();
 
@@ -13,7 +14,6 @@ function DrawerRoutes() {
     const {user} = useContext(AuthContext)
     return (
         <>
-
             <Drawer.Navigator drawerContent={props => <HeaderDrawer {...props} />} screenOptions={{
                 headerTintColor: Colors.text,
                 headerStyle: {

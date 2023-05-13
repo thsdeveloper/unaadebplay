@@ -1,30 +1,36 @@
 import { Image as NativeBaseImage, IImageProps, Skeleton } from 'native-base';
-import { useEffect, useState } from 'react';
-import { getImageData } from '../services/AssetsService';
+import {useContext, useEffect, useState} from 'react';
+import ConfigContext from "../contexts/ConfigContext";
 
 type Props = IImageProps & {
     assetId: string | undefined;
-    width: number;
-    height: number;
+    width?: string | undefined;
+    height?: string | undefined;
 };
 
-export function Image({ assetId = undefined, width, height, ...rest }: Props) {
+export function Image({ assetId = undefined, width = undefined, height = undefined, ...rest }: Props) {
     const [image, setImage] = useState<string | undefined>(undefined);
     const [loading, setLoading] = useState(true);
+    const config = useContext(ConfigContext);
 
     useEffect(() => {
+        if (!assetId) {
+            setLoading(false);
+            return;
+        }
+
         async function loadImage() {
             try {
-                const base64data = await getImageData(`/assets/${assetId}`);
-                setImage(base64data);
+                setImage(`${config.url_api}/assets/${assetId}`);
             } catch (e) {
-                setImage('https://www.madeireiraestrela.com.br/images/joomlart/demo/default.jpg');
+                setImage(`${config.url_api}/assets/${config.avatar_default}`);
             } finally {
                 setLoading(false);
             }
         }
+
         loadImage();
-    }, []);
+    }, [assetId]);
 
     return loading ? (
         <Skeleton width={width} height={height} />

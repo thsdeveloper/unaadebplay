@@ -11,6 +11,7 @@ import LottieView from 'lottie-react-native';
 import TranslationContext from "../../contexts/TranslationContext";
 import AuthContext from "../../contexts/AuthContext";
 import {emailExists} from "../../services/user";
+import AlertContext from "../../contexts/AlertContext";
 
 const forgetPasswordSchema = Yup.object({
     email: Yup.string()
@@ -26,6 +27,7 @@ export default function ForgetPassword() {
     const [loading, setLoading] = useState(false);
     const {requestPasswordReset} = useContext(AuthContext)
     const {t} = useContext(TranslationContext);
+    const alert = useContext(AlertContext)
 
     const {
         control,
@@ -41,26 +43,15 @@ export default function ForgetPassword() {
 
         try {
             if (!(await emailExists(data.email))) {
-                toast.show({
-                    title: "Usuário não encontrado",
-                    description: "O email informado não está associado a uma conta existente. Verifique se digitou o email corretamente ou crie uma nova conta.",
-                    bgColor: "red.500",
-                    duration: 5000,
-                });
+                alert.error('O email informado não está associado a uma conta existente. Verifique se digitou o email corretamente ou crie uma nova conta.')
                 setLoading(false);
                 return;
             }
 
             await requestPasswordReset(data.email);
-            toast.show({
-                title: `Solicitação de redefinição de senha enviada para ${data.email}`,
-                bgColor: "green.500",
-            });
+            alert.success(`Solicitação de redefinição de senha enviada para ${data.email}`)
         } catch (error) {
-            toast.show({
-                title: `Ocorreu um erro ao processar a solicitação`,
-                bgColor: "red.500",
-            });
+            alert.success('Ocorreu um erro ao processar a solicitação')
         } finally {
             setLoading(false);
         }
@@ -69,8 +60,8 @@ export default function ForgetPassword() {
 
     return (
         <View>
-            <Box p={10}>
-                <Box>
+            <VStack p={10}>
+                <Box alignItems="center" justifyContent="center">
                     <LottieView
                         autoPlay
                         ref={animation}
@@ -87,7 +78,7 @@ export default function ForgetPassword() {
                         {t('reset_password_description')}
                     </Text>
                 </Box>
-                <VStack space={4}>
+                <VStack space={4} pt={4}>
                     <Controller
                         control={control}
                         name={"email"}
@@ -112,7 +103,7 @@ export default function ForgetPassword() {
                         isLoadingText="Enviando..."
                     />
                 </VStack>
-            </Box>
+            </VStack>
         </View>
     );
 }

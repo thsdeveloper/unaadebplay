@@ -11,7 +11,7 @@ export function Input({errorMessage = null, isInvalid, ...rest}: Props) {
     return (
         <FormControl isInvalid={invalid}>
             <NativeBaseInput
-                fontSize={'md'}
+                size={'xl'}
                 isInvalid={invalid}
                 _invalid={{
                     borderWidth: 1

@@ -1,6 +1,6 @@
 import React, {useState, useEffect, useContext} from 'react';
 import {FlatList, TouchableOpacity} from 'react-native';
-import {Box, Text, VStack, HStack, Divider, Spinner, Stack, Skeleton, Center} from 'native-base';
+import {Box, Text, VStack, Divider, Spinner, Stack} from 'native-base';
 import {getItems} from '../../../services/items';
 import {RepertoriesTypes} from '../../../types/RepertoriesTypes';
 import {getAssetURI} from "../../../services/AssetsService";
@@ -9,7 +9,6 @@ import TranslationContext from "../../../contexts/TranslationContext";
 import { FontAwesome } from '@expo/vector-icons';
 import colors from "../../../constants/colors";
 import {useAudioPlayer} from "../../../contexts/AudioPlayerContext";
-import GlobalAudioPlayer from "../../../components/GlobalAudioPlayer";
 import SkeletonItem from "../../../components/SkeletonItem";
 
 
@@ -18,7 +17,7 @@ const RepertoireListScreen = () => {
     const [isLoadingItemList, setIsLoadingItemList] = useState(false);
     const [isLoadingList, setIsLoadingList] = useState(false);
     const {t} = useContext(TranslationContext);
-    const { setAudioURI, setAlbum } = useAudioPlayer();
+    const { setAlbumID } = useAudioPlayer();
 
     useEffect(() => {
         const loadRepertories = async () => {
@@ -35,9 +34,7 @@ const RepertoireListScreen = () => {
 
     const handleAudioPress = async (album: RepertoriesTypes) => {
         setIsLoadingItemList(true);
-        const uri = await getAssetURI(album.mp3.id);
-        setAudioURI(uri);
-        setAlbum(album);
+        setAlbumID(album.id);
         setIsLoadingItemList(false);
     };
 
