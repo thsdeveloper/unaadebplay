@@ -8,4 +8,5 @@ export interface BannerTypes extends GenericItem {
     image: string;
     description: string;
     page_route: string;
+    id_route: string;
 }

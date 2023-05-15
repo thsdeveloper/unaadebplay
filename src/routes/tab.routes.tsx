@@ -12,11 +12,13 @@ import Contact from "../pages/app/Contact";
 import Settings from "../pages/app/Settings";
 
 import News from "../pages/app/News";
+import Events from "../pages/app/Events";
 import BannerDetails from "../pages/app/Dashboard/BannerDetails";
 import RepertoireListScreen from "../pages/app/Dashboard/RepertoireListScreen";
 import React from "react";
 import GlobalAudioPlayer from "../components/GlobalAudioPlayer";
 import FlashMessage from "react-native-flash-message";
+import EventDetailsPage from "../pages/app/Events/EventDetailsPage";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -60,6 +62,17 @@ function SettingsScreen() {
             headerShown: false,
         }}>
             <Stack.Screen name="Settings" component={Settings}/>
+        </Stack.Navigator>
+    );
+}
+
+function EventosScreen() {
+    return (
+        <Stack.Navigator screenOptions={{
+            headerShown: false,
+        }}>
+            <Stack.Screen name="Events" component={Events}/>
+            <Stack.Screen name="EventsDetails" component={EventDetailsPage}/>
         </Stack.Navigator>
     );
 }
@@ -111,10 +124,10 @@ function TabRoutes() {
                         )
                     }
                 }/>
-                <Tab.Screen name="SettingsScreen" component={SettingsScreen} options={
+                <Tab.Screen name="SettingsScreen" component={EventosScreen} options={
                     {
                         headerShown: false,
-                        tabBarLabel: 'Agenda',
+                        tabBarLabel: 'Eventos',
                         tabBarIcon: ({color, size}) => (
                             <FontAwesome name={'calendar'} color={color} size={size}/>
                         )

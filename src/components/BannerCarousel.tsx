@@ -29,7 +29,7 @@ const BannerCarousel = ({banners, navigation}: PropsBanners) => {
 
     const handleBannerPress = (item: BannerTypes) => {
         // Adicione a lógica de navegação aqui para redirecionar o usuário para uma tela específica
-        navigation.navigate(item.page_route, { id: item.id });
+        navigation.navigate(item.page_route, { id: item.id_route });
     };
 
 

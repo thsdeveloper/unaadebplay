@@ -171,7 +171,7 @@ const AudioPlayer = ({albumID, onClose}) => {
                             <HStack space={2} justifyContent="center">
                                 <Spinner accessibilityLabel="Loading posts" />
                                 <Heading color="primary.500" fontSize="md">
-                                    Carregando música...
+                                    Aguarde...
                                 </Heading>
                             </HStack>
                         </Box>
