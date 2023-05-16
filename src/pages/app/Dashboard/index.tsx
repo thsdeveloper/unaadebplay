@@ -60,6 +60,16 @@ export default function Dashboard({navigation}: { navigation: any }) {
                     {t('text_section_diretoria')}
                 </Text>
             </Stack>
+            <Stack space={"sm"} p={2} direction={"row"} alignItems={"center"}>
+                <FontAwesome5
+                    name={'users'}
+                    size={20}
+                    color={colors.secundary}
+                />
+                <Text fontWeight={'medium'} fontSize={'lg'}>
+                    {t('text_section_diretoria')}
+                </Text>
+            </Stack>
         </ScrollView>
     );
 }
