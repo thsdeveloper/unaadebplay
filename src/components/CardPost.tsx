@@ -2,23 +2,24 @@ import {Box, AspectRatio, Stack, Heading, Text, Pressable} from 'native-base'
 import React, {useEffect, useState} from "react";
 import {formatTime} from "../utils/directus";
 import {Image} from "./Image";
-import {Avatar} from "./Avatar";
-import {NewsItem} from "../services/news";
 import {getUserId} from "../services/user";
-import {ReponseUser} from "../services/auth";
+import {PostsTypes} from "../types/PostsTypes";
+import {UserTypes} from "../types/UserTypes";
+import {useNavigation} from "@react-navigation/native";
 
 type Props = {
-    post: NewsItem;
+    post: PostsTypes;
 }
 
-export function CardNews({post}: Props) {
-    const [user, setUser] = useState<ReponseUser>();
+export function CardPost({post}: Props) {
+    const [user, setUser] = useState<UserTypes>();
+    const navigation = useNavigation();
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const fetchedUser = await getUserId(post.user_created);
-                setUser(fetchedUser);
+                const responseUser = await getUserId(post.user_created);
+                setUser(responseUser);
             } catch (error) {
                 console.error("Error fetching user:", error);
             }
@@ -27,9 +28,14 @@ export function CardNews({post}: Props) {
         fetchData();
     }, [post.user_created]);
 
+    const handlePostPress = async () => {
+        // @ts-ignore
+        navigation.navigate('PostsDetails', {id: post.id})
+    };
+
 
     return (
-        <Pressable>
+        <Pressable onPress={() => handlePostPress()}>
             {({isHovered, isFocused, isPressed}) => {
                 return (
                     <Box m={'2'}>
@@ -52,15 +58,12 @@ export function CardNews({post}: Props) {
                                     </Text>
                                 </Box>
                                 <Box flex={1} flexDirection={'row'} alignItems={'center'}>
-                                   <Box pr={2}>
-                                       <Avatar assetId={user?.avatar} size={'sm'}/>
-                                   </Box>
                                     <Box>
                                         <Text color="coolGray.400" fontWeight="600" lineHeight={'xs'}>
                                            Publicador por: {user?.first_name}
                                         </Text>
                                         <Text color="coolGray.400" fontWeight="400">
-                                            Data: {formatTime(post.date_created)}
+                                            Data: {formatTime(post.date_created, 'DD/MM/YYYY')}
                                         </Text>
                                     </Box>
                                 </Box>

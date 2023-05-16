@@ -7,9 +7,43 @@ import 'react-native-gesture-handler';
 import {ConfigProvider} from "./src/contexts/ConfigContext";
 import {TranslationProvider} from "./src/contexts/TranslationContext";
 import {AudioPlayerProvider} from "./src/contexts/AudioPlayerContext";
-import React from "react";
+import { Alert } from 'react-native';
+import * as Updates from 'expo-updates';
+import {useEffect} from "react";
 
 export default function App() {
+
+    useEffect(() => {
+        checkForUpdate();
+    }, []);
+
+    const checkForUpdate = async () => {
+        try {
+            const update = await Updates.checkForUpdateAsync();
+            if (update.isAvailable) {
+                Alert.alert(
+                    "Nova atualização disponível",
+                    "Deseja atualizar o aplicativo agora?",
+                    [
+                        {
+                            text: "Sim",
+                            onPress: async () => {
+                                await Updates.fetchUpdateAsync();
+                                // ... atualiza o aplicativo ...
+                                await Updates.reloadAsync();
+                            }
+                        },
+                        {
+                            text: "Não",
+                        }
+                    ]
+                );
+            }
+        } catch (e) {
+            // tratar erro
+        }
+    };
+
     return (
         <>
             <NativeBaseProvider>

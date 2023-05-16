@@ -59,8 +59,7 @@ const getAccessToken = async () => {
 
 const getRefreshToken = async () => {
     try {
-        const refresh_token = await AsyncStorage.getItem('@UNAADEBAuth:refresh_token');
-        return refresh_token;
+        return await AsyncStorage.getItem('@UNAADEBAuth:refresh_token');
     } catch (error) {
         console.error(error);
     }

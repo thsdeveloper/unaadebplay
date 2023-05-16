@@ -3,7 +3,6 @@ import {FlatList, TouchableOpacity} from 'react-native';
 import {Box, Text, VStack, Divider, Spinner, Stack} from 'native-base';
 import {getItems} from '../../../services/items';
 import {RepertoriesTypes} from '../../../types/RepertoriesTypes';
-import {getAssetURI} from "../../../services/AssetsService";
 import {Image} from "../../../components/Image";
 import TranslationContext from "../../../contexts/TranslationContext";
 import { FontAwesome } from '@expo/vector-icons';
@@ -13,7 +12,7 @@ import SkeletonItem from "../../../components/SkeletonItem";
 
 
 const RepertoireListScreen = () => {
-    const [repertoires, setRepertoires] = useState<RepertoriesTypes>();
+    const [repertoires, setRepertoires] = useState<RepertoriesTypes[]>();
     const [isLoadingItemList, setIsLoadingItemList] = useState(false);
     const [isLoadingList, setIsLoadingList] = useState(false);
     const {t} = useContext(TranslationContext);
@@ -22,10 +21,10 @@ const RepertoireListScreen = () => {
     useEffect(() => {
         const loadRepertories = async () => {
             setIsLoadingList(true)
-            const response = await getItems<RepertoriesTypes>('repertorios', {
+            const responseRepertories = await getItems<RepertoriesTypes>('repertorios', {
                 fields: '*.*,mp3.*',
             });
-            setRepertoires(response);
+            setRepertoires(responseRepertories);
             setIsLoadingList(false)
         };
 
@@ -42,7 +41,7 @@ const RepertoireListScreen = () => {
         <TouchableOpacity onPress={() => handleAudioPress(item)}>
             <Stack direction="row" space={"sm"} p={2}>
                 <Box>
-                    <Image width={20} height={20} assetId={item.image_cover.id}/>
+                    <Image width={'20'} height={'20'} assetId={item.image_cover.id}/>
                 </Box>
                 <Box>
                     <VStack>
@@ -58,6 +57,7 @@ const RepertoireListScreen = () => {
         </TouchableOpacity>
     );
 
+    // @ts-ignore
     return (
         <Box flex={1} bg="white">
             <Stack space={"sm"} p={2} direction={"row"} alignItems={"center"}>

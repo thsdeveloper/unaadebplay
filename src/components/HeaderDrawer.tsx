@@ -22,6 +22,7 @@ export function HeaderDrawer(props) {
             const avatarId = (user && user.avatar) ? user.avatar : idAvatar;
 
             const base64data = await getImageData(`/assets/${avatarId}`);
+            // @ts-ignore
             setAvatar(base64data)
         }
 

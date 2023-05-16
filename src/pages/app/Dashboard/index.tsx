@@ -5,7 +5,7 @@ import BannerCarousel from "../../../components/BannerCarousel";
 import {getItems} from "../../../services/items";
 import {BannerTypes} from "../../../types/BannerTypes";
 import TranslationContext from "../../../contexts/TranslationContext";
-import {Ionicons} from "@expo/vector-icons";
+import {Ionicons, FontAwesome5} from "@expo/vector-icons";
 import colors from "../../../constants/colors";
 import AlertContext from "../../../contexts/AlertContext";
 
@@ -44,20 +44,20 @@ export default function Dashboard({navigation}: { navigation: any }) {
                     color={colors.secundary}
                 />
                 <Text fontWeight={'medium'} fontSize={'lg'}>
-                    Descubra o que está rolando!
+                    {t('text_section_banner')}
                 </Text>
             </Stack>
             <Box>
                 <BannerCarousel banners={banners} navigation={navigation} />
             </Box>
             <Stack space={"sm"} p={2} direction={"row"} alignItems={"center"}>
-                <Ionicons
-                    name={'notifications'}
+                <FontAwesome5
+                    name={'users'}
                     size={20}
                     color={colors.secundary}
                 />
                 <Text fontWeight={'medium'} fontSize={'lg'}>
-                    Conheça a coordenação geral
+                    {t('text_section_diretoria')}
                 </Text>
             </Stack>
         </ScrollView>

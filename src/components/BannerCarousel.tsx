@@ -44,15 +44,15 @@ const BannerCarousel = ({banners, navigation}: PropsBanners) => {
                 <Image
                     borderRadius={10}
                     assetId={item.image}
-                    width={width}
-                    height={height}
+                    width={String(width)}
+                    height={String(height)}
                     resizeMode="cover"
                 />
                 <LinearGradient
                     colors={['transparent', 'rgba(0, 0, 0, 0.8)']}
                     style={styles.textBackground}
                 />
-                <Box position={"absolute"} bottom={4} left={4}>
+                <Box position={"absolute"} bottom={4} left={4} right={4}>
                     <Text style={styles.bannerTitle}>{item.title}</Text>
                     <Text style={styles.bannerDescription}>{item.description}</Text>
                 </Box>

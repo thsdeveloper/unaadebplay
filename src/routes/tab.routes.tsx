@@ -1,6 +1,4 @@
 import Dashboard from '../pages/app/Dashboard';
-import ForgetPassword from '../pages/ForgetPassword';
-import About from "../pages/app/About";
 import {MaterialIcons, FontAwesome5, FontAwesome} from '@expo/vector-icons'
 import Colors from '../constants/colors'
 
@@ -11,14 +9,14 @@ import {createDrawerNavigator} from '@react-navigation/drawer'
 import Contact from "../pages/app/Contact";
 import Settings from "../pages/app/Settings";
 
-import News from "../pages/app/News";
 import Events from "../pages/app/Events";
-import BannerDetails from "../pages/app/Dashboard/BannerDetails";
 import RepertoireListScreen from "../pages/app/Dashboard/RepertoireListScreen";
 import React from "react";
 import GlobalAudioPlayer from "../components/GlobalAudioPlayer";
 import FlashMessage from "react-native-flash-message";
 import EventDetailsPage from "../pages/app/Events/EventDetailsPage";
+import PostsPage from "../pages/app/Posts";
+import PostDetailsPage from "../pages/app/Posts/PostDetailsPage";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -39,43 +37,39 @@ function DashboardScreen() {
             <Stack.Navigator>
                 <Stack.Screen name="Home" component={Dashboard} options={{headerShown: false}}/>
                 <Stack.Screen name="Contact" component={Contact} options={{headerShown: false}}/>
-                <Stack.Screen name="BannerDetails" component={BannerDetails} options={{headerShown: false}}/>
                 <Stack.Screen name="RepertoireList" component={RepertoireListScreen} options={{headerShown: false}}/>
             </Stack.Navigator>
         </>
     );
 }
 
-function NewsScreen() {
+function PostsScreen() {
     return (
-        <Stack.Navigator screenOptions={{
-            headerShown: false,
-        }}>
-            <Stack.Screen name="newss" component={News}/>
-        </Stack.Navigator>
-    );
-}
-
-function SettingsScreen() {
-    return (
-        <Stack.Navigator screenOptions={{
-            headerShown: false,
-        }}>
-            <Stack.Screen name="Settings" component={Settings}/>
+        <Stack.Navigator screenOptions={{headerShown: false}}>
+            <Stack.Screen name="Posts" component={PostsPage}/>
+            <Stack.Screen name="PostsDetails" component={PostDetailsPage}/>
         </Stack.Navigator>
     );
 }
 
 function EventosScreen() {
     return (
-        <Stack.Navigator screenOptions={{
-            headerShown: false,
-        }}>
+        <Stack.Navigator screenOptions={{headerShown: false}}>
             <Stack.Screen name="Events" component={Events}/>
             <Stack.Screen name="EventsDetails" component={EventDetailsPage}/>
         </Stack.Navigator>
     );
 }
+
+function SettingsScreen() {
+    return (
+        <Stack.Navigator screenOptions={{headerShown: false}}>
+            <Stack.Screen name="Settings" component={Settings}/>
+        </Stack.Navigator>
+    );
+}
+
+
 
 
 function TabRoutes() {
@@ -115,7 +109,7 @@ function TabRoutes() {
                         )
                     }
                 }/>
-                <Tab.Screen name="News" component={NewsScreen} options={
+                <Tab.Screen name="News" component={PostsScreen} options={
                     {
                         headerShown: false,
                         tabBarLabel: 'Notícias',

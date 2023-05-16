@@ -11,7 +11,7 @@ export async function getItems<T extends GenericItem>(collectionName: string,  p
         });
         return response.data.data;
     } catch (error) {
-        console.error('Error fetching items:', error);
+        console.error(`Error fetching ${collectionName}:`, error);
     }
 }
 

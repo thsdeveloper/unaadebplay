@@ -55,7 +55,7 @@ const EventPage = () => {
 
 
     const handleEventPress = async (event: EventsTypes) => {
-        navigation.navigate('EventsDetails', {event})
+        navigation.navigate('EventsDetails', {id: event.id})
     };
 
     const renderItem = ({item}: { item: EventsTypes }) => (

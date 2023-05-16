@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "UnaadebPlay",
+    "name": "Unaadeb Play",
     "slug": "unaadebplay",
     "version": "1.0.2",
     "scheme": "unaadebplay",
@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#E51C44"
     },
     "assetBundlePatterns": [
       "**/*"
