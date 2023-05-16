@@ -23,8 +23,6 @@ export default function News({navigation}: NewsProps) {
     const [error, setError] = useState<string>('');
     const toast = useToast();
     const {t} = useContext(TranslationContext);
-
-
     const handleRefresh = async () => {
         setRefreshing(true);
         await loadNews(setNews, setIsLoading, setError);
@@ -37,7 +35,7 @@ export default function News({navigation}: NewsProps) {
 
     useEffect(() => {
         if (error) {
-            toast.show({ title: error, bgColor: 'red.500', duration: 5000, placement: 'top' });
+            toast.show({ title: error, bgColor: 'red.400', duration: 5000, placement: 'top' });
         }
     }, [error]);
 
