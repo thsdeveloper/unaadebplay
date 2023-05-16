@@ -29,14 +29,12 @@ const BannerCarousel = ({banners, navigation}: PropsBanners) => {
 
     const handleBannerPress = (item: BannerTypes) => {
         // Adicione a lógica de navegação aqui para redirecionar o usuário para uma tela específica
-        navigation.navigate(item.page_route, { id: item.id_route });
+        // navigation.navigate(item.page_route, { id: item.id_route })
+        navigation.navigate(item.page_route, { screen: item.screen, params: { id: item.params_id }});
     };
-
-
 
     const width = screenWidth * 0.8;
     const height = 120;
-
 
     const renderItem = ({item}: any) => (
         <Pressable onPress={() => handleBannerPress(item)} ml={2}>

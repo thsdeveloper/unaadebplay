@@ -23,14 +23,6 @@ const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
 
 
-function DrawerRoutes() {
-    return (
-        <Drawer.Navigator>
-            <Drawer.Screen name="Dashboard" component={Dashboard}/>
-        </Drawer.Navigator>
-    );
-}
-
 function DashboardScreen() {
     return (
         <>
@@ -70,8 +62,6 @@ function SettingsScreen() {
 }
 
 
-
-
 function TabRoutes() {
     return (
         <>
@@ -109,7 +99,7 @@ function TabRoutes() {
                         )
                     }
                 }/>
-                <Tab.Screen name="News" component={PostsScreen} options={
+                <Tab.Screen name="Noticias" component={PostsScreen} options={
                     {
                         headerShown: false,
                         tabBarLabel: 'Notícias',
@@ -118,7 +108,7 @@ function TabRoutes() {
                         )
                     }
                 }/>
-                <Tab.Screen name="SettingsScreen" component={EventosScreen} options={
+                <Tab.Screen name="Eventos" component={EventosScreen} options={
                     {
                         headerShown: false,
                         tabBarLabel: 'Eventos',
@@ -127,7 +117,7 @@ function TabRoutes() {
                         )
                     }
                 }/>
-                <Tab.Screen name="media" component={SettingsScreen} options={
+                <Tab.Screen name="Configuracoes" component={SettingsScreen} options={
                     {
                         headerShown: false,
                         tabBarLabel: 'Configurações',
