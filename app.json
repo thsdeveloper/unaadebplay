@@ -2,7 +2,7 @@
   "expo": {
     "name": "Unaadeb Play",
     "slug": "unaadebplay",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "scheme": "unaadebplay",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -31,7 +31,7 @@
     },
     "android": {
       "package": "com.unaadebplay",
-      "versionCode": 4
+      "versionCode": 5
     },
     "ios": {
       "bundleIdentifier": "br.com.unaadeb.undaadebplay",
