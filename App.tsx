@@ -7,42 +7,41 @@ import 'react-native-gesture-handler';
 import {ConfigProvider} from "./src/contexts/ConfigContext";
 import {TranslationProvider} from "./src/contexts/TranslationContext";
 import {AudioPlayerProvider} from "./src/contexts/AudioPlayerContext";
-import { Alert } from 'react-native';
-import * as Updates from 'expo-updates';
-import {useEffect} from "react";
+import * as SplashScreen from 'expo-splash-screen';
+import {useEffect, useState} from "react";
+import {getConfig} from "./src/services/config";
 
 export default function App() {
+    const [appIsReady, setAppIsReady] = useState(false);
+    const [config, setConfig] = useState({});
 
     useEffect(() => {
-        checkForUpdate();
+        async function prepare() {
+            try {
+                // Mantém a tela de splash enquanto estamos preparando os recursos
+                await SplashScreen.preventAutoHideAsync();
+
+                // Carrega todas as configurações
+                const configData = await getConfig();
+                setConfig(configData);
+            } catch (e) {
+                console.warn(e);
+            } finally {
+                setAppIsReady(true);
+            }
+        }
+        prepare();
     }, []);
 
-    const checkForUpdate = async () => {
-        try {
-            const update = await Updates.checkForUpdateAsync();
-            if (update.isAvailable) {
-                Alert.alert(
-                    "Nova atualização disponível",
-                    "Deseja atualizar o aplicativo agora?",
-                    [
-                        {
-                            text: "Sim",
-                            onPress: async () => {
-                                await Updates.fetchUpdateAsync();
-                                // ... atualiza o aplicativo ...
-                                await Updates.reloadAsync();
-                            }
-                        },
-                        {
-                            text: "Não",
-                        }
-                    ]
-                );
-            }
-        } catch (e) {
-            // tratar erro
+    useEffect(() => {
+        if (appIsReady) {
+            SplashScreen.hideAsync();
         }
-    };
+    }, [appIsReady]);
+
+    if (!appIsReady) {
+        return null;
+    }
 
     return (
         <>
@@ -51,7 +50,7 @@ export default function App() {
                 <NavigationContainer>
                     <AlertProvider>
                         <AuthProvider>
-                            <ConfigProvider>
+                            <ConfigProvider value={config}>
                                 <TranslationProvider>
                                     <AudioPlayerProvider>
                                         <Routes/>

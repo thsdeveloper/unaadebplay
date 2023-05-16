@@ -9,19 +9,22 @@ const ConfigContext = createContext<ConfigContextData>({});
 
 interface ConfigProviderProps {
     children: ReactNode;
+    value?: ConfigContextData; // Nova prop para um valor inicial de configuração
 }
 
-export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
-    const [config, setConfig] = useState<ConfigContextData>({});
+export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children, value }) => {
+    const [config, setConfig] = useState<ConfigContextData>(value || {});
 
     useEffect(() => {
-        async function fetchConfig() {
-            const configData = await getConfig();
-            setConfig(configData);
-        }
+        if (!value) { // Se nenhum valor inicial foi fornecido, carregue as configurações
+            async function fetchConfig() {
+                const configData = await getConfig();
+                setConfig(configData);
+            }
 
-        fetchConfig();
-    }, []);
+            fetchConfig();
+        }
+    }, [value]);
 
     return (
         <ConfigContext.Provider value={config}>

@@ -1,5 +1,5 @@
 import React, {useContext, useEffect, useState} from "react";
-import {StyleSheet, RefreshControl} from "react-native";
+import {RefreshControl, Alert} from "react-native";
 import {Box, Text, ScrollView, Stack} from "native-base";
 import BannerCarousel from "../../../components/BannerCarousel";
 import {getItems} from "../../../services/items";
@@ -8,10 +8,7 @@ import TranslationContext from "../../../contexts/TranslationContext";
 import {Ionicons, FontAwesome5} from "@expo/vector-icons";
 import colors from "../../../constants/colors";
 import AlertContext from "../../../contexts/AlertContext";
-
-const styles = StyleSheet.create({
-    container: {flex: 1, justifyContent: 'center'}
-})
+import * as Updates from "expo-updates";
 
 export default function Dashboard({navigation}: { navigation: any }) {
     const [refreshing, setRefreshing] = useState(false);
@@ -19,9 +16,38 @@ export default function Dashboard({navigation}: { navigation: any }) {
     const {t} = useContext(TranslationContext);
     const alert = useContext(AlertContext);
 
+    const checkForUpdate = async () => {
+        try {
+            const update = await Updates.checkForUpdateAsync();
+            if (update.isAvailable) {
+                Alert.alert(
+                    "Nova atualização disponível",
+                    "Deseja atualizar o aplicativo agora?",
+                    [
+                        {
+                            text: "Sim",
+                            onPress: async () => {
+                                await Updates.fetchUpdateAsync();
+                                // ... atualiza o aplicativo ...
+                                await Updates.reloadAsync();
+                            }
+                        },
+                        {
+                            text: "Não",
+                        }
+                    ]
+                );
+            }
+        } catch (e) {
+            // tratar erro
+        }
+    };
+    useEffect(() => {
+        checkForUpdate()
+    }, []);
 
     useEffect(() => {
-            loadBanners()
+        loadBanners()
     }, []);
 
     const onRefresh = async () => {
@@ -35,8 +61,10 @@ export default function Dashboard({navigation}: { navigation: any }) {
         setBanners(response);
     }
 
+
     return (
-        <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} title={t('text_search')} />}>
+        <ScrollView
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} title={t('text_search')}/>}>
             <Stack space={"sm"} p={2} direction={"row"} alignItems={"center"}>
                 <Ionicons
                     name={'notifications'}
@@ -48,7 +76,7 @@ export default function Dashboard({navigation}: { navigation: any }) {
                 </Text>
             </Stack>
             <Box>
-                <BannerCarousel banners={banners} navigation={navigation} />
+                <BannerCarousel banners={banners} navigation={navigation}/>
             </Box>
             <Stack space={"sm"} p={2} direction={"row"} alignItems={"center"}>
                 <FontAwesome5

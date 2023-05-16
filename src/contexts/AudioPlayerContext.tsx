@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, {createContext, useState, useContext, ReactNode} from 'react';
 
 interface AudioPlayerContextData {
     albumID: string | null;
@@ -18,7 +18,11 @@ export const useAudioPlayer = () => {
     return context;
 };
 
-export const AudioPlayerProvider: React.FC = ({ children }) => {
+interface AudioPlayerProviderProps {
+    children: ReactNode;
+}
+
+export const AudioPlayerProvider: React.FC<AudioPlayerProviderProps> = ({ children }) => {
     const [albumID, setAlbumID] = useState<string | null>(null);
 
     return (
