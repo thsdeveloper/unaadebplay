@@ -3,9 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from "axios";
 import api, {handleErrors} from "../services/api";
 import {UserTypes} from "../types/UserTypes";
-import {useToast} from "native-base";
 import AlertContext from "./AlertContext";
-import {showMessage} from "react-native-flash-message";
 
 interface Props {
     children: React.ReactNode;
@@ -28,8 +26,6 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     const [user, setUser] = useState<UserTypes | null>(null);
     const [loading, setLoading] = useState(false);
     const alert = useContext(AlertContext)
-
-    const toast = useToast()
 
     useEffect(() => {
         async function loadStorageData() {

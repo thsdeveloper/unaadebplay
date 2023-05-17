@@ -4,7 +4,6 @@ import Colors from '../constants/colors'
 
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs'
 import {createNativeStackNavigator} from "@react-navigation/native-stack";
-import {createDrawerNavigator} from '@react-navigation/drawer'
 
 import Contact from "../pages/app/Contact";
 import Settings from "../pages/app/Settings";
@@ -17,10 +16,10 @@ import FlashMessage from "react-native-flash-message";
 import EventDetailsPage from "../pages/app/Events/EventDetailsPage";
 import PostsPage from "../pages/app/Posts";
 import PostDetailsPage from "../pages/app/Posts/PostDetailsPage";
+import UserProfile from "../pages/app/Users/UserProfile";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
-const Drawer = createDrawerNavigator();
 
 
 function DashboardScreen() {
@@ -30,6 +29,7 @@ function DashboardScreen() {
                 <Stack.Screen name="Home" component={Dashboard} options={{headerShown: false}}/>
                 <Stack.Screen name="Contact" component={Contact} options={{headerShown: false}}/>
                 <Stack.Screen name="RepertoireList" component={RepertoireListScreen} options={{headerShown: false}}/>
+                <Stack.Screen name="UserProfile" component={UserProfile} options={{headerShown: false}}/>
             </Stack.Navigator>
         </>
     );
@@ -75,16 +75,8 @@ function TabRoutes() {
                     color: 'red'
                 },
                 tabBarActiveTintColor: Colors.text,
-                // headerTransparent: true,
                 headerTintColor: 'red',
                 tabBarStyle: {
-                    // height: 100,
-                    // // position: 'absolute',
-                    // bottom: 10,
-                    // // right: 16,
-                    // // left: 16,
-                    // borderRadius: 16,
-                    // padding: 10,
                     backgroundColor: Colors.secundary,
                     borderColor: 'red',
                 },
@@ -99,7 +91,7 @@ function TabRoutes() {
                         )
                     }
                 }/>
-                <Tab.Screen name="Noticias" component={PostsScreen} options={
+                <Tab.Screen name="News" component={PostsScreen} options={
                     {
                         headerShown: false,
                         tabBarLabel: 'Notícias',

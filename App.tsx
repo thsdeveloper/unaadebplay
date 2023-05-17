@@ -46,7 +46,7 @@ export default function App() {
     return (
         <>
             <NativeBaseProvider>
-                <StatusBar backgroundColor="#0E1647"/>
+                <StatusBar backgroundColor="#0E1647" barStyle="light-content" />
                 <NavigationContainer>
                     <AlertProvider>
                         <AuthProvider>

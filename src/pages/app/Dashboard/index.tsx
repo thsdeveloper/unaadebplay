@@ -2,17 +2,15 @@ import React, {useContext, useEffect, useState} from "react";
 import {RefreshControl, Alert} from "react-native";
 import {Box, Text, ScrollView, Stack} from "native-base";
 import BannerCarousel from "../../../components/BannerCarousel";
-import {getItems} from "../../../services/items";
-import {BannerTypes} from "../../../types/BannerTypes";
 import TranslationContext from "../../../contexts/TranslationContext";
 import {Ionicons, FontAwesome5} from "@expo/vector-icons";
 import colors from "../../../constants/colors";
 import AlertContext from "../../../contexts/AlertContext";
 import * as Updates from "expo-updates";
+import BannerCarouselUsers from "../../../components/BannerCarouselUsers";
 
 export default function Dashboard({navigation}: { navigation: any }) {
     const [refreshing, setRefreshing] = useState(false);
-    const [banners, setBanners] = useState<BannerTypes[]>([]);
     const {t} = useContext(TranslationContext);
     const alert = useContext(AlertContext);
 
@@ -22,7 +20,7 @@ export default function Dashboard({navigation}: { navigation: any }) {
             if (update.isAvailable) {
                 Alert.alert(
                     "Nova atualização disponível",
-                    "Deseja atualizar o aplicativo agora?",
+                    "Deseja atualizar o aplicativo UNAADEB Play agora?",
                     [
                         {
                             text: "Sim",
@@ -46,20 +44,9 @@ export default function Dashboard({navigation}: { navigation: any }) {
         checkForUpdate()
     }, []);
 
-    useEffect(() => {
-        loadBanners()
-    }, []);
-
     const onRefresh = async () => {
         setRefreshing(true);
-        await loadBanners();
-        setRefreshing(false);
     };
-
-    const loadBanners = async () => {
-        const response = await getItems<BannerTypes>('banners');
-        setBanners(response);
-    }
 
 
     return (
@@ -76,18 +63,25 @@ export default function Dashboard({navigation}: { navigation: any }) {
                 </Text>
             </Stack>
             <Box>
-                <BannerCarousel banners={banners} navigation={navigation}/>
+                <BannerCarousel navigation={navigation} refreshing={refreshing} setRefreshing={setRefreshing}/>
             </Box>
-            <Stack space={"sm"} p={2} direction={"row"} alignItems={"center"}>
-                <FontAwesome5
-                    name={'users'}
-                    size={20}
-                    color={colors.secundary}
-                />
-                <Text fontWeight={'medium'} fontSize={'lg'}>
-                    {t('text_section_diretoria')}
-                </Text>
-            </Stack>
+            <Box>
+                <Stack p={2} space={"sm"} direction={"row"} alignItems={"center"}>
+                    <FontAwesome5
+                        name={'users'}
+                        size={20}
+                        color={colors.secundary}
+                    />
+                    <Text fontWeight={'medium'} fontSize={'lg'}>
+                        {t('text_section_diretoria')}
+                    </Text>
+                </Stack>
+                <Box>
+                    <BannerCarouselUsers navigation={navigation} refreshing={refreshing} setRefreshing={setRefreshing}/>
+                </Box>
+            </Box>
+
+
             <Stack space={"sm"} p={2} direction={"row"} alignItems={"center"}>
                 <FontAwesome5
                     name={'users'}

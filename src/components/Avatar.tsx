@@ -1,34 +1,38 @@
-import {Avatar as NativeBaseAvatar, IAvatarProps, IImageProps, Skeleton} from 'native-base'
-import {useEffect, useState} from "react";
-import {getImageData} from "../services/AssetsService";
+import {Avatar as NativeBaseAvatar, IAvatarProps, Skeleton} from 'native-base'
+import {useContext, useEffect, useState} from "react";
+import ConfigContext from "../contexts/ConfigContext";
 
 type Props = IAvatarProps & {
-    assetId: string | undefined;
+    userAvatarID: string | undefined;
     width: number;
     height: number;
 };
 
-export function Avatar({ assetId = undefined, width, height, ...rest }: Props) {
-    const [image, setImage] = useState<string | undefined>(undefined);
+export function Avatar({ userAvatarID, width, height, ...rest }: Props) {
+    const [URIImage, setUriImage] = useState<string | undefined>(undefined);
     const [loading, setLoading] = useState(true);
+    const config = useContext(ConfigContext);
 
     useEffect(() => {
         async function loadImage() {
             try {
-                const base64data = await getImageData(`/assets/${assetId}`);
-                setImage(base64data);
+                const idAvatarDefault = await config.avatar_default;
+                // Verifica se userID existem, caso contrário, usa o valor padrão idAvatarDefault
+                const avatarId = await (userAvatarID) ? userAvatarID : idAvatarDefault;
+                const url = `${config.url_api}/assets/${avatarId}`
+                setUriImage(url)
             } catch (e) {
-                setImage('https://www.madeireiraestrela.com.br/images/joomlart/demo/default.jpg');
+                setUriImage(undefined);
             } finally {
                 setLoading(false);
             }
         }
         loadImage();
-    }, []);
+    }, [userAvatarID]);
 
     return loading ? (
         <Skeleton width={width} height={height} />
     ) : (
-        <NativeBaseAvatar width={width} height={height} source={{ uri: image }} {...rest} />
+        <NativeBaseAvatar width={width} height={height} source={{ uri: URIImage }} {...rest} />
     );
 }

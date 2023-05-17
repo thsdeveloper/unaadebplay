@@ -2,8 +2,9 @@ import api from "./api";
 import {AxiosResponse} from "axios";
 import {UserTypes} from "../types/UserTypes";
 import {GlobalQueryParams} from "../types/GlobalQueryParamsTypes";
+import {GenericItem} from "./items";
 
-export async function getUserId(id: string): Promise<UserTypes>{
+export async function getUserId<T extends GenericItem>(id: string): Promise<UserTypes>{
     try {
         const response = await api.get(`/users/${id}`);
         return response.data.data;
@@ -21,7 +22,7 @@ export async function createUser(data: UserTypes): Promise<AxiosResponse<any> | 
     }
 }
 
-export async function getUsers(params?: GlobalQueryParams):Promise<UserTypes[]> {
+export async function getUsers<T extends GenericItem>(params?: GlobalQueryParams):Promise<UserTypes[]> {
     try {
         const response = await api.get('/users', {
             params,

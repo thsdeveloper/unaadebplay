@@ -4,8 +4,6 @@ import TabRoutes from '../routes/tab.routes'
 import Colors from "../constants/colors";
 import React, {useContext} from "react";
 import AuthContext from "../contexts/AuthContext";
-import GlobalAudioPlayer from "../components/GlobalAudioPlayer";
-import FlashMessage from "react-native-flash-message";
 
 const Drawer = createDrawerNavigator();
 
@@ -22,7 +20,8 @@ function DrawerRoutes() {
                 title: `Olá ${user?.first_name}, bem-vindo!`,
                 drawerStyle: {
                     backgroundColor: Colors.secundary
-                }
+                },
+                swipeEnabled: false,
             }}>
                 <Drawer.Screen name="Home" component={TabRoutes}/>
             </Drawer.Navigator>

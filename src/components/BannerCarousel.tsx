@@ -7,29 +7,40 @@ import { BannerTypes } from '../types/BannerTypes';
 import { Image } from './Image';
 import PaginationDots from "./PaginationDots";
 import { NavigationProp, ParamListBase } from '@react-navigation/native';
+import {getItems} from "../services/items";
 
 
 const { width: screenWidth } = Dimensions.get('window');
 
 interface PropsBanners {
-    banners: BannerTypes[],
     navigation: NavigationProp<ParamListBase>;
+    refreshing: any,
+    setRefreshing: any
 }
 
-const BannerCarousel = ({banners, navigation}: PropsBanners) => {
+const BannerCarousel = ({navigation, refreshing, setRefreshing}: PropsBanners) => {
     const [loading, setLoading] = useState(true);
     const [activeIndex, setActiveIndex] = useState(0);
+    const [banners, setBanners] = useState<BannerTypes[]>([]);
 
+    console.log('refreshing', refreshing)
 
     useEffect(() => {
-      if(banners){
-          setLoading(false)
-      }
-    }, []);
+        const loadBanners = async () => {
+            const response = await getItems<BannerTypes>('banners').finally(() => {
+                setLoading(false)
+            });
+            setBanners(response);
+            setRefreshing(false);
+        }
+
+        loadBanners()
+    }, [refreshing]);
+
+
 
     const handleBannerPress = (item: BannerTypes) => {
         // Adicione a lógica de navegação aqui para redirecionar o usuário para uma tela específica
-        // navigation.navigate(item.page_route, { id: item.id_route })
         navigation.navigate(item.page_route, { screen: item.screen, params: { id: item.params_id }});
     };
 
@@ -46,14 +57,19 @@ const BannerCarousel = ({banners, navigation}: PropsBanners) => {
                     height={String(height)}
                     resizeMode="cover"
                 />
-                <LinearGradient
-                    colors={['transparent', 'rgba(0, 0, 0, 0.8)']}
-                    style={styles.textBackground}
-                />
+                {item.title && item.description ? (
+                    <LinearGradient
+                        colors={['transparent', 'rgba(0, 0, 0, 1.8)']}
+                        style={styles.textBackground}
+                    />
+                ): (
+                   <></>
+                )}
                 <Box position={"absolute"} bottom={4} left={4} right={4}>
                     <Text style={styles.bannerTitle}>{item.title}</Text>
                     <Text style={styles.bannerDescription}>{item.description}</Text>
                 </Box>
+
             </Box>
         </Pressable>
     );
@@ -103,7 +119,7 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         width: '100%',
-        height: '30%',
+        height: '90%',
         borderBottomLeftRadius: 10,
         borderBottomRightRadius: 10,
     },
