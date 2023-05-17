@@ -1,6 +1,6 @@
 import React, {useContext, useEffect, useState} from "react";
 import {RefreshControl, Alert} from "react-native";
-import {Box, Text, ScrollView, Stack} from "native-base";
+import {Box, Text, ScrollView, Stack, Image} from "native-base";
 import BannerCarousel from "../../../components/BannerCarousel";
 import TranslationContext from "../../../contexts/TranslationContext";
 import {Ionicons, FontAwesome5} from "@expo/vector-icons";
@@ -8,11 +8,13 @@ import colors from "../../../constants/colors";
 import AlertContext from "../../../contexts/AlertContext";
 import * as Updates from "expo-updates";
 import BannerCarouselUsers from "../../../components/BannerCarouselUsers";
+import ConfigContext from "../../../contexts/ConfigContext";
 
 export default function Dashboard({navigation}: { navigation: any }) {
     const [refreshing, setRefreshing] = useState(false);
     const {t} = useContext(TranslationContext);
     const alert = useContext(AlertContext);
+    const config = useContext(ConfigContext);
 
     const checkForUpdate = async () => {
         try {
@@ -52,27 +54,9 @@ export default function Dashboard({navigation}: { navigation: any }) {
     return (
         <ScrollView
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} title={t('text_search')}/>}>
-            <Stack space={"sm"} p={2} direction={"row"} alignItems={"center"}>
-                <Ionicons
-                    name={'notifications'}
-                    size={20}
-                    color={colors.secundary}
-                />
-                <Text fontWeight={'medium'} fontSize={'lg'}>
-                    {t('text_section_banner')}
-                </Text>
-            </Stack>
             <Box>
-                <BannerCarousel navigation={navigation} refreshing={refreshing} setRefreshing={setRefreshing}/>
-            </Box>
-            <Box>
-                <Stack p={2} space={"sm"} direction={"row"} alignItems={"center"}>
-                    <FontAwesome5
-                        name={'users'}
-                        size={20}
-                        color={colors.secundary}
-                    />
-                    <Text fontWeight={'medium'} fontSize={'lg'}>
+                <Stack m={2} space={"sm"} direction={"row"} alignItems={"center"}>
+                    <Text fontWeight={'bold'} fontSize={'lg'} color={colors.accent}>
                         {t('text_section_diretoria')}
                     </Text>
                 </Stack>
@@ -80,18 +64,19 @@ export default function Dashboard({navigation}: { navigation: any }) {
                     <BannerCarouselUsers navigation={navigation} refreshing={refreshing} setRefreshing={setRefreshing}/>
                 </Box>
             </Box>
+            <Box>
+                <Stack space={"sm"} m={2} direction={"row"} alignItems={"center"}>
+                    <Text fontWeight={'bold'} fontSize={'lg'} color={colors.accent}>
+                        {t('text_section_banner')}
+                    </Text>
+                </Stack>
+                <BannerCarousel navigation={navigation} refreshing={refreshing} setRefreshing={setRefreshing}/>
+            </Box>
 
+            <Box py={6} px={2}>
+                <Image source={{uri: `${config.url_api}/assets/064f556b-5137-4ffd-9a77-70cb8017e414`}} width={"full"} height={40} />
+            </Box>
 
-            <Stack space={"sm"} p={2} direction={"row"} alignItems={"center"}>
-                <FontAwesome5
-                    name={'users'}
-                    size={20}
-                    color={colors.secundary}
-                />
-                <Text fontWeight={'medium'} fontSize={'lg'}>
-                    {t('text_section_diretoria')}
-                </Text>
-            </Stack>
         </ScrollView>
     );
 }
