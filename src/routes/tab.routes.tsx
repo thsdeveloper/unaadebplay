@@ -78,8 +78,6 @@ function TabRoutes() {
                 headerTintColor: 'red',
                 tabBarStyle: {
                     backgroundColor: Colors.secundary,
-                    borderColor: 'red',
-                    height: 100
                 },
             }}>
                 <Tab.Screen name="Dashboard" component={DashboardScreen} options={

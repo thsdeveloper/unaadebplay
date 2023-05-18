@@ -3,7 +3,6 @@ import {RefreshControl, Alert} from "react-native";
 import {Box, Text, ScrollView, Stack, Image} from "native-base";
 import BannerCarousel from "../../../components/BannerCarousel";
 import TranslationContext from "../../../contexts/TranslationContext";
-import {Ionicons, FontAwesome5} from "@expo/vector-icons";
 import colors from "../../../constants/colors";
 import AlertContext from "../../../contexts/AlertContext";
 import * as Updates from "expo-updates";
@@ -73,8 +72,11 @@ export default function Dashboard({navigation}: { navigation: any }) {
                 <BannerCarousel navigation={navigation} refreshing={refreshing} setRefreshing={setRefreshing}/>
             </Box>
 
-            <Box py={6} px={2}>
-                <Image source={{uri: `${config.url_api}/assets/064f556b-5137-4ffd-9a77-70cb8017e414`}} width={"full"} height={40} />
+            <Box py={4} px={2}>
+                <Image source={{uri: `${config.url_api}/assets/244f4c73-e676-4189-9424-7a555eb341f1`}}
+                       borderRadius={10}
+                       width={"full"}
+                       height={40} />
             </Box>
 
         </ScrollView>
