@@ -5,7 +5,6 @@ import {
     VStack,
     Text,
     KeyboardAvoidingView,
-    useToast,
     Checkbox,
     Pressable,
     Modal,
@@ -128,7 +127,7 @@ const FormSigUpUser = () => {
 
     const renderItem = () => (
         <VStack>
-            <Box backgroundColor={colors.accent} borderRadius={10} p={4} mt={2}>
+            <Box backgroundColor={colors.secundary} p={4}>
                 <Image assetId={config.project_logo}
                        alt={'title'}
                        width={'100%'}
@@ -289,7 +288,7 @@ const FormSigUpUser = () => {
                     data={[0]} // Fornecer um único elemento para renderizar
                     renderItem={renderItem}
                     keyExtractor={keyExtractor}
-                    contentContainerStyle={{paddingHorizontal: 6}}
+                    contentContainerStyle={{paddingHorizontal: 0}}
                 />
 
                 <Modal isOpen={isTermsModalVisible} onClose={toggleTermsModal} width={"full"}>

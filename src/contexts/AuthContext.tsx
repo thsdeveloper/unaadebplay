@@ -15,6 +15,7 @@ interface AuthContextData {
     signIn(email: string, password: string): Promise<void>;
     signOut(): void;
     requestPasswordReset(email: string): Promise<void>;
+    setUser(user: UserTypes): void;
     resetPassword(token: string, newPassword: string): Promise<void>;
     loading: boolean;
 }
@@ -132,7 +133,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     }
 
     return (
-        <AuthContext.Provider value={{ signed: !!user, user, signIn, signOut, requestPasswordReset, resetPassword, loading }}>
+        <AuthContext.Provider value={{ signed: !!user, user, signIn, signOut, requestPasswordReset, resetPassword, setUser, loading }}>
             {children}
         </AuthContext.Provider>
     );

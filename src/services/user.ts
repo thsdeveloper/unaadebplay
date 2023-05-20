@@ -22,6 +22,16 @@ export async function createUser(data: UserTypes): Promise<AxiosResponse<any> | 
     }
 }
 
+export async function updateUser(id: string, data: any): Promise<AxiosResponse<UserTypes> | null> {
+    try {
+        return await api.patch(`/users/${id}`, data);
+    } catch (error) {
+        console.error('Erro ao atualizar usuário:', error);
+        throw error;
+    }
+}
+
+
 export async function getUsers<T extends GenericItem>(params?: GlobalQueryParams):Promise<UserTypes[]> {
     try {
         const response = await api.get('/users', {

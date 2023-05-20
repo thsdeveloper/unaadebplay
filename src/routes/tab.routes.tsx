@@ -70,12 +70,8 @@ function TabRoutes() {
 
             <Tab.Navigator screenOptions={{
                 tabBarIconStyle: {
-                    borderStyle: "solid",
-                    backgroundColor: 'red',
-                    color: 'red'
+
                 },
-                tabBarActiveTintColor: Colors.text,
-                headerTintColor: 'red',
                 tabBarStyle: {
                     backgroundColor: Colors.secundary,
                 },

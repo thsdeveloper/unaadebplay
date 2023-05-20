@@ -23,21 +23,21 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
     return (
         <VStack width="100%">
             <FormControl isInvalid={!!errorMessage}>
-                    <Select
-                        width="100%"
-                        fontSize={'md'}
-                        placeholder={placeholder}
-                        onValueChange={onValueChange}
-                        selectedValue={selectedValue}
-                    >
-                        {options.map((option, index) => (
-                            <Select.Item
-                                key={index}
-                                label={option[labelKey]}
-                                value={option[valueKey]}
-                            />
-                        ))}
-                    </Select>
+                <Select
+                    width="100%"
+                    size={'xl'}
+                    placeholder={placeholder}
+                    onValueChange={onValueChange}
+                    selectedValue={selectedValue}
+                >
+                    {options.map((option, index) => (
+                        <Select.Item
+                            key={index}
+                            label={option[labelKey]}
+                            value={option[valueKey]}
+                        />
+                    ))}
+                </Select>
                 <FormControl.ErrorMessage>{errorMessage}</FormControl.ErrorMessage>
             </FormControl>
         </VStack>
