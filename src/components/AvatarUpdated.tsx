@@ -1,11 +1,20 @@
 import React, {useState, useEffect, useContext} from 'react';
-import {Button, Avatar, Pressable, Text, Actionsheet, useDisclose, Box, Icon, IAvatarProps, Spinner} from 'native-base';
+import {
+    Avatar,
+    Text,
+    Actionsheet,
+    useDisclose,
+    Box,
+    Icon,
+    IAvatarProps,
+    Spinner,
+    HStack, Heading
+} from 'native-base';
 import * as ImagePicker from 'expo-image-picker';
-import api from "../services/api";
+import api, {handleErrors} from "../services/api";
 import {Ionicons} from "@expo/vector-icons";
 import AlertContext from "../contexts/AlertContext";
 import {TouchableOpacity} from "react-native";
-import {FilesTypes} from "../types/FilesTypes";
 import ConfigContext from "../contexts/ConfigContext";
 import authContext from "../contexts/AuthContext";
 
@@ -14,23 +23,34 @@ type Props = IAvatarProps & {
 };
 
 export default function AvatarUpdated({userAvatarID}: Props) {
-    const [image, setImage] = useState(null);
+    const [image, setImage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false); // New loading state
     const config = useContext(ConfigContext)
     const {setUser} = useContext(authContext)
     const {isOpen, onOpen, onClose} = useDisclose();
     const alert = useContext(AlertContext)
 
-    useEffect(() => {
-        if (userAvatarID) {
-            const url = getUrlFromAvatarId(userAvatarID);
-            setImage(url);
-        }
-    }, [userAvatarID]);
+    const idFolder = '602c2a95-39d6-4202-8edf-37ad69723277';
 
-    function getUrlFromAvatarId(id: string) {
-        return `${config.url_api}/assets/${id}`;
-    }
+
+    useEffect(() => {
+        async function loadImage() {
+            setIsLoading(true)
+            try {
+                const idAvatarDefault = await config.avatar_default;
+                // Verifica se userID existem, caso contrário, usa o valor padrão idAvatarDefault
+                const avatarId = await (userAvatarID) ? userAvatarID : idAvatarDefault;
+                const url = `${config.url_api}/assets/${avatarId}`
+                setImage(url)
+            } catch (e) {
+                setImage(null);
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
+        loadImage();
+    }, [userAvatarID]);
 
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
@@ -48,57 +68,112 @@ export default function AvatarUpdated({userAvatarID}: Props) {
         }
     };
 
-    const sendImage = async (uri) => {
-        const idFolder = '602c2a95-39d6-4202-8edf-37ad69723277'
-
+    async function uploadFile(uri) {
         let formData = new FormData();
         let name = uri.split("/").pop();
         let match = /\.(\w+)$/.exec(name);
         let type = match ? `image/${match[1]}` : `image`;
 
-        formData.append('file', { uri: uri, name: name, type });
+        formData.append('file', {uri: uri, name: name, type});
 
-        try {
-            if (userAvatarID) {
-                await api.delete(`/files/${userAvatarID}`);
-            }
+        return await api.post("/files", formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+    }
 
-            let response = await api.post("/files", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
+    async function updateFile(fileId, title) {
+        const dataFileUp = {
+            title: title,
+            folder: idFolder
+        }
 
-            const dataFileUp = {
-                title: response.data.data.first_name,
-                folder: idFolder
-            }
+        return await api.patch(`/files/${fileId}`, dataFileUp);
+    }
 
-            const resUpdateFile = await api.patch(`/files/${response.data.data.id}`, dataFileUp);
+    async function updateUserAvatar(avatarId) {
+        const userdata = {
+            avatar: avatarId
+        }
 
-            const userdata = {
-                avatar: resUpdateFile.data.data.id
-            }
+        return await api.patch('/users/me', userdata);
+    }
 
-            const resUser = await api.patch('/users/me', userdata);
-
-            setUser(resUser.data.data)
-
-            alert.success(`Arquivo salvo com sucesso! ${resUser.data.data.first_name}`);
-        } catch (error) {
-            alert.error('Erro ao salvar a imagem')
-            console.log(error);
-        } finally {
-            setIsLoading(false); // Set loading to false after sending the image
+    async function deleteUserFile(fileId) {
+        if (fileId) {
+            await api.delete(`/files/${fileId}`);
         }
     }
+
+    const sendImage = async (uri) => {
+        let response, resUpdateFile, resUser;
+
+        try {
+            setIsLoading(true); // Set loading to true at the beginning
+            response = await uploadFile(uri);
+        } catch (error) {
+            const message = handleErrors(error.response.data.errors);
+            alert.error(`Erro ao fazer upload da imagem: ${message}`);
+            setIsLoading(false);
+            return; // Sai da função se o upload falhar
+        }
+
+        try {
+            resUpdateFile = await updateFile(response.data.data.id, response.data.data.first_name);
+        } catch (error) {
+            const message = handleErrors(error.response.data.errors);
+            alert.error(`Erro ao atualizar o arquivo: ${message}`);
+            setIsLoading(false);
+            return; // Sai da função se a atualização do arquivo falhar
+        }
+
+        try {
+            resUser = await updateUserAvatar(resUpdateFile.data.data.id);
+        } catch (error) {
+            const message = handleErrors(error.response.data.errors);
+            alert.error(`Erro ao atualizar o avatar do usuário: ${message}`);
+            setIsLoading(false);
+            return; // Sai da função se a atualização do avatar do usuário falhar
+        }
+
+        try {
+            await deleteUserFile(userAvatarID);
+        } catch (error) {
+            const message = handleErrors(error.response.data.errors);
+            alert.error(`Erro ao deletar o arquivo antigo: ${message}`);
+            // Aqui você pode escolher não sair da função mesmo se falhar ao deletar o arquivo antigo
+        }
+
+        setUser(resUser.data.data);
+        alert.success('Imagem atualizada com sucesso!');
+        setIsLoading(false);
+    }
+
 
     return (
         <TouchableOpacity onPress={() => onOpen()}>
             {isLoading ?
-                <Spinner /> :  // Display a loading spinner while loading
+                <Box
+                    position="absolute"
+                    top={0}
+                    bottom={0}
+                    left={0}
+                    right={0}
+                    justifyContent="center"
+                    alignItems="center"
+                    zIndex={1}
+                    bgColor="rgba(0, 0, 0, 0.8)"
+                >
+                    <HStack space={2} justifyContent="center">
+                        <Spinner accessibilityLabel="Loading posts" />
+                        <Heading color="primary.500" fontSize="md">
+                            Aguarde...
+                        </Heading>
+                    </HStack>
+                </Box> :  // Display a loading spinner while loading
                 <>
-                    <Avatar source={{ uri: String(image) }} size={"xl"} />
+                    <Avatar source={{uri: String(image)}} size={"xl"}/>
                     <Text textAlign={"center"} fontWeight={"bold"}>Editar foto</Text>
                 </>
             }
@@ -111,7 +186,7 @@ export default function AvatarUpdated({userAvatarID}: Props) {
                         </Text>
                     </Box>
                     <Actionsheet.Item
-                        startIcon={<Icon as={Ionicons} size="6" name="albums" />}
+                        startIcon={<Icon as={Ionicons} size="6" name="albums"/>}
                         onPress={() => pickImage()}>Buscar na galeria
                     </Actionsheet.Item>
                 </Actionsheet.Content>

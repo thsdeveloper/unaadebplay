@@ -32,9 +32,11 @@ import {useAuth} from "../../contexts/AuthContext";
 import {handleErrors} from "../../services/api";
 import colors from "../../constants/colors";
 import AlertContext from "../../contexts/AlertContext";
+import {RadioInput} from "../../components/Radio";
 
 
 const signUpSchema = Yup.object({
+    gender: Yup.string().required('O campo gênero é obrigatório'),
     first_name: Yup.string().trim().min(2, 'O primeiro nome deve ter pelo menos 2 caracteres').required('O primeiro nome é obrigatório'),
     last_name: Yup.string().trim().min(2, 'O sobrenome deve ter pelo menos 2 caracteres').required('O sobrenome é obrigatório'),
     email: Yup.string()
@@ -137,9 +139,6 @@ const FormSigUpUser = () => {
                     {t('description_sign_up')}
                 </Heading>
             </Box>
-
-
-
             <VStack space={3} mt="5" p={4}>
                 <Controller
                     control={control}
@@ -193,6 +192,22 @@ const FormSigUpUser = () => {
                             autoCorrect={false}
                         />
                     )}/>
+                <Controller
+                    control={control}
+                    name={'gender'}
+                    render={({field: {onChange, value}}) => (
+                        <RadioInput
+                            message={'Escolha o seu gênero:'}
+                            errorMessage={errors.gender?.message}
+                            options={[
+                                { value: 'masculino', label: 'Masculino' },
+                                { value: 'feminino', label: 'Feminino' },
+                            ]}
+                            value={value}
+                            onChange={onChange}
+                        />
+                    )}
+                />
                 <Controller
                     control={control}
                     name={'password'}

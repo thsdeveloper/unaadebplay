@@ -32,10 +32,10 @@
     },
     "android": {
       "package": "com.unaadebplay",
-      "versionCode": 5
+      "versionCode": 6
     },
     "ios": {
-      "bundleIdentifier": "br.com.unaadeb.undaadebplay",
+      "bundleIdentifier": "com.unaadebplay",
       "buildNumber": "1.0.0"
     }
   }

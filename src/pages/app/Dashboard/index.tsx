@@ -76,7 +76,7 @@ export default function Dashboard({navigation}: { navigation: any }) {
                 <Image source={{uri: `${config.url_api}/assets/244f4c73-e676-4189-9424-7a555eb341f1`}}
                        borderRadius={10}
                        width={"full"}
-                       height={40} />
+                       height={'1/3'} />
             </Box>
 
         </ScrollView>

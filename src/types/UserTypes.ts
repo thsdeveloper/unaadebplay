@@ -17,6 +17,7 @@ export interface UserTypes extends GenericItem{
     role: string,
     token: string,
     last_access: string,
-    last_page: string
+    last_page: string,
     sector: string
+    gender: string
 }

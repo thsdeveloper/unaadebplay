@@ -22,9 +22,9 @@ export async function createUser(data: UserTypes): Promise<AxiosResponse<any> | 
     }
 }
 
-export async function updateUser(id: string, data: any): Promise<AxiosResponse<UserTypes> | null> {
+export async function updateUserMe(data: any): Promise<AxiosResponse<UserTypes> | null> {
     try {
-        return await api.patch(`/users/${id}`, data);
+        return await api.patch(`/users/me`, data);
     } catch (error) {
         console.error('Erro ao atualizar usuário:', error);
         throw error;

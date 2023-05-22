@@ -1,5 +1,5 @@
 import Dashboard from '../pages/app/Dashboard';
-import {MaterialIcons, FontAwesome5, FontAwesome} from '@expo/vector-icons'
+import {Ionicons, FontAwesome5, FontAwesome} from '@expo/vector-icons'
 import Colors from '../constants/colors'
 
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs'
@@ -17,6 +17,7 @@ import EventDetailsPage from "../pages/app/Events/EventDetailsPage";
 import PostsPage from "../pages/app/Posts";
 import PostDetailsPage from "../pages/app/Posts/PostDetailsPage";
 import UserProfile from "../pages/app/Users/UserProfile";
+import colors from "../constants/colors";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -66,15 +67,29 @@ function TabRoutes() {
     return (
         <>
             <FlashMessage position="top"/>
-            <GlobalAudioPlayer />
+            <GlobalAudioPlayer/>
 
             <Tab.Navigator screenOptions={{
+                headerStyle: {
+                    backgroundColor: colors.primary
+                },
                 tabBarIconStyle: {
-
+                    color: colors.primary,
+                    // backgroundColor: colors.primary,
+                    // borderWidth: 1,
+                    // borderRadius: '100%',
+                    // width: '100%'
                 },
                 tabBarStyle: {
                     backgroundColor: Colors.secundary,
+                    paddingHorizontal: 0,
+                    paddingVertical: 0,
+                    height: 60
                 },
+                tabBarLabelStyle: {
+                    color: Colors.text,
+                    marginBottom: 5
+                }
             }}>
                 <Tab.Screen name="Dashboard" component={DashboardScreen} options={
                     {
@@ -107,9 +122,9 @@ function TabRoutes() {
                 <Tab.Screen name="Configuracoes" component={SettingsScreen} options={
                     {
                         headerShown: false,
-                        tabBarLabel: 'Configurações',
+                        tabBarLabel: 'Meu Perfil',
                         tabBarIcon: ({color, size}) => (
-                            <MaterialIcons name={'settings'} color={color} size={size}/>
+                            <Ionicons name={'person'} color={color} size={size}/>
                         )
                     }
                 }/>

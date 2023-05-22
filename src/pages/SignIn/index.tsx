@@ -101,12 +101,7 @@ export default function SignIn({navigation}: { navigation: any }) {
                                         secureTextEntry={!showPassword}
                                         autoCapitalize="none"
                                         autoCorrect={false}
-                                        InputRightElement={
-                                                <IconButton
-                                                    onPress={handleShowPassword}
-                                                    icon={<Icon as={MaterialIcons} name={showPassword ? "visibility-off" : "visibility"} />}
-                                                />
-                                        }
+                                        isPassword={true}
                                     />
                                 )}/>
 
