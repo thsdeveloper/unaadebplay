@@ -82,13 +82,13 @@ function TabRoutes() {
                 },
                 tabBarStyle: {
                     backgroundColor: Colors.secundary,
-                    paddingHorizontal: 0,
-                    paddingVertical: 0,
-                    height: 60
+                    // paddingHorizontal: 0,
+                    // paddingVertical: 0,
+                    // height: 60
                 },
                 tabBarLabelStyle: {
                     color: Colors.text,
-                    marginBottom: 5
+                    // marginBottom: 5
                 }
             }}>
                 <Tab.Screen name="Dashboard" component={DashboardScreen} options={
