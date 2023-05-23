@@ -98,7 +98,6 @@ export default function SignIn({navigation}: { navigation: any }) {
                                         onBlur={onBlur}
                                         value={value}
                                         errorMessage={errors.password?.message}
-                                        secureTextEntry={!showPassword}
                                         autoCapitalize="none"
                                         autoCorrect={false}
                                         isPassword={true}

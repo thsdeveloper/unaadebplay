@@ -15,7 +15,7 @@ interface AuthContextData {
     signIn(email: string, password: string): Promise<void>;
     signOut(): void;
     requestPasswordReset(email: string): Promise<void>;
-    setUser(user: UserTypes): void;
+    setUser(user: UserTypes): Promise<void>;
     resetPassword(token: string, newPassword: string): Promise<void>;
     loading: boolean;
 }
@@ -24,19 +24,19 @@ interface AuthContextData {
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
 export const AuthProvider: React.FC<Props> = ({ children }) => {
-    const [user, setUser] = useState<UserTypes | null>(null);
+    const [user, setUserState] = useState<UserTypes | null>(null);
     const [loading, setLoading] = useState(false);
     const alert = useContext(AlertContext)
 
     useEffect(() => {
         async function loadStorageData() {
             setLoading(true);
-            const user = await AsyncStorage.getItem('@UNAADEBAuth:user');
-            const access_token = await AsyncStorage.getItem('@UNAADEBAuth:access_token');
-            const refresh_token = await AsyncStorage.getItem('@UNAADEBAuth:refresh_token');
+
+            const keys = ['@UNAADEBAuth:user', '@UNAADEBAuth:access_token', '@UNAADEBAuth:refresh_token'];
+            const [[, user], [, access_token], [, refresh_token]] = await AsyncStorage.multiGet(keys);
 
             if (user && access_token) {
-                setUser(JSON.parse(user));
+                setUserState(JSON.parse(user));
             }
 
             setLoading(false);
@@ -44,6 +44,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
         loadStorageData();
     }, []);
+
+
+    async function setUser(user: UserTypes) {
+        await AsyncStorage.setItem('@UNAADEBAuth:user', JSON.stringify(user));
+        setUserState(user);
+    }
 
     async function signIn(email: string, password: string) {
         try {
@@ -56,10 +62,10 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             });
             const user: UserTypes = { ...responseUser.data.data };
             await setAuthStorage(user, access_token, refresh_token, expires);
-            setUser(user);
+            await setUser(user);
 
         } catch (error) {
-            const message = await handleErrors(error.response.data.errors);
+            const message = handleErrors(error.response.data.errors);
             alert.error(message)
         }
 
@@ -125,7 +131,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             }
 
             await clearAuthStorage();
-            setUser(null);
+            await setUser(null);
         } catch (error) {
             handleErrors(error.data.errors)
             console.error("Erro ao sair:", error.data.errors);

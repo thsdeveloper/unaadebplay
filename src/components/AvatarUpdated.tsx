@@ -8,7 +8,7 @@ import {
     Icon,
     IAvatarProps,
     Spinner,
-    HStack, Heading
+    HStack,
 } from 'native-base';
 import * as ImagePicker from 'expo-image-picker';
 import api, {handleErrors} from "../services/api";
@@ -155,7 +155,6 @@ export default function AvatarUpdated({userAvatarID}: Props) {
         <TouchableOpacity onPress={() => onOpen()}>
             {isLoading ?
                 <Box
-                    position="absolute"
                     top={0}
                     bottom={0}
                     left={0}
@@ -163,13 +162,11 @@ export default function AvatarUpdated({userAvatarID}: Props) {
                     justifyContent="center"
                     alignItems="center"
                     zIndex={1}
-                    bgColor="rgba(0, 0, 0, 0.8)"
                 >
+                    <Avatar source={{uri: String(image)}} size={"xl"}/>
                     <HStack space={2} justifyContent="center">
-                        <Spinner accessibilityLabel="Loading posts" />
-                        <Heading color="primary.500" fontSize="md">
-                            Aguarde...
-                        </Heading>
+                        <Spinner accessibilityLabel="Uploading" />
+                        <Text fontWeight={"bold"}>Uploading...</Text>
                     </HStack>
                 </Box> :  // Display a loading spinner while loading
                 <>

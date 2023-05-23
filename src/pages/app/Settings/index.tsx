@@ -1,6 +1,6 @@
 import React, {useContext, useState} from "react";
 import {View, Text, Platform} from "react-native";
-import {Box, KeyboardAvoidingView, Link, ScrollView, VStack} from "native-base";
+import {Badge, Box, KeyboardAvoidingView, Link, ScrollView, VStack} from "native-base";
 import * as Yup from "yup";
 import {Controller, useForm} from "react-hook-form";
 import {yupResolver} from "@hookform/resolvers/yup/dist/yup";
@@ -34,7 +34,6 @@ export default function Settings({navigation}: { navigation: any }) {
     const {t} = useContext(TranslationContext);
     const alert = useContext(AlertContext)
     const {user, setUser} = useContext(authContext)
-    console.log('user', user)
 
     const [loading, setLoading] = useState(false);
 
@@ -55,9 +54,9 @@ export default function Settings({navigation}: { navigation: any }) {
             console.log('UserData >>', userData)
 
             const {data} = await updateUserMe(userData);
-            setUser(data.data)
-            alert.success(`Usuário ${data.data.first_name} atualizado com sucesso`)
 
+            await setUser(data.data)
+            alert.success(`Usuário ${data.data.first_name} atualizado com sucesso`)
         } catch (error) {
             const message = handleErrors(error.response.data.errors);
             alert.error(`Error ao atualizar o usuário: ${message}`)
@@ -79,6 +78,9 @@ export default function Settings({navigation}: { navigation: any }) {
                 </VStack>
                 <Box p={4}>
                     <VStack space={4}>
+                        <Badge colorScheme="info" alignSelf="center" variant={"outline"}>
+                            {user?.title}
+                        </Badge>
                         <Controller
                             control={control}
                             name={'first_name'}
@@ -116,6 +118,7 @@ export default function Settings({navigation}: { navigation: any }) {
                             render={({field: {onChange, value}}) => (
                                 <Input
                                     type={'email'}
+                                    placeholder={'Seu e-mail'}
                                     value={value}
                                     placeholderTextColor={'gray.400'}
                                     onChangeText={onChange}
@@ -195,7 +198,7 @@ export default function Settings({navigation}: { navigation: any }) {
                             render={({field: {onChange, value}}) => (
                                 <Input
                                     value={value}
-                                    placeholder={'Sua localização, endereço'}
+                                    placeholder={'Escreva uma descrição sobre você!'}
                                     placeholderTextColor={'gray.400'}
                                     onChangeText={onChange}
                                     errorMessage={errors.description?.message}
