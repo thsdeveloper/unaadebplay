@@ -18,6 +18,8 @@ import PostsPage from "../pages/app/Posts";
 import PostDetailsPage from "../pages/app/Posts/PostDetailsPage";
 import UserProfile from "../pages/app/Users/UserProfile";
 import colors from "../constants/colors";
+import {Button} from "../components/Button";
+import {TouchableOpacity} from "react-native";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();

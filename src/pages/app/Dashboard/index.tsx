@@ -8,6 +8,7 @@ import AlertContext from "../../../contexts/AlertContext";
 import * as Updates from "expo-updates";
 import BannerCarouselUsers from "../../../components/BannerCarouselUsers";
 import ConfigContext from "../../../contexts/ConfigContext";
+import ShareApp from "../../../components/ShareApp";
 
 export default function Dashboard({navigation}: { navigation: any }) {
     const [refreshing, setRefreshing] = useState(false);
@@ -71,12 +72,14 @@ export default function Dashboard({navigation}: { navigation: any }) {
                 </Stack>
                 <BannerCarousel navigation={navigation} refreshing={refreshing} setRefreshing={setRefreshing}/>
             </Box>
-
             <Box py={4} px={2}>
                 <Image source={{uri: `${config.url_api}/assets/244f4c73-e676-4189-9424-7a555eb341f1`}}
                        borderRadius={10}
                        width={"full"}
-                       height={'1/3'} />
+                       height={'40'}/>
+            </Box>
+            <Box>
+                <ShareApp/>
             </Box>
 
         </ScrollView>

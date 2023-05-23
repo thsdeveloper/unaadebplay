@@ -1,6 +1,6 @@
 import React, {useState, useEffect, useContext} from 'react';
 import {RefreshControl, TouchableOpacity} from 'react-native';
-import {Box, Text, VStack, Divider, Spinner, Stack, SectionList} from 'native-base';
+import {Box, Text, VStack, Divider, Spinner, Stack, SectionList, HStack} from 'native-base';
 import {getItems} from '../../../services/items';
 import {Image} from "../../../components/Image";
 import TranslationContext from "../../../contexts/TranslationContext";
@@ -60,20 +60,18 @@ const EventPage = () => {
 
     const renderItem = ({item}: { item: EventsTypes }) => (
         <TouchableOpacity onPress={() => handleEventPress(item)}>
-            <Stack direction="row" space={"sm"} p={2}>
+            <HStack p={2} space={2} alignItems={"center"}>
                 <Box>
-                    <Image borderRadius={4} width={'20'} height={'20'} resizeMode="cover" assetId={item.image_cover}/>
+                    <Image width={'20'} height={'20'} resizeMode="cover" assetId={item.image_cover}/>
                 </Box>
-                <Box flex={1} alignItems={"center"}>
-                    <VStack justifyItems={"center"}>
-                        <Text fontSize="lg" fontWeight="bold">
-                            {item.title}
-                        </Text>
+                <Box>
+                    <VStack>
+                        <Text fontSize="lg" fontWeight="bold" numberOfLines={1}>{item.title}</Text>
                         <Text color="gray.500">Local: {item.location}</Text>
                         <Text color="gray.500">Contato: {item.organizer_contact_info}</Text>
                     </VStack>
                 </Box>
-            </Stack>
+            </HStack>
             <Divider/>
         </TouchableOpacity>
     );
