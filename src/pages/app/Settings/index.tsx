@@ -1,13 +1,12 @@
 import React, {useContext, useState} from "react";
-import {View, Text, Platform} from "react-native";
-import {Badge, Box, KeyboardAvoidingView, Link, ScrollView, VStack} from "native-base";
+import {Platform} from "react-native";
+import {Badge, Box, KeyboardAvoidingView, ScrollView, VStack} from "native-base";
 import * as Yup from "yup";
 import {Controller, useForm} from "react-hook-form";
 import {yupResolver} from "@hookform/resolvers/yup/dist/yup";
 import {Input} from "../../../components/input";
 import {Button} from "../../../components/Button";
-import {emailExists, updateUserMe} from "../../../services/user";
-import ConfigContext from "../../../contexts/ConfigContext";
+import {updateUserMe} from "../../../services/user";
 import TranslationContext from "../../../contexts/TranslationContext";
 import AlertContext from "../../../contexts/AlertContext";
 import authContext from "../../../contexts/AuthContext";
@@ -20,8 +19,7 @@ const signUpSchema = Yup.object({
     first_name: Yup.string().trim().min(2, 'O primeiro nome deve ter pelo menos 2 caracteres').required('O campo nome é obrigatório'),
     last_name: Yup.string().trim().min(2, 'O sobrenome deve ter pelo menos 2 caracteres').required('O campo sobrenome é obrigatório'),
     email: Yup.string().email('Digite um email válido').required('Email é obrigatório'),
-    // password: Yup.string().min(4, 'Senha deve ter no mínimo 4 caracteres').required('Senha é obrigatória'),
-    // password_confirmed: Yup.string().oneOf([Yup.ref('password'), null], 'As senhas não coincidem.'),
+    phone: Yup.string().matches(/^\(?([0-9]{2})\)?[-. ]?([0-9]{5})[-. ]?([0-9]{4})$/, "Número de telefone inválido").required("Obrigatório"),
     gender: Yup.string().required('O campo gênero é obrigatório'),
     location: Yup.string().trim().min(2, 'O campo localização é obrigatório').required('O campo localização é obrigatório'),
     description: Yup.string().trim().min(20, 'O campo descrição deve conter pelo menos 20 caracteres'),
@@ -30,7 +28,6 @@ const signUpSchema = Yup.object({
 type FormDataProps = Yup.InferType<typeof signUpSchema>;
 
 export default function Settings({navigation}: { navigation: any }) {
-    const config = useContext(ConfigContext);
     const {t} = useContext(TranslationContext);
     const alert = useContext(AlertContext)
     const {user, setUser} = useContext(authContext)
@@ -45,18 +42,13 @@ export default function Settings({navigation}: { navigation: any }) {
     async function handleUpdateUser(dataUserForm: FormDataProps) {
         setLoading(true)
         try {
-
             const userData = {
                 ...dataUserForm,
                 title: t('member_unaadeb'),
-                description: t('member_description'),
             }
-            console.log('UserData >>', userData)
-
             const {data} = await updateUserMe(userData);
-
             await setUser(data.data)
-            alert.success(`Usuário ${data.data.first_name} atualizado com sucesso`)
+            alert.success(`Usuário atualizado com sucesso`)
         } catch (error) {
             const message = handleErrors(error.response.data.errors);
             alert.error(`Error ao atualizar o usuário: ${message}`)
@@ -126,40 +118,27 @@ export default function Settings({navigation}: { navigation: any }) {
                                 />
                             )}
                         />
-                        {/*<Controller*/}
-                        {/*    control={control}*/}
-                        {/*    name={'password'}*/}
-                        {/*    defaultValue={user?.password}*/}
-                        {/*    render={({field: {onChange, value}}) => (*/}
-                        {/*        <Input*/}
-                        {/*            isPassword={true}*/}
-                        {/*            type={'password'}*/}
-                        {/*            placeholder={'Senha'}*/}
-                        {/*            placeholderTextColor={'gray.400'}*/}
-                        {/*            onChangeText={onChange}*/}
-                        {/*            value={value}*/}
-                        {/*            errorMessage={errors.password?.message}*/}
-                        {/*            autoCapitalize="none"*/}
-                        {/*            autoCorrect={false}*/}
-                        {/*        />*/}
-                        {/*    )}/>*/}
-                        {/*<Controller*/}
-                        {/*    control={control}*/}
-                        {/*    name={'password_confirmed'}*/}
-                        {/*    defaultValue={user?.password}*/}
-                        {/*    render={({field: {onChange, value}}) => (*/}
-                        {/*        <Input*/}
-                        {/*            isPassword={true}*/}
-                        {/*            type={'password'}*/}
-                        {/*            value={value}*/}
-                        {/*            placeholder={'Confirme a senha'}*/}
-                        {/*            placeholderTextColor={'gray.400'}*/}
-                        {/*            onChangeText={onChange}*/}
-                        {/*            errorMessage={errors.password_confirmed?.message}*/}
-                        {/*            autoCapitalize="none"*/}
-                        {/*            autoCorrect={false}*/}
-                        {/*        />*/}
-                        {/*    )}/>*/}
+                        <Controller
+                            control={control}
+                            name={'phone'}
+                            defaultValue={user?.phone}
+                            render={({field: {onChange, value}}) => (
+                                <Input
+                                    placeholder={'Telefone'}
+                                    value={value}
+                                    onChangeText={onChange}
+                                    errorMessage={errors.phone?.message}
+                                    mask={{
+                                        type: 'cel-phone',
+                                        options: {
+                                            maskType: 'BRL',
+                                            withDDD: true,
+                                            dddMask: '(99) ',
+                                        }
+                                    }}
+                                />
+                            )}
+                        />
                         <Controller
                             control={control}
                             name={'gender'}
@@ -206,7 +185,6 @@ export default function Settings({navigation}: { navigation: any }) {
                             )}
                         />
                     </VStack>
-
                     <Box>
                         <Button title={'Atualizar cadastro'}
                                 height={12}

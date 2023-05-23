@@ -152,7 +152,7 @@ export default function AvatarUpdated({userAvatarID}: Props) {
 
 
     return (
-        <TouchableOpacity onPress={() => onOpen()}>
+        <>
             {isLoading ?
                 <Box
                     top={0}
@@ -170,24 +170,26 @@ export default function AvatarUpdated({userAvatarID}: Props) {
                     </HStack>
                 </Box> :  // Display a loading spinner while loading
                 <>
-                    <Avatar source={{uri: String(image)}} size={"xl"}/>
-                    <Text textAlign={"center"} fontWeight={"bold"}>Editar foto</Text>
+                    <TouchableOpacity onPress={() => onOpen()}>
+                        <Avatar source={{uri: String(image)}} size={"xl"}/>
+                        <Text textAlign={"center"} fontWeight={"bold"}>Editar foto</Text>
+
+                        <Actionsheet isOpen={isOpen} onClose={onClose}>
+                            <Actionsheet.Content>
+                                <Box w="100%" h={60} px={4} justifyContent="center">
+                                    <Text fontSize="16" color="gray.500" fontWeight={"bold"}>
+                                        Edite a sua foto de perfil
+                                    </Text>
+                                </Box>
+                                <Actionsheet.Item
+                                    startIcon={<Icon as={Ionicons} size="6" name="albums"/>}
+                                    onPress={() => pickImage()}>Buscar na galeria
+                                </Actionsheet.Item>
+                            </Actionsheet.Content>
+                        </Actionsheet>
+                    </TouchableOpacity>
                 </>
             }
-
-            <Actionsheet isOpen={isOpen} onClose={onClose}>
-                <Actionsheet.Content>
-                    <Box w="100%" h={60} px={4} justifyContent="center">
-                        <Text fontSize="16" color="gray.500" fontWeight={"bold"}>
-                            Edite a sua foto de perfil
-                        </Text>
-                    </Box>
-                    <Actionsheet.Item
-                        startIcon={<Icon as={Ionicons} size="6" name="albums"/>}
-                        onPress={() => pickImage()}>Buscar na galeria
-                    </Actionsheet.Item>
-                </Actionsheet.Content>
-            </Actionsheet>
-        </TouchableOpacity>
+        </>
     );
 }

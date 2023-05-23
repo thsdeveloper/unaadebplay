@@ -2,7 +2,6 @@ import React, {useContext, useRef, useState} from "react";
 import {Controller, useForm} from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
-import { useToast } from "native-base";
 import { VStack, Box, Text } from "native-base";
 import { Button } from "../../components/Button";
 import { Input } from "../../components/input";
@@ -23,7 +22,6 @@ type FormDataProps = Yup.InferType<typeof forgetPasswordSchema>;
 
 export default function ForgetPassword() {
     const animation = useRef(null);
-    const toast = useToast();
     const [loading, setLoading] = useState(false);
     const {requestPasswordReset} = useContext(AuthContext)
     const {t} = useContext(TranslationContext);
@@ -51,7 +49,7 @@ export default function ForgetPassword() {
             await requestPasswordReset(data.email);
             alert.success(`Solicitação de redefinição de senha enviada para ${data.email}`)
         } catch (error) {
-            alert.success('Ocorreu um erro ao processar a solicitação')
+            alert.error('Ocorreu um erro ao processar a solicitação')
         } finally {
             setLoading(false);
         }
