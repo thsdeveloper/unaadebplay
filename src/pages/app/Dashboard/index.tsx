@@ -1,6 +1,6 @@
 import React, {useContext, useEffect, useState} from "react";
 import {RefreshControl, Alert, TouchableOpacity} from "react-native";
-import {Box, Text, ScrollView, Stack, Image, VStack, HStack, Icon} from "native-base";
+import {Box, Text, ScrollView, Stack, Image, VStack, HStack, Icon, Heading, Avatar, Center} from "native-base";
 import BannerCarousel from "../../../components/BannerCarousel";
 import TranslationContext from "../../../contexts/TranslationContext";
 import colors from "../../../constants/colors";
@@ -8,7 +8,8 @@ import AlertContext from "../../../contexts/AlertContext";
 import * as Updates from "expo-updates";
 import BannerCarouselUsers from "../../../components/BannerCarouselUsers";
 import ConfigContext from "../../../contexts/ConfigContext";
-import { MaterialIcons } from '@expo/vector-icons';
+import {FontAwesome5, MaterialIcons, FontAwesome, Entypo} from '@expo/vector-icons';
+import AvatarGroup from "../../../components/AvatarGroup";
 
 export default function Dashboard({navigation}: { navigation: any }) {
     const [refreshing, setRefreshing] = useState(false);
@@ -60,6 +61,45 @@ export default function Dashboard({navigation}: { navigation: any }) {
     return (
         <ScrollView
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} title={t('text_search')}/>}>
+            <Box alignItems={"center"} py={4}>
+
+                <Box alignItems={"center"} pb={4}>
+                    <Heading color={colors.dark} fontWeight={"extrabold"}>#GeradosNoAltar2023</Heading>
+                    <Heading color={colors.dark} fontSize={14}>CONGRESSO GERAL DA UNAADEB 2023</Heading>
+                </Box>
+
+                <HStack space={2}>
+
+                    <Box width={'1/4'} height={20} bgColor={colors.primary} borderRadius={10} justifyContent={"center"}>
+                        <TouchableOpacity onPress={() => navigation.navigate('Contribua')}>
+                            <Box alignItems={"center"} justifyContent={"center"}>
+                                <Icon ml={2} as={FontAwesome5} name="fire" size={"2xl"} color={colors.yellow}/>
+                                <Text fontWeight={'bold'} color={colors.white}>Congresso</Text>
+                            </Box>
+                        </TouchableOpacity>
+                    </Box>
+
+                    <Box width={'1/4'} height={20} bgColor={colors.primary} borderRadius={10} justifyContent={"center"}>
+                        <TouchableOpacity onPress={() => navigation.navigate('Contribua')}>
+                            <Box alignItems={"center"} justifyContent={"center"}>
+                                <Icon as={FontAwesome} name="music" size={"2xl"} color={colors.yellow}/>
+                                <Text fontWeight={'bold'} color={colors.white}>Repertório</Text>
+                            </Box>
+                        </TouchableOpacity>
+                    </Box>
+
+                    <Box width={'1/4'} height={20} bgColor={colors.primary} borderRadius={10} justifyContent={"center"}>
+                        <TouchableOpacity onPress={() => navigation.navigate('Contribua')}>
+                            <Box alignItems={"center"} justifyContent={"center"}>
+                                <Icon as={Entypo} name="youtube" size={"2xl"} color={colors.yellow}/>
+                                <Text fontWeight={'bold'} color={colors.white}>Congresso</Text>
+                            </Box>
+                        </TouchableOpacity>
+                    </Box>
+
+                </HStack>
+
+            </Box>
             <Box>
                 <Stack m={2} space={"sm"} direction={"row"} alignItems={"center"}>
                     <Text fontWeight={'bold'} fontSize={'lg'} color={colors.accent}>
@@ -88,19 +128,26 @@ export default function Dashboard({navigation}: { navigation: any }) {
 
             <Box py={1} px={2}>
                 <TouchableOpacity onPress={() => navigation.navigate('Contribua')}>
-                    <Box backgroundColor={colors.secundary3} width={'100%'} height={'24'} borderRadius={4} justifyContent={"center"} alignItems={"center"}>
-                       <HStack space={2} alignItems={"center"} justifyContent={"center"} px={4}>
-                           <Box>
-                               <Icon as={MaterialIcons} name="attach-money" size={"4xl"} color={colors.yellow} />
-                               {/*<FontAwesome5 name="money-bill-wave" size={40} color={colors.yellow} />*/}
-                           </Box>
-                           <VStack>
-                               <Text fontSize={20} fontWeight={"bold"} color={colors.text}>Seja um parceiro da UNAADEB</Text>
-                               <Text color={colors.yellow}>Clique e contribua com o congresso 2023</Text>
-                           </VStack>
-                       </HStack>
+                    <Box backgroundColor={colors.secundary3} width={'100%'} height={'24'} borderRadius={4}
+                         justifyContent={"center"} alignItems={"center"}>
+                        <HStack space={2} alignItems={"center"} justifyContent={"center"} px={4}>
+                            <Box>
+                                <Icon as={MaterialIcons} name="attach-money" size={"4xl"} color={colors.yellow}/>
+                                {/*<FontAwesome5 name="money-bill-wave" size={40} color={colors.yellow} />*/}
+                            </Box>
+                            <VStack>
+                                <Text fontSize={20} fontWeight={"bold"} color={colors.text}>
+                                    Seja um parceiro da UNAADEB
+                                </Text>
+                                <Text color={colors.yellow}>Clique e contribua com o Congresso 2023</Text>
+                            </VStack>
+                        </HStack>
                     </Box>
                 </TouchableOpacity>
+            </Box>
+
+            <Box py={4} bgColor={colors.secundary2} mt={4} borderTopWidth={4} borderColor={colors.darkRed}>
+                <AvatarGroup />
             </Box>
         </ScrollView>
     );
