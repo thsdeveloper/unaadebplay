@@ -66,6 +66,8 @@ const UserProfile = ({route}: any) => {
                             </HStack>
                         </Box>
                         <Box>
+
+
                             <Text fontSize="sm" color="gray.500">
                                 Sexo: {user.gender}
                             </Text>
