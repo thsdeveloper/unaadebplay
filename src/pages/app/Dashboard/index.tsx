@@ -8,7 +8,6 @@ import AlertContext from "../../../contexts/AlertContext";
 import * as Updates from "expo-updates";
 import BannerCarouselUsers from "../../../components/BannerCarouselUsers";
 import ConfigContext from "../../../contexts/ConfigContext";
-import ShareApp from "../../../components/ShareApp";
 
 export default function Dashboard({navigation}: { navigation: any }) {
     const [refreshing, setRefreshing] = useState(false);
@@ -17,6 +16,11 @@ export default function Dashboard({navigation}: { navigation: any }) {
     const config = useContext(ConfigContext);
 
     const checkForUpdate = async () => {
+        if (__DEV__) {
+            console.log('Cannot check for updates in development mode');
+            return;
+        }
+
         try {
             const update = await Updates.checkForUpdateAsync();
             if (update.isAvailable) {
@@ -39,9 +43,10 @@ export default function Dashboard({navigation}: { navigation: any }) {
                 );
             }
         } catch (e) {
-            // tratar erro
+            console.error(e); // log the error to console
         }
     };
+
     useEffect(() => {
         checkForUpdate()
     }, []);
@@ -78,10 +83,6 @@ export default function Dashboard({navigation}: { navigation: any }) {
                        width={"full"}
                        height={'40'}/>
             </Box>
-            <Box>
-                <ShareApp/>
-            </Box>
-
         </ScrollView>
     );
 }
