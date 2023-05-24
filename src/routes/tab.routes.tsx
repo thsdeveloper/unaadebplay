@@ -20,6 +20,7 @@ import UserProfile from "../pages/app/Users/UserProfile";
 import colors from "../constants/colors";
 import {Button} from "../components/Button";
 import {TouchableOpacity} from "react-native";
+import Contribua from "../pages/app/Dashboard/Contribua";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -33,6 +34,7 @@ function DashboardScreen() {
                 <Stack.Screen name="Contact" component={Contact} options={{headerShown: false}}/>
                 <Stack.Screen name="RepertoireList" component={RepertoireListScreen} options={{headerShown: false}}/>
                 <Stack.Screen name="UserProfile" component={UserProfile} options={{headerShown: false}}/>
+                <Stack.Screen name="Contribua" component={Contribua} options={{headerShown: false}}/>
             </Stack.Navigator>
         </>
     );

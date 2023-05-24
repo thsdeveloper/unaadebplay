@@ -1,6 +1,6 @@
 import React, {useContext, useEffect, useState} from "react";
-import {RefreshControl, Alert} from "react-native";
-import {Box, Text, ScrollView, Stack, Image} from "native-base";
+import {RefreshControl, Alert, TouchableOpacity} from "react-native";
+import {Box, Text, ScrollView, Stack, Image, VStack, HStack, Icon} from "native-base";
 import BannerCarousel from "../../../components/BannerCarousel";
 import TranslationContext from "../../../contexts/TranslationContext";
 import colors from "../../../constants/colors";
@@ -8,6 +8,7 @@ import AlertContext from "../../../contexts/AlertContext";
 import * as Updates from "expo-updates";
 import BannerCarouselUsers from "../../../components/BannerCarouselUsers";
 import ConfigContext from "../../../contexts/ConfigContext";
+import { MaterialIcons } from '@expo/vector-icons';
 
 export default function Dashboard({navigation}: { navigation: any }) {
     const [refreshing, setRefreshing] = useState(false);
@@ -77,11 +78,29 @@ export default function Dashboard({navigation}: { navigation: any }) {
                 </Stack>
                 <BannerCarousel navigation={navigation} refreshing={refreshing} setRefreshing={setRefreshing}/>
             </Box>
-            <Box py={4} px={2}>
-                <Image source={{uri: `${config.url_api}/assets/244f4c73-e676-4189-9424-7a555eb341f1`}}
-                       borderRadius={10}
-                       width={"full"}
-                       height={'40'}/>
+            <Box>
+                <Stack space={"sm"} mx={2} mt={2} direction={"row"} alignItems={"center"}>
+                    <Text fontWeight={'bold'} fontSize={'lg'} color={colors.accent}>
+                        Contribua no congresso
+                    </Text>
+                </Stack>
+            </Box>
+
+            <Box py={1} px={2}>
+                <TouchableOpacity onPress={() => navigation.navigate('Contribua')}>
+                    <Box backgroundColor={colors.secundary3} width={'100%'} height={'24'} borderRadius={4} justifyContent={"center"} alignItems={"center"}>
+                       <HStack space={2} alignItems={"center"} justifyContent={"center"} px={4}>
+                           <Box>
+                               <Icon as={MaterialIcons} name="attach-money" size={"4xl"} color={colors.yellow} />
+                               {/*<FontAwesome5 name="money-bill-wave" size={40} color={colors.yellow} />*/}
+                           </Box>
+                           <VStack>
+                               <Text fontSize={20} fontWeight={"bold"} color={colors.text}>Seja um parceiro da UNAADEB</Text>
+                               <Text color={colors.yellow}>Clique e contribua com o congresso 2023</Text>
+                           </VStack>
+                       </HStack>
+                    </Box>
+                </TouchableOpacity>
             </Box>
         </ScrollView>
     );
