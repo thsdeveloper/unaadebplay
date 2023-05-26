@@ -1,19 +1,51 @@
-import {Text, Icon, Box, Flex, Button, VStack} from 'native-base'
+import {Text, Icon, Box, Flex, Button, VStack, HStack} from 'native-base'
 import {DrawerContentScrollView} from "@react-navigation/drawer";
 import {useAuth} from "../contexts/AuthContext";
 import {relativeTime} from "../utils/directus";
-import {AntDesign} from "@expo/vector-icons";
+import {AntDesign, FontAwesome5} from "@expo/vector-icons";
 import {Avatar} from "./Avatar";
 import * as Application from 'expo-application';
-import { ReactNode, RefAttributes } from 'react';
-import { ScrollViewProps, ScrollView } from 'react-native';
+import React, {ReactNode, RefAttributes} from 'react';
+import {ScrollViewProps, ScrollView} from 'react-native';
+import {FlatList, TouchableOpacity} from 'react-native';
+import colors from "../constants/colors";
+import {useNavigation} from "@react-navigation/native";
 
-export function HeaderDrawer(props: JSX.IntrinsicAttributes & ScrollViewProps & { children: ReactNode; } & RefAttributes<ScrollView>) {
+
+export function HeaderDrawer(props: JSX.IntrinsicAttributes & ScrollViewProps & {
+    children: ReactNode;
+} & RefAttributes<ScrollView>) {
     const {signOut, user} = useAuth()
+    const navigation = useNavigation();
 
     async function handleSignOut() {
         signOut();
     }
+
+    const menuItems = [
+        {name: 'Dashboard', icon: 'home', route: 'Dashboard', isActive: true},
+        {name: 'Congresso 2023', icon: 'fire', route: 'Congresso', isActive: false},
+        {name: 'Eventos', icon: 'calendar-alt', route: 'Eventos', isActive: false},
+        {name: 'Notícias', icon: 'newspaper', route: 'News', isActive: false},
+        {name: 'Meu Perfil', icon: 'user-alt', route: 'Configuracoes', isActive: false},
+        {name: 'Membros', icon: 'users', route: 'UserListPage', isActive: false},
+    ];
+
+    const DrawerItem = ({icon, name}) => (
+            <>
+                <HStack space={2} alignItems={"center"} py={2} marginY={2} px={4}>
+                    <Box>
+                        <Icon as={FontAwesome5} name={icon} size={"lg"} color={colors.primary}/>
+                    </Box>
+                    <Box>
+                        <VStack>
+                            <Text color={colors.text} numberOfLines={1}>{name}</Text>
+                        </VStack>
+                    </Box>
+                </HStack>
+            </>
+        )
+    ;
 
     return (
         <DrawerContentScrollView {...props} contentContainerStyle={{flex: 1}}>
@@ -28,19 +60,25 @@ export function HeaderDrawer(props: JSX.IntrinsicAttributes & ScrollViewProps & 
                             <Box>
                                 <Text color={"text.300"} fontWeight={'bold'}>{user?.first_name}</Text>
                                 <Text color={"text.400"} fontSize={'xs'}>{user?.email}</Text>
-                                <Text color={"text.400"} fontSize={'xs'}>Ultimo acesso: {relativeTime(user?.last_access)}</Text>
+                                <Text color={"text.400"} fontSize={'xs'}>Ultimo
+                                    acesso: {relativeTime(user?.last_access)}</Text>
                             </Box>
                         </Flex>
                     </Box>
-                    <Box p={4}>
-                        <Button colorScheme={'danger'} leftIcon={
-                            <Icon as={AntDesign} name="logout" size="sm"/>
-                        } onPress={handleSignOut}>Sair da Aplicação</Button>
-                    </Box>
                 </VStack>
-                <Box position={"absolute"} bottom={10} width={"100%"} p={4}>
-                    <Text color={"text.300"} fontWeight={'bold'}>Versão da Build: {Application.nativeBuildVersion}</Text>
+                <Box>
+                    {menuItems.map((item, index) => (
+                        <TouchableOpacity key={index} onPress={() => navigation.navigate(item.route)}>
+                            <DrawerItem icon={item.icon} name={item.name} isActive={item.isActive}/>
+                        </TouchableOpacity>
+                    ))}
                 </Box>
+               <Box p={4}>
+                   <Button colorScheme={'danger'} leftIcon={
+                       <Icon as={AntDesign} name="logout" size="sm"/>
+                   } onPress={handleSignOut}>Sair da Aplicação</Button>
+                   <Text color={"text.300"} textAlign={"center"} py={4} fontWeight={'bold'}>Versão da Build: {Application.nativeBuildVersion}</Text>
+               </Box>
             </Box>
         </DrawerContentScrollView>
     )

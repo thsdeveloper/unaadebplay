@@ -20,4 +20,5 @@ export interface UserTypes extends GenericItem{
     last_page: string,
     sector: string
     gender: string
+    phone: string
 }

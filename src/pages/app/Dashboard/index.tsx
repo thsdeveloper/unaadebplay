@@ -1,6 +1,6 @@
 import React, {useContext, useEffect, useState} from "react";
 import {RefreshControl, Alert, TouchableOpacity} from "react-native";
-import {Box, Text, ScrollView, Stack, Image, VStack, HStack, Icon, Heading, Avatar, Center} from "native-base";
+import {Box, Text, ScrollView, Stack, Image, VStack, HStack, Icon, Heading, Avatar, Center, Divider} from "native-base";
 import BannerCarousel from "../../../components/BannerCarousel";
 import TranslationContext from "../../../contexts/TranslationContext";
 import colors from "../../../constants/colors";
@@ -61,7 +61,7 @@ export default function Dashboard({navigation}: { navigation: any }) {
     return (
         <ScrollView
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} title={t('text_search')}/>}>
-            <Box alignItems={"center"} py={4}>
+            <Box alignItems={"center"} pt={4}>
 
                 <Box alignItems={"center"} pb={4}>
                     <Heading color={colors.dark} fontWeight={"extrabold"}>#GeradosNoAltar2023</Heading>
@@ -70,35 +70,36 @@ export default function Dashboard({navigation}: { navigation: any }) {
 
                 <HStack space={2}>
 
-                    <Box width={'1/4'} height={20} bgColor={colors.primary} borderRadius={10} justifyContent={"center"}>
-                        <TouchableOpacity onPress={() => navigation.navigate('Contribua')}>
+                    <Box width={'1/4'} height={20} bgColor={colors.secundary2} borderRadius={10} justifyContent={"center"}>
+                        <TouchableOpacity onPress={() => navigation.navigate('Congresso')}>
                             <Box alignItems={"center"} justifyContent={"center"}>
-                                <Icon ml={2} as={FontAwesome5} name="fire" size={"2xl"} color={colors.yellow}/>
+                                <Icon ml={2} as={FontAwesome5} name="fire" size={"2xl"} color={colors.primary}/>
                                 <Text fontWeight={'bold'} color={colors.white}>Congresso</Text>
                             </Box>
                         </TouchableOpacity>
                     </Box>
 
-                    <Box width={'1/4'} height={20} bgColor={colors.primary} borderRadius={10} justifyContent={"center"}>
-                        <TouchableOpacity onPress={() => navigation.navigate('Contribua')}>
+                    <Box width={'1/4'} height={20} bgColor={colors.secundary2} borderRadius={10} justifyContent={"center"}>
+                        <TouchableOpacity onPress={() => navigation.navigate('RepertoireList')}>
                             <Box alignItems={"center"} justifyContent={"center"}>
-                                <Icon as={FontAwesome} name="music" size={"2xl"} color={colors.yellow}/>
+                                <Icon as={FontAwesome} name="music" size={"2xl"} color={colors.primary}/>
                                 <Text fontWeight={'bold'} color={colors.white}>Repertório</Text>
                             </Box>
                         </TouchableOpacity>
                     </Box>
 
-                    <Box width={'1/4'} height={20} bgColor={colors.primary} borderRadius={10} justifyContent={"center"}>
-                        <TouchableOpacity onPress={() => navigation.navigate('Contribua')}>
+                    <Box width={'1/4'} height={20} bgColor={colors.secundary2} borderRadius={10} justifyContent={"center"}>
+                        <TouchableOpacity onPress={() => navigation.navigate('Youtube')}>
                             <Box alignItems={"center"} justifyContent={"center"}>
-                                <Icon as={Entypo} name="youtube" size={"2xl"} color={colors.yellow}/>
-                                <Text fontWeight={'bold'} color={colors.white}>Congresso</Text>
+                                <Icon as={Entypo} name="youtube" size={"2xl"} color={colors.primary}/>
+                                <Text fontWeight={'bold'} color={colors.white}>Youtube</Text>
                             </Box>
                         </TouchableOpacity>
                     </Box>
 
                 </HStack>
 
+                <Divider mt={4} />
             </Box>
             <Box>
                 <Stack m={2} space={"sm"} direction={"row"} alignItems={"center"}>

@@ -14,7 +14,7 @@ import * as ImagePicker from 'expo-image-picker';
 import api, {handleErrors} from "../services/api";
 import {Ionicons} from "@expo/vector-icons";
 import AlertContext from "../contexts/AlertContext";
-import {TouchableOpacity} from "react-native";
+import {Platform, TouchableOpacity} from "react-native";
 import ConfigContext from "../contexts/ConfigContext";
 import authContext from "../contexts/AuthContext";
 
@@ -53,6 +53,14 @@ export default function AvatarUpdated({userAvatarID}: Props) {
     }, [userAvatarID]);
 
     const pickImage = async () => {
+        if (Platform.OS !== 'web') {
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+                alert.error('Desculpe, nós precisamos de permissão para acessar a sua galeria para continuar!');
+            }
+        }
+
+
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.All,
             allowsEditing: true,

@@ -7,6 +7,7 @@ import {Avatar} from "../../../components/Avatar";
 import colors from "../../../constants/colors";
 import {ImageBackground} from "react-native";
 import ConfigContext from "../../../contexts/ConfigContext";
+import {LoadingLottier} from "../../../components/LoadingLottier";
 
 const UserProfile = ({route}: any) => {
     const {id} = route.params;
@@ -81,11 +82,7 @@ const UserProfile = ({route}: any) => {
 
                     </Box>
                 </VStack>
-            ) : (
-                <Center flex={1}>
-                    <Text>Loading...</Text>
-                </Center>
-            )}
+            ) : (<LoadingLottier />)}
         </Box>
     );
 };
