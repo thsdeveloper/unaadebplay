@@ -17,6 +17,13 @@
     }
   },
   "submit": {
+    "production": {
+      "ios": {
+        "appleId": "unaadeb.oficial@gmail.com",
+        "ascAppId": "6449838223",
+        "appleTeamId": "TA926MKMKK"
+      }
+    },
     "uat": {
       "android": {
         "serviceAccountKeyPath": "./pc-api-6689060312237652008-428-eed4d5edddfa.json",

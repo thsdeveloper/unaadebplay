@@ -13,6 +13,14 @@
       "resizeMode": "contain",
       "backgroundColor": "#E51C44"
     },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The $(PRODUCT_NAME) app accesses your photos to allow you to share them on your profile."
+        }
+      ]
+    ],
     "assetBundlePatterns": [
       "**/*"
     ],
