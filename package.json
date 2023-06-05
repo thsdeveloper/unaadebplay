@@ -26,6 +26,7 @@
     "expo-image-picker": "~14.1.1",
     "expo-linear-gradient": "~12.1.2",
     "expo-linking": "~4.0.1",
+    "expo-screen-orientation": "~5.1.1",
     "expo-splash-screen": "~0.18.2",
     "expo-status-bar": "~1.4.4",
     "expo-updates": "~0.16.4",
@@ -49,6 +50,8 @@
     "react-native-screens": "~3.20.0",
     "react-native-svg": "13.4.0",
     "react-native-web": "~0.18.11",
+    "react-native-webview": "11.26.0",
+    "react-native-youtube-iframe": "^2.2.2",
     "yup": "^1.0.2"
   },
   "devDependencies": {
