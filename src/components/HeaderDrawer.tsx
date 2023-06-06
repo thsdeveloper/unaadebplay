@@ -1,15 +1,18 @@
-import {Text, Icon, Box, Flex, Button, VStack, HStack} from 'native-base'
+import {Text, Icon, Box, Flex, Button, VStack, HStack, Divider} from 'native-base'
 import {DrawerContentScrollView} from "@react-navigation/drawer";
 import {useAuth} from "../contexts/AuthContext";
 import {relativeTime} from "../utils/directus";
 import {AntDesign, FontAwesome5} from "@expo/vector-icons";
 import {Avatar} from "./Avatar";
 import * as Application from 'expo-application';
-import React, {ReactNode, RefAttributes} from 'react';
-import {ScrollViewProps, ScrollView} from 'react-native';
-import {FlatList, TouchableOpacity} from 'react-native';
+import React, {ReactNode, RefAttributes, useContext} from 'react';
+import {ScrollViewProps, ScrollView, Alert} from 'react-native';
+import {TouchableOpacity} from 'react-native';
 import colors from "../constants/colors";
 import {useNavigation} from "@react-navigation/native";
+import * as Updates from "expo-updates";
+import AlertContext from "../contexts/AlertContext";
+import {updateUserMe} from "../services/user";
 
 
 export function HeaderDrawer(props: JSX.IntrinsicAttributes & ScrollViewProps & {
@@ -17,18 +20,49 @@ export function HeaderDrawer(props: JSX.IntrinsicAttributes & ScrollViewProps & 
 } & RefAttributes<ScrollView>) {
     const {signOut, user} = useAuth()
     const navigation = useNavigation();
+    const alert = useContext(AlertContext)
 
     async function handleSignOut() {
         signOut();
     }
 
+    async function handleDeleteAcount() {
+        try {
+            Alert.alert(
+                "Deseja realmente excluir a sua conta?",
+                "Essa ação não poderá ser desfeita, sua conta será excluída em até 24h.",
+                [
+                    {
+                        text: "Excluir",
+                        onPress: async () => {
+
+                            const userData = {
+                               status: 'suspended'
+                            }
+                            await updateUserMe(userData);
+
+                            alert.success('Solicitação enviada com sucesso!')
+                            signOut();
+
+                        }
+                    },
+                    {
+                        text: "Não",
+                    }
+                ]
+            );
+        } catch (e) {
+            console.error(e); // log the error to console
+        }
+    }
+
     const menuItems = [
-        {name: 'Dashboard', icon: 'home', route: 'Dashboard', isActive: true},
-        {name: 'Congresso 2023', icon: 'fire', route: 'Congresso', isActive: false},
-        {name: 'Eventos', icon: 'calendar-alt', route: 'Eventos', isActive: false},
-        {name: 'Notícias', icon: 'newspaper', route: 'News', isActive: false},
-        {name: 'Meu Perfil', icon: 'user-alt', route: 'Configuracoes', isActive: false},
-        {name: 'Membros', icon: 'users', route: 'UserListPage', isActive: false},
+        {name: 'Dashboard', icon: 'home', route: 'Dashboard', screen: 'Home', isActive: true},
+        {name: 'Congresso 2023', icon: 'fire', route: 'Dashboard', screen: 'Congresso', isActive: false},
+        {name: 'Eventos', icon: 'calendar-alt', route: 'Eventos', screen: 'Events', isActive: false},
+        {name: 'Notícias', icon: 'newspaper', route: 'News', screen: 'Posts', isActive: false},
+        {name: 'Meu Perfil', icon: 'user-alt', route: 'Configuracoes', screen: 'Settings', isActive: false},
+        {name: 'Membros', icon: 'users', route: 'Dashboard', screen: 'UserListPage', isActive: false},
     ];
 
     const DrawerItem = ({icon, name}) => (
@@ -68,17 +102,23 @@ export function HeaderDrawer(props: JSX.IntrinsicAttributes & ScrollViewProps & 
                 </VStack>
                 <Box>
                     {menuItems.map((item, index) => (
-                        <TouchableOpacity key={index} onPress={() => navigation.navigate(item.route)}>
+                        <TouchableOpacity key={index}
+                                          onPress={() => navigation.navigate(item.route, {screen: item.screen})}>
                             <DrawerItem icon={item.icon} name={item.name} isActive={item.isActive}/>
                         </TouchableOpacity>
                     ))}
                 </Box>
-               <Box p={4}>
-                   <Button colorScheme={'danger'} leftIcon={
-                       <Icon as={AntDesign} name="logout" size="sm"/>
-                   } onPress={handleSignOut}>Sair da Aplicação</Button>
-                   <Text color={"text.300"} textAlign={"center"} py={4} fontWeight={'bold'}>Versão da Build: {Application.nativeBuildVersion}</Text>
-               </Box>
+                <Box p={4}>
+                    <Button colorScheme={'danger'} leftIcon={
+                        <Icon as={AntDesign} name="logout" size="sm"/>
+                    } onPress={handleSignOut}>Sair da Aplicação</Button>
+                    <Divider my={4}/>
+                    <Button variant={"outline"} colorScheme={'danger'}
+                            leftIcon={<Icon as={AntDesign} name="delete" size="sm"/>} onPress={handleDeleteAcount}>Excluir
+                        minha conta</Button>
+                    <Text color={"text.300"} textAlign={"center"} py={4} fontWeight={'bold'}>Versão da
+                        Build: {Application.nativeBuildVersion}</Text>
+                </Box>
             </Box>
         </DrawerContentScrollView>
     )

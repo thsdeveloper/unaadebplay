@@ -1,18 +1,13 @@
-import React, {useCallback, useEffect, useRef, useState} from "react";
-import YoutubeIframe from "react-native-youtube-iframe";
-import {Text, Box, ScrollView, Button, Heading} from "native-base";
+import React, {useEffect, useRef, useState} from "react";
+import {Text, Box, Button, Heading, VStack, Center} from "native-base";
 import LottieView from "lottie-react-native";
 import colors from "../../../constants/colors";
-import {ActivityIndicator} from "react-native";
-import * as ScreenOrientation from "expo-screen-orientation"
-import {getItem, getItems} from "../../../services/items";
-import {RepertoriesTypes} from "../../../types/RepertoriesTypes";
+import {getItems} from "../../../services/items";
+import * as Linking from 'expo-linking';
 
 const YoutubePage = () => {
     const animation = useRef(null);
-    const [videoReady, setVideoReady] = useState(false);
     const [youtube, setYoutube] = useState();
-
 
     useEffect(() => {
         const loadInfoYoutube = async () => {
@@ -23,22 +18,16 @@ const YoutubePage = () => {
         loadInfoYoutube();
     }, []);
 
-
-
-    const onFullScreenChange = useCallback((isFullScreen: boolean) => {
-        if(isFullScreen){
-            ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE)
-        }else{
-            ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT)
+    const openYoutube = () => {
+        if (youtube?.url) {  // Substitua 'url' pela chave que contém a URL do seu canal do YouTube no objeto retornado por getItems('youtube')
+            Linking.openURL(youtube.url);
         }
-        console.log(isFullScreen)
-    }, [])
-
+    }
 
     return (
-        <ScrollView backgroundColor={colors.line} flex={1} px={6}>
+        <Center flex={1} px="8" backgroundColor={colors.line}>
+            <VStack space={4} alignItems="center" justifyContent="center">
 
-            <Box>
                 <Box alignItems="center" justifyContent="center">
                     <LottieView
                         autoPlay
@@ -51,23 +40,17 @@ const YoutubePage = () => {
                         }}
                         source={youtube?.icone}
                     />
-                    <Heading fontSize={26} fontWeight={"bold"} textAlign={"center"} color={colors.text}>{youtube?.title}</Heading>
+                    <Heading fontSize={26} fontWeight={"bold"} textAlign={"center"}
+                             color={colors.text}>{youtube?.title}</Heading>
                     <Text textAlign={"center"} color={colors.text}>{youtube?.description}</Text>
                 </Box>
-                <Box width={'100%'}>
-                    <YoutubeIframe
-                        videoId={youtube?.id_youtube}
-                        height={250}
-                        onReady={() => setVideoReady(true)}
-                        onFullScreenChange={onFullScreenChange}
-                    />
-                    {!videoReady && <ActivityIndicator/>}
-                </Box>
                 <Box>
-                    <Button>{youtube?.title}</Button>
+                    <Button colorScheme={"danger"} size={"lg"} onPress={openYoutube}>Acesse nosso canal do Youtube</Button>
+                    <Text pt={2} fontSize={"xs"} textAlign={"center"} color={colors.text}>O conteúdo das nossas
+                        transmissões são protegidos por direitos autorais.</Text>
                 </Box>
-            </Box>
-        </ScrollView>
+            </VStack>
+        </Center>
     );
 };
 export default YoutubePage;

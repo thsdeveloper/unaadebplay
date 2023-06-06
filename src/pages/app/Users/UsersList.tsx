@@ -13,16 +13,13 @@ const UserListPage = ({ navigation }) => {
     const [search, setSearch] = useState();
     const [inputText, setInputText] = useState('');
     const [page, setPage] = useState(1);
-    const [isLoadingList, setIsLoadingList] = useState(false);
     const [isLoadingUser, setIsLoadingUser] = useState(false);
 
-    const loadUsers = useCallback(async (reset = false) => {
-        setIsLoadingList(true);
-
-        const filters = search ? {
+    const loadUsers = useCallback(async (reset = false, searchText = search) => {
+        const filters = searchText ? {
             filter: {
                 first_name: {
-                    _contains: search,
+                    _contains: searchText,
                 },
             },
         } : {};
@@ -38,8 +35,6 @@ const UserListPage = ({ navigation }) => {
         } else {
             setUsers(prevUsers => [...prevUsers, ...responseUsers]);
         }
-
-        setIsLoadingList(false);
     }, [search, page]);
 
 
@@ -56,11 +51,11 @@ const UserListPage = ({ navigation }) => {
     const handleSearch = () => {
         setSearch(inputText);
         setPage(1);
-        loadUsers(true);
+        loadUsers(true, inputText);
     };
 
-    const renderItem = ({ item }) => (
-        <UserItem item={item} handleUserPress={handleUserPress} />
+    const renderItem = ({ item, index }) => (
+        <UserItem key={`${item.id}-${index}`} item={item} handleUserPress={handleUserPress} />
     );
 
     useEffect(() => {
@@ -83,9 +78,7 @@ const UserListPage = ({ navigation }) => {
                 />
             </HStack>
 
-            {isLoadingList ? (
-                <LoadingLottier />
-            ) : users.length > 0 ? (
+            {users.length > 0 ? (
                 <FlatList
                     data={users}
                     renderItem={renderItem}

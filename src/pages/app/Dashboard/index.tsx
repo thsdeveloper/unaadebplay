@@ -1,6 +1,6 @@
 import React, {useContext, useEffect, useState} from "react";
 import {RefreshControl, Alert, TouchableOpacity} from "react-native";
-import {Box, Text, ScrollView, Stack, Image, VStack, HStack, Icon, Heading, Avatar, Center, Divider} from "native-base";
+import {Box, Text, ScrollView, Stack, VStack, HStack, Icon, Heading, Divider} from "native-base";
 import BannerCarousel from "../../../components/BannerCarousel";
 import TranslationContext from "../../../contexts/TranslationContext";
 import colors from "../../../constants/colors";
@@ -31,7 +31,7 @@ export default function Dashboard({navigation}: { navigation: any }) {
                     "Deseja atualizar o aplicativo UNAADEB Play agora?",
                     [
                         {
-                            text: "Sim",
+                            text: "Sim, atualizar!",
                             onPress: async () => {
                                 await Updates.fetchUpdateAsync();
                                 // ... atualiza o aplicativo ...

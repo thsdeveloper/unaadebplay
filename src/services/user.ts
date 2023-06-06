@@ -4,9 +4,11 @@ import {UserTypes} from "../types/UserTypes";
 import {GlobalQueryParams} from "../types/GlobalQueryParamsTypes";
 import {GenericItem} from "./items";
 
-export async function getUserId<T extends GenericItem>(id: string): Promise<UserTypes>{
+export async function getUserId<T extends GenericItem>(id: string, params?: Record<string, unknown>): Promise<UserTypes>{
     try {
-        const response = await api.get(`/users/${id}`);
+        const response = await api.get(`/users/${id}`, {
+            params: params,
+        });
         return response.data.data;
     } catch (error) {
         throw error;
