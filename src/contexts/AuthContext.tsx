@@ -55,14 +55,24 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         try {
             const reponseLogin = await axios.post('https://back-unaadeb.onrender.com/auth/login', {email: email, password: password});
             const { access_token, refresh_token, expires } = reponseLogin.data.data;
+
             const responseUser = await axios.get('https://back-unaadeb.onrender.com/users/me', {
                 headers: {
                     Authorization: `Bearer ${access_token}`,
                 },
             });
             const user: UserTypes = { ...responseUser.data.data };
-            await setAuthStorage(user, access_token, refresh_token, expires);
-            await setUser(user);
+
+
+            // Verifica se o status do usuário é "active"
+            if (user.status === 'active') {
+                await setAuthStorage(user, access_token, refresh_token, expires);
+                await setUser(user);
+            } else {
+                // Caso contrário, exibe uma mensagem de erro informando que o usuário não está ativo
+                alert.error('Usuário nao esta ativo!')
+                throw new Error('Usuário não está ativo.');
+            }
 
         } catch (error) {
             const message = handleErrors(error.response.data.errors);
