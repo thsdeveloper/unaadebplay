@@ -36,7 +36,6 @@ import {RadioInput} from "../../components/Radio";
 
 
 const signUpSchema = Yup.object({
-    gender: Yup.string().required('O campo gênero é obrigatório'),
     first_name: Yup.string().trim().min(2, 'O primeiro nome deve ter pelo menos 2 caracteres').required('O primeiro nome é obrigatório'),
     last_name: Yup.string().trim().min(2, 'O sobrenome deve ter pelo menos 2 caracteres').required('O sobrenome é obrigatório'),
     email: Yup.string()
@@ -50,7 +49,6 @@ const signUpSchema = Yup.object({
                 return !exists; // retornar true se o e-mail NÃO existir
             }
         ),
-    phone: Yup.string().matches(/^\(?([0-9]{2})\)?[-. ]?([0-9]{5})[-. ]?([0-9]{4})$/, "Número de telefone inválido").required("Obrigatório"),
     password: Yup.string().min(4, 'Senha deve ter no mínimo 4 caracteres').required('Senha é obrigatória'),
     sector: Yup.string().required('Escolha seu setor'),
     password_confirmed: Yup.string().oneOf([Yup.ref('password'), null], 'As senhas não coincidem.'),
