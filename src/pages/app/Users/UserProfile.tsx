@@ -121,9 +121,6 @@ const UserProfile = ({route}: any) => {
                             <Text fontSize="md" color="gray.500">
                                 E-mail: {user.email}
                             </Text>
-                            <Text fontSize="md" color="gray.500">
-                                Telefone: {user.phone}
-                            </Text>
                         </Box>
 
                     </Box>
