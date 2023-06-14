@@ -1,5 +1,5 @@
 
-Projeto UnAADebPlay
+Projeto UNAADEB Play
 Licença MIT
 Issues abertas
 Forks

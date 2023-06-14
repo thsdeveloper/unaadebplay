@@ -4,7 +4,7 @@ import { View, StyleSheet, Text } from "react-native";
 const CongressoPage = () => {
     return (
         <View style={styles.center}>
-            <Text>Congresso Page</Text>
+            <Text>Em breve mais informações sobre o congresso</Text>
         </View>
     );
 };
