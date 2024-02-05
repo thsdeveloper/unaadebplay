@@ -1,5 +1,5 @@
-import {Avatar as NativeBaseAvatar, IAvatarProps, Skeleton} from 'native-base'
-import {useContext, useEffect, useState} from "react";
+import { Avatar as NativeBaseAvatar, IAvatarProps, Skeleton } from 'native-base'
+import { useContext, useEffect, useState } from "react";
 import ConfigContext from "../contexts/ConfigContext";
 
 type Props = IAvatarProps & {
@@ -19,7 +19,7 @@ export function Avatar({ userAvatarID, width, height, ...rest }: Props) {
                 const idAvatarDefault = await config.avatar_default;
                 // Verifica se userID existem, caso contrário, usa o valor padrão idAvatarDefault
                 const avatarId = await (userAvatarID) ? userAvatarID : idAvatarDefault;
-                const url = `${config.url_api}/assets/${avatarId}`
+                const url = `${config.url_api}/assets/${avatarId}&fit=cover`
                 setUriImage(url)
             } catch (e) {
                 setUriImage(undefined);
@@ -31,7 +31,7 @@ export function Avatar({ userAvatarID, width, height, ...rest }: Props) {
     }, [userAvatarID]);
 
     return loading ? (
-        <Skeleton width={width} height={height} />
+        <Skeleton width={width} height={height} startColor="red.800" />
     ) : (
         <NativeBaseAvatar width={width} height={height} source={{ uri: URIImage }} {...rest} />
     );
