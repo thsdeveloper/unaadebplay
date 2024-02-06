@@ -64,8 +64,8 @@ export default function Dashboard({navigation}: { navigation: any }) {
             <Box alignItems={"center"} pt={4}>
 
                 <Box alignItems={"center"} pb={4}>
-                    <Heading color={colors.dark} fontWeight={"extrabold"}>#GeradosNoAltar2023</Heading>
-                    <Heading color={colors.dark} fontSize={14}>CONGRESSO GERAL DA UNAADEB 2023</Heading>
+                    <Heading color={colors.dark} fontWeight={"extrabold"}>#GeradosNoAltar2024</Heading>
+                    <Heading color={colors.dark} fontSize={14}>CONGRESSO GERAL DA UNAADEB 2024</Heading>
                 </Box>
 
                 <HStack space={2}>
