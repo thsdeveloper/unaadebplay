@@ -60,7 +60,7 @@ const UserProfile = ({ route }: any) => {
                                 {user.first_name} {user.last_name}
                             </Text>
                             <Text colorScheme="info" alignSelf="center" variant={"outline"}>
-                                {user.role.name} - {user.title}
+                                {user.role?.name} - {user?.title}
                             </Text>
                         </Box>
 

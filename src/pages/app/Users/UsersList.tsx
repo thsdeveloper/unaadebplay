@@ -5,6 +5,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { getUsers } from "../../../services/user";
 import UserItem from "../../../components/UserItem";
 import { LoadingLottier } from "../../../components/LoadingLottier";
+import UserSkeleton from '../../../components/Skeletons/UserListSkeletons'
 
 const PAGE_SIZE = 20;
 
@@ -78,7 +79,9 @@ const UserListPage = ({ navigation }) => {
                 />
             </HStack>
 
-            {users.length > 0 ? (
+            {users.length === 0 ? (
+                <UserSkeleton />
+            ) : users.length > 0 && (
                 <FlatList
                     data={users}
                     renderItem={renderItem}
@@ -86,13 +89,8 @@ const UserListPage = ({ navigation }) => {
                     onEndReached={handleLoadMore}
                     onEndReachedThreshold={0.5}
                 />
-            ) : (
-                <Center>
-                    <Text>Nenhum membro encontrado.</Text>
-                </Center>
             )}
 
-            {isLoadingUser && <LoadingLottier />}
         </Box>
     );
 };

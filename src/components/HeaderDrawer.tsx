@@ -57,7 +57,7 @@ export function HeaderDrawer(props: JSX.IntrinsicAttributes & ScrollViewProps & 
     }
 
     const menuItems = [
-        {name: 'Dashboard', icon: 'home', route: 'Dashboard', screen: 'Home', isActive: true},
+        {name: 'início', icon: 'home', route: 'Dashboard', screen: 'Home', isActive: true},
         {name: 'Congresso 2023', icon: 'fire', route: 'Dashboard', screen: 'Congresso', isActive: false},
         {name: 'Eventos', icon: 'calendar-alt', route: 'Eventos', screen: 'Events', isActive: false},
         {name: 'Notícias', icon: 'newspaper', route: 'News', screen: 'Posts', isActive: false},
