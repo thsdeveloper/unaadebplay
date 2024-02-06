@@ -34,7 +34,7 @@ type FormDataProps = Yup.InferType<typeof signInSchema>;
 
 
 export default function SignIn({ navigation }: { navigation: any }) {
-    const { signIn } = useAuth();
+    const { login } = useAuth();
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const { t } = useContext(TranslationContext);
@@ -52,7 +52,7 @@ export default function SignIn({ navigation }: { navigation: any }) {
     async function handleSignIn(data: FormDataProps) {
         setLoading(true)
         try {
-            await signIn(data.email, data.password);
+            await login(data.email, data.password);
         } finally {
             setLoading(false)
         }

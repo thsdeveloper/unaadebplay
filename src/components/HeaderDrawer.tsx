@@ -18,13 +18,9 @@ import {updateUserMe} from "../services/user";
 export function HeaderDrawer(props: JSX.IntrinsicAttributes & ScrollViewProps & {
     children: ReactNode;
 } & RefAttributes<ScrollView>) {
-    const {signOut, user} = useAuth()
+    const {logout, user} = useAuth()
     const navigation = useNavigation();
     const alert = useContext(AlertContext)
-
-    async function handleSignOut() {
-        signOut();
-    }
 
     async function handleDeleteAcount() {
         try {
@@ -111,7 +107,7 @@ export function HeaderDrawer(props: JSX.IntrinsicAttributes & ScrollViewProps & 
                 <Box p={4}>
                     <Button colorScheme={'danger'} leftIcon={
                         <Icon as={AntDesign} name="logout" size="sm"/>
-                    } onPress={handleSignOut}>Sair da Aplicação</Button>
+                    } onPress={logout}>Sair da Aplicação</Button>
                     <Divider my={4}/>
                     <Button variant={"outline"} colorScheme={'danger'}
                             leftIcon={<Icon as={AntDesign} name="delete" size="sm"/>} onPress={handleDeleteAcount}>Excluir

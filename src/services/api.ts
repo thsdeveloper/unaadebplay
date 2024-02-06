@@ -1,6 +1,34 @@
 import axios from 'axios'
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {ERROR_MESSAGES} from "../constants/errorMessages";
+import {authentication, createDirectus, logout, readItems, readMe, rest} from '@directus/sdk';
+import {UserTypes} from "../types/UserTypes";
+
+const url = 'https://back-unaadeb.onrender.com'
+const directusClient = createDirectus(url).with(authentication('cookie'));
+
+
+export async function signIn(email, password): Promise<UserTypes> {
+    try {
+        const authClient = await directusClient.login(email, password)
+        console.log('authClient', authClient)
+        const client = await directusClient.with(rest())
+        return await client.request<UserTypes>(readMe())
+    } catch (error) {
+        console.error('Erro ao fazer login no Directus:', error);
+        throw error;
+    }
+}
+
+export async function signOut(): Promise<void> {
+    try {
+        const result = await directusClient.logout()
+        console.log('result', result)
+    } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+        throw error;
+    }
+}
 
 
 const api = axios.create({
@@ -9,7 +37,7 @@ const api = axios.create({
 
 api.interceptors.request.use(async (config) => {
     const access_token = await getAccessToken();
-    if(access_token){
+    if (access_token) {
         config.headers.Authorization = `Bearer ${access_token}`;
     }
     return config;
@@ -31,7 +59,7 @@ const handleErrorsAxios = async (error: any) => {
                     refresh_token: refresh,
                 });
 
-                const { access_token, refresh_token, expires } = res.data.data;
+                const {access_token, refresh_token, expires} = res.data.data;
                 await setTokenStorage(access_token, refresh_token, expires);
                 return api(originalConfig);
             } catch (_error) {
@@ -84,7 +112,6 @@ export function handleErrors(errors: any[]): string {
     // Retorne uma mensagem de erro padrão se a matriz de erros estiver vazia
     return 'Nenhum erro especificado.';
 }
-
 
 
 export default api;

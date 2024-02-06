@@ -1,7 +1,7 @@
 import React, {createContext, useContext, useEffect, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from "axios";
-import api, {handleErrors} from "../services/api";
+import api, {handleErrors, signIn, signOut} from "../services/api";
 import {UserTypes} from "../types/UserTypes";
 import AlertContext from "./AlertContext";
 
@@ -12,18 +12,24 @@ interface Props {
 interface AuthContextData {
     signed: boolean;
     user: UserTypes | null;
-    signIn(email: string, password: string): Promise<void>;
-    signOut(): void;
+
+    login(email: string, password: string): Promise<void>;
+
+    logout(): void;
+
     requestPasswordReset(email: string): Promise<void>;
+
     setUser(user: UserTypes): Promise<void>;
+
     resetPassword(token: string, newPassword: string): Promise<void>;
+
     loading: boolean;
 }
 
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
-export const AuthProvider: React.FC<Props> = ({ children }) => {
+export const AuthProvider: React.FC<Props> = ({children}) => {
     const [user, setUserState] = useState<UserTypes | null>(null);
     const [loading, setLoading] = useState(false);
     const alert = useContext(AlertContext)
@@ -51,22 +57,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         setUserState(user);
     }
 
-    async function signIn(email: string, password: string) {
+    async function login(email: string, password: string) {
         try {
-            const reponseLogin = await axios.post('https://back-unaadeb.onrender.com/auth/login', {email: email, password: password});
-            const { access_token, refresh_token, expires } = reponseLogin.data.data;
-
-            const responseUser = await axios.get('https://back-unaadeb.onrender.com/users/me', {
-                headers: {
-                    Authorization: `Bearer ${access_token}`,
-                },
-            });
-            const user: UserTypes = { ...responseUser.data.data };
-
-
+            const user = await signIn(email, password)
             // Verifica se o status do usuário é "active"
             if (user.status === 'active') {
-                await setAuthStorage(user, access_token, refresh_token, expires);
+                await setAuthStorage(user);
                 await setUser(user);
             } else {
                 // Caso contrário, exibe uma mensagem de erro informando que o usuário não está ativo
@@ -103,44 +99,13 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         }
     }
 
-    async function setAuthStorage(user: UserTypes, access_token: string, refresh_token: string, expires: number) {
+    async function setAuthStorage(user: UserTypes) {
         await AsyncStorage.setItem('@UNAADEBAuth:user', JSON.stringify(user));
-        await AsyncStorage.setItem('@UNAADEBAuth:access_token', access_token);
-        await AsyncStorage.setItem('@UNAADEBAuth:refresh_token', refresh_token);
-        await AsyncStorage.setItem('@UNAADEBAuth:expires', String(expires));
     }
 
-    async function getRefreshToken() {
+    async function logout() {
         try {
-            return await AsyncStorage.getItem("@UNAADEBAuth:refresh_token");
-        } catch (error) {
-            console.error("Erro ao obter refresh_token:", error);
-        }
-    }
-
-    async function clearAuthStorage() {
-        try {
-            await AsyncStorage.multiRemove([
-                "@UNAADEBAuth:access_token",
-                "@UNAADEBAuth:refresh_token",
-                "@UNAADEBAuth:expires",
-            ]);
-        } catch (error) {
-            console.error("Erro ao limpar o armazenamento da autenticação:", error);
-        }
-    }
-
-    async function signOut() {
-        try {
-            const refresh_token = await getRefreshToken();
-
-            if (refresh_token) {
-                await axios.post(`https://back-unaadeb.onrender.com/auth/logout`, {
-                    refresh_token: refresh_token
-                });
-            }
-
-            await clearAuthStorage();
+            const result = await signOut();
             await setUser(null);
         } catch (error) {
             handleErrors(error.data.errors)
@@ -149,7 +114,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     }
 
     return (
-        <AuthContext.Provider value={{ signed: !!user, user, signIn, signOut, requestPasswordReset, resetPassword, setUser, loading }}>
+        <AuthContext.Provider
+            value={{signed: !!user, user, login, logout, requestPasswordReset, resetPassword, setUser, loading}}>
             {children}
         </AuthContext.Provider>
     );
