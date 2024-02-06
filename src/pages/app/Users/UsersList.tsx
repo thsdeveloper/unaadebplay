@@ -27,6 +27,7 @@ const UserListPage = ({ navigation }) => {
 
         const responseUsers = await getUsers({
             ...filters,
+            sort: 'first_name',
             limit: PAGE_SIZE,
             offset: reset ? 0 : (page - 1) * PAGE_SIZE,
         });

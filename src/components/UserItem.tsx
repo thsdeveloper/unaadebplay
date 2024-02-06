@@ -1,7 +1,6 @@
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
 import { Box, Text, VStack, Divider, Stack } from 'native-base';
-import {Image} from "./Image";
 import colors from "../constants/colors";
 import {Avatar} from "./Avatar";
 
@@ -21,11 +20,8 @@ const UserItem = React.memo(({ item, handleUserPress }) => (
             </Box>
             <Box>
                 <VStack>
-                    <Text fontSize="lg" fontWeight="bold">
-                        {item.first_name}
-                    </Text>
+                    <Text fontSize="lg" fontWeight="bold">{item.first_name}</Text>
                     <Text color="gray.500">{item.email}</Text>
-                    <Text color="gray.500">{item.sector.name}</Text>
                 </VStack>
             </Box>
         </Stack>

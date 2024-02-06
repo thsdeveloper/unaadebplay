@@ -14,7 +14,8 @@
       "channel": "hml"
     },
     "production": {
-      "channel": "master"
+      "channel": "master",
+      "autoIncrement": true
     }
   },
   "submit": {

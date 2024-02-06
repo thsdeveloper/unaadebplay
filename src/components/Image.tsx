@@ -1,5 +1,6 @@
-import {Image as NativeBaseImage, IImageProps, Skeleton, Text, HStack, VStack, Center} from 'native-base';
+import {Image as NativeBaseImage, IImageProps, Skeleton, Text, HStack, VStack, Center, Box} from 'native-base';
 import React, {useContext, useEffect, useState} from 'react';
+import {Image as ImageRN} from "react-native";
 import ConfigContext from "../contexts/ConfigContext";
 
 type Props = IImageProps & {
@@ -9,33 +10,40 @@ type Props = IImageProps & {
 };
 
 export function Image({assetId = undefined, width = undefined, height = undefined, ...rest}: Props) {
-    const [image, setImage] = useState<string | undefined>(undefined);
+    const {url_api, avatar_default} = useContext(ConfigContext);
     const [loading, setLoading] = useState(true);
-    const config = useContext(ConfigContext);
+    const defaultImage = `${url_api}/assets/${avatar_default}?fit=cover`;
+    const [imageSrc, setImageSrc] = useState<string>(defaultImage);
 
     useEffect(() => {
-        if (!assetId) {
-            setLoading(false);
-            return;
-        }
+        const userImage = assetId ? `${url_api}/assets/${assetId}?fit=cover` : defaultImage;
+        setImageSrc(userImage);
+    }, [assetId, avatar_default, url_api]);
 
-        async function loadImage() {
-            try {
-                setImage(`${config.url_api}/assets/${assetId}`);
-            } catch (e) {
-                setImage(`${config.url_api}/assets/${config.avatar_default}`);
-            } finally {
-                setLoading(false);
-            }
-        }
+    const handleImageLoaded = () => {
+        setLoading(false);
+    };
 
-        loadImage();
-    }, [assetId]);
-
-    return loading ? (
-        <NativeBaseImage width={width} height={height}
-                         source={{uri: `${config.url_api}/assets/${config.avatar_default}`}} {...rest} />
-    ) : (
-        <NativeBaseImage width={width} height={height} source={{uri: image}} {...rest} />
-    );
+    return (
+        <Box position={"relative"}>
+            {loading && (
+                <Box position={"absolute"} zIndex={9998} width={'100%'} height={height}>
+                    <Skeleton
+                              borderColor="coolGray.400"
+                              endColor="text.400"
+                              width={width}
+                              height={height}
+                              speed={2}/>
+                </Box>
+            )}
+            <Box width={width} height={height} borderRadius={4}>
+                <ImageRN
+                    source={{uri: imageSrc}}
+                    style={{width: '100%', height: '100%'}}
+                    resizeMode="cover"
+                    onLoadEnd={handleImageLoaded}
+                />
+            </Box>
+        </Box>
+    )
 }
