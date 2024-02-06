@@ -5,13 +5,13 @@ import ConfigContext from "../contexts/ConfigContext";
 
 type Props = IAvatarProps & {
     userAvatarID?: string;
-    width: number | string;  // Permitindo que width e height sejam strings também, para compatibilidade com estilos do NativeBase
+    width: number | string;
     height: number | string;
 };
 
 export function Avatar({ userAvatarID, width, height, ...rest }: Props) {
     const { url_api, avatar_default } = useContext(ConfigContext);
-    const [loading, setLoading] = useState(true); // Estado para controlar a exibição do Spinner
+    const [loading, setLoading] = useState(true);
     const defaultImage = `${url_api}/assets/${avatar_default}?fit=cover`;
     const [imageSrc, setImageSrc] = useState<string>(defaultImage);
 
@@ -21,7 +21,7 @@ export function Avatar({ userAvatarID, width, height, ...rest }: Props) {
     }, [userAvatarID, avatar_default, url_api]);
 
     const handleImageLoaded = () => {
-        setLoading(false); // Desativa o loading quando a imagem é carregada
+        setLoading(false);
     };
 
     return (
@@ -35,7 +35,7 @@ export function Avatar({ userAvatarID, width, height, ...rest }: Props) {
                     source={{ uri: imageSrc }}
                     style={{ width: '100%', height: '100%', borderRadius: 100 }}
                     resizeMode="cover"
-                    onLoadEnd={handleImageLoaded}  // Utiliza o evento onLoadEnd para desativar o loading
+                    onLoadEnd={handleImageLoaded}
                 />
             </NativeBaseAvatar>
     );

@@ -116,8 +116,12 @@ export function HeaderDrawer(props: JSX.IntrinsicAttributes & ScrollViewProps & 
                     <Button variant={"outline"} colorScheme={'danger'}
                             leftIcon={<Icon as={AntDesign} name="delete" size="sm"/>} onPress={handleDeleteAcount}>Excluir
                         minha conta</Button>
-                    <Text color={"text.300"} textAlign={"center"} py={4} fontWeight={'bold'}>Versão da
-                        Build: {Application.nativeBuildVersion}</Text>
+                    <Text color={"text.300"} textAlign={"center"} py={4} fontWeight={'bold'}>
+                        Build Version: {Application.nativeBuildVersion}
+                    </Text>
+                    <Text color={"text.300"} textAlign={"center"} py={4} fontWeight={'bold'}>
+                        App Version: {Application.nativeApplicationVersion}
+                    </Text>
                 </Box>
             </Box>
         </DrawerContentScrollView>
