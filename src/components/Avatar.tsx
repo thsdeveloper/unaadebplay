@@ -1,38 +1,42 @@
-import {Avatar as NativeBaseAvatar, IAvatarProps, Skeleton} from 'native-base'
-import {useContext, useEffect, useState} from "react";
+import { Avatar as NativeBaseAvatar, IAvatarProps, Center, Spinner, Box, Skeleton } from 'native-base';
+import { useContext, useEffect, useState } from "react";
+import { Image } from "react-native";
 import ConfigContext from "../contexts/ConfigContext";
 
 type Props = IAvatarProps & {
-    userAvatarID: string | undefined;
-    width: number;
-    height: number;
+    userAvatarID?: string;
+    width: number | string;  // Permitindo que width e height sejam strings também, para compatibilidade com estilos do NativeBase
+    height: number | string;
 };
 
 export function Avatar({ userAvatarID, width, height, ...rest }: Props) {
-    const [URIImage, setUriImage] = useState<string | undefined>(undefined);
-    const [loading, setLoading] = useState(true);
-    const config = useContext(ConfigContext);
+    const { url_api, avatar_default } = useContext(ConfigContext);
+    const [loading, setLoading] = useState(true); // Estado para controlar a exibição do Spinner
+    const defaultImage = `${url_api}/assets/${avatar_default}?fit=cover`;
+    const [imageSrc, setImageSrc] = useState<string>(defaultImage);
 
     useEffect(() => {
-        async function loadImage() {
-            try {
-                const idAvatarDefault = await config.avatar_default;
-                // Verifica se userID existem, caso contrário, usa o valor padrão idAvatarDefault
-                const avatarId = await (userAvatarID) ? userAvatarID : idAvatarDefault;
-                const url = `${config.url_api}/assets/${avatarId}`
-                setUriImage(url)
-            } catch (e) {
-                setUriImage(undefined);
-            } finally {
-                setLoading(false);
-            }
-        }
-        loadImage();
-    }, [userAvatarID]);
+        const userImage = userAvatarID ? `${url_api}/assets/${userAvatarID}?fit=cover` : defaultImage;
+        setImageSrc(userImage);
+    }, [userAvatarID, avatar_default, url_api]);
 
-    return loading ? (
-        <Skeleton width={width} height={height} />
-    ) : (
-        <NativeBaseAvatar width={width} height={height} source={{ uri: URIImage }} {...rest} />
+    const handleImageLoaded = () => {
+        setLoading(false); // Desativa o loading quando a imagem é carregada
+    };
+
+    return (
+            <NativeBaseAvatar width={width} height={height} {...rest}>
+                {loading && (
+                    <Box zIndex={1000} position={"absolute"}>
+                        <Skeleton borderWidth={2} borderColor="coolGray.400" endColor="text.400" size={width} rounded="full" speed={2} />
+                    </Box>
+                )}
+                <Image
+                    source={{ uri: imageSrc }}
+                    style={{ width: '100%', height: '100%', borderRadius: 100 }}
+                    resizeMode="cover"
+                    onLoadEnd={handleImageLoaded}  // Utiliza o evento onLoadEnd para desativar o loading
+                />
+            </NativeBaseAvatar>
     );
 }

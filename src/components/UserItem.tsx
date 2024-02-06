@@ -25,6 +25,7 @@ const UserItem = React.memo(({ item, handleUserPress }) => (
                         {item.first_name}
                     </Text>
                     <Text color="gray.500">{item.email}</Text>
+                    <Text color="gray.500">{item.sector.name}</Text>
                 </VStack>
             </Box>
         </Stack>

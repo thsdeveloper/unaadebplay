@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import {getConfig} from "../services/config";
+import { getConfig } from "../services/config";
 
 interface ConfigContextData {
     [key: string]: any;

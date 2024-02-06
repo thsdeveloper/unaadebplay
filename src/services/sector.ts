@@ -1,6 +1,6 @@
 import api from "./api";
-import {handleErrors} from "../utils/directus";
-import {NewsItem} from "./news";
+import { handleErrors } from "../utils/directus";
+import { NewsItem } from "./news";
 
 export interface SectorItem {
     id: number;
@@ -18,12 +18,12 @@ export interface SectorItem {
 }
 
 export function loadSectors(setSectors: (sectors: SectorItem[]) => void, setIsLoading: (loading: boolean) => void, setError: (error: string) => void) {
-    api.get('/items/setores',
-        {
-            params: {
-                filter: {status: {_eq: 'published'}}
-            }
-        }).then(({data: {data}}) => {
+    api.get('/items/setores', {
+        params: {
+            filter: { status: { _eq: 'published' } },
+            sort: 'name' // Adiciona a ordenação pelo campo 'name'
+        }
+    }).then(({ data: { data } }) => {
         setSectors(data);
         setIsLoading(false);
         setError('');

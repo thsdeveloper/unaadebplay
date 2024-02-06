@@ -5,6 +5,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { getUsers } from "../../../services/user";
 import UserItem from "../../../components/UserItem";
 import { LoadingLottier } from "../../../components/LoadingLottier";
+import UserSkeleton from '../../../components/Skeletons/UserListSkeletons'
 
 const PAGE_SIZE = 20;
 
@@ -64,9 +65,10 @@ const UserListPage = ({ navigation }) => {
 
     return (
         <Box flex={1} bg="white">
-            <HStack width="100%" py={2} px={3}>
+            <HStack width="100%" py={2} px={3} background={'blue.800'}>
                 <Input
                     flex={1}
+                    size={'2xl'}
                     placeholder="Digite o nome do usuário"
                     onChangeText={setInputText}
                     value={inputText}
@@ -78,7 +80,9 @@ const UserListPage = ({ navigation }) => {
                 />
             </HStack>
 
-            {users.length > 0 ? (
+            {users.length === 0 ? (
+                <UserSkeleton />
+            ) : users.length > 0 && (
                 <FlatList
                     data={users}
                     renderItem={renderItem}
@@ -86,13 +90,8 @@ const UserListPage = ({ navigation }) => {
                     onEndReached={handleLoadMore}
                     onEndReachedThreshold={0.5}
                 />
-            ) : (
-                <Center>
-                    <Text>Nenhum membro encontrado.</Text>
-                </Center>
             )}
 
-            {isLoadingUser && <LoadingLottier />}
         </Box>
     );
 };
