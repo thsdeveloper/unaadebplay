@@ -1,18 +1,16 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { Box, VStack, Text, HStack, Center, Badge, Divider } from 'native-base';
+import React, { useEffect, useState } from 'react';
+import { Box, VStack, Text, HStack, Center } from 'native-base';
 import { getUserId } from "../../../services/user";
 import { UserTypes } from "../../../types/UserTypes";
 import { Avatar } from "../../../components/Avatar";
 import colors from "../../../constants/colors";
-import { ImageBackground, TouchableOpacity } from "react-native";
-import ConfigContext from "../../../contexts/ConfigContext";
+import { TouchableOpacity } from "react-native";
 import { LoadingLottier } from "../../../components/LoadingLottier";
 import { useNavigation } from "@react-navigation/native";
 
 const UserProfile = ({ route }: any) => {
     const { id } = route.params;
     const [user, setUser] = useState<UserTypes | null>(null);
-    const config = useContext(ConfigContext);
     const navigation = useNavigation();
 
     useEffect(() => {
@@ -39,7 +37,6 @@ const UserProfile = ({ route }: any) => {
             {user ? (
                 <VStack space={4}>
                     <Box h={24} w={"full"} position={"relative"}>
-                        <ImageBackground style={{ flex: 1 }}>
                             <Avatar
                                 position={"absolute"}
                                 top={2}
@@ -51,7 +48,6 @@ const UserProfile = ({ route }: any) => {
                                 _text={{ fontSize: "md", fontWeight: "600" }}
                                 alignSelf="center"
                             />
-                        </ImageBackground>
                     </Box>
 
                     <Box top={16}>

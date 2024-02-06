@@ -65,9 +65,10 @@ const UserListPage = ({ navigation }) => {
 
     return (
         <Box flex={1} bg="white">
-            <HStack width="100%" py={2} px={3}>
+            <HStack width="100%" py={2} px={3} background={'blue.800'}>
                 <Input
                     flex={1}
+                    size={'2xl'}
                     placeholder="Digite o nome do usuário"
                     onChangeText={setInputText}
                     value={inputText}
