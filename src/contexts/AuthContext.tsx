@@ -1,9 +1,9 @@
 import React, {createContext, useContext, useEffect, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from "axios";
-import api, {handleErrors} from "../services/api";
+import {signOut, signIn, requestPassword, requestResetPassword} from "../services/auth";
 import {UserTypes} from "../types/UserTypes";
 import AlertContext from "./AlertContext";
+import {handleErrors} from "../utils/directus";
 
 interface Props {
     children: React.ReactNode;
@@ -12,18 +12,24 @@ interface Props {
 interface AuthContextData {
     signed: boolean;
     user: UserTypes | null;
-    signIn(email: string, password: string): Promise<void>;
-    signOut(): void;
+
+    login(email: string | null, password: string | null): Promise<void>;
+
+    logout(): void;
+
     requestPasswordReset(email: string): Promise<void>;
-    setUser(user: UserTypes): Promise<void>;
+
+    setUser(user: UserTypes | null): Promise<void>;
+
     resetPassword(token: string, newPassword: string): Promise<void>;
+
     loading: boolean;
 }
 
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
-export const AuthProvider: React.FC<Props> = ({ children }) => {
+export const AuthProvider: React.FC<Props> = ({children}) => {
     const [user, setUserState] = useState<UserTypes | null>(null);
     const [loading, setLoading] = useState(false);
     const alert = useContext(AlertContext)
@@ -31,125 +37,66 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     useEffect(() => {
         async function loadStorageData() {
             setLoading(true);
-
-            const keys = ['@UNAADEBAuth:user', '@UNAADEBAuth:access_token', '@UNAADEBAuth:refresh_token'];
-            const [[, user], [, access_token], [, refresh_token]] = await AsyncStorage.multiGet(keys);
-
-            if (user && access_token) {
+            const keys = ['@UNAADEB:User'];
+            const [[, user]] = await AsyncStorage.multiGet(keys);
+            if (user) {
                 setUserState(JSON.parse(user));
             }
-
             setLoading(false);
         }
 
         loadStorageData();
     }, []);
 
-
-    async function setUser(user: UserTypes) {
-        await AsyncStorage.setItem('@UNAADEBAuth:user', JSON.stringify(user));
-        setUserState(user);
-    }
-
-    async function signIn(email: string, password: string) {
+    async function login(email: string, password: string) {
         try {
-            const reponseLogin = await axios.post('https://back-unaadeb.onrender.com/auth/login', {email: email, password: password});
-            const { access_token, refresh_token, expires } = reponseLogin.data.data;
-
-            const responseUser = await axios.get('https://back-unaadeb.onrender.com/users/me', {
-                headers: {
-                    Authorization: `Bearer ${access_token}`,
-                },
-            });
-            const user: UserTypes = { ...responseUser.data.data };
-
-
-            // Verifica se o status do usuário é "active"
+            const user = await signIn(email, password)
             if (user.status === 'active') {
-                await setAuthStorage(user, access_token, refresh_token, expires);
                 await setUser(user);
-            } else {
-                // Caso contrário, exibe uma mensagem de erro informando que o usuário não está ativo
-                alert.error('Usuário nao esta ativo!')
-                throw new Error('Usuário não está ativo.');
             }
-
         } catch (error) {
-            const message = handleErrors(error.response.data.errors);
+            const message = handleErrors(error.errors);
             alert.error(message)
         }
+    }
 
+    async function logout() {
+        try {
+            await signOut();
+            await setUser(null);
+        } catch (error) {
+            const message = handleErrors(error.errors);
+            alert.error(message)
+        }
     }
 
     async function requestPasswordReset(email: string): Promise<void> {
         try {
-            await api.post('/auth/password/request', {
-                email: email,
-                reset_url: "https://unaadeb.app.br/reset-password"
-            });
+            await requestPassword(email);
+            alert.success(`Solicitação de redefinição de senha enviada para ${email}`)
         } catch (error) {
-            throw error;
+            const message = handleErrors(error.errors);
+            alert.error(message)
         }
     }
 
     async function resetPassword(token: string, newPassword: string): Promise<void> {
         try {
-            await api.post('/auth/password/reset', {
-                token: token,
-                password: newPassword,
-            });
+            await requestResetPassword(token, newPassword);
         } catch (error) {
-            throw error;
+            const message = handleErrors(error.errors);
+            alert.error(message)
         }
     }
 
-    async function setAuthStorage(user: UserTypes, access_token: string, refresh_token: string, expires: number) {
-        await AsyncStorage.setItem('@UNAADEBAuth:user', JSON.stringify(user));
-        await AsyncStorage.setItem('@UNAADEBAuth:access_token', access_token);
-        await AsyncStorage.setItem('@UNAADEBAuth:refresh_token', refresh_token);
-        await AsyncStorage.setItem('@UNAADEBAuth:expires', String(expires));
-    }
-
-    async function getRefreshToken() {
-        try {
-            return await AsyncStorage.getItem("@UNAADEBAuth:refresh_token");
-        } catch (error) {
-            console.error("Erro ao obter refresh_token:", error);
-        }
-    }
-
-    async function clearAuthStorage() {
-        try {
-            await AsyncStorage.multiRemove([
-                "@UNAADEBAuth:access_token",
-                "@UNAADEBAuth:refresh_token",
-                "@UNAADEBAuth:expires",
-            ]);
-        } catch (error) {
-            console.error("Erro ao limpar o armazenamento da autenticação:", error);
-        }
-    }
-
-    async function signOut() {
-        try {
-            const refresh_token = await getRefreshToken();
-
-            if (refresh_token) {
-                await axios.post(`https://back-unaadeb.onrender.com/auth/logout`, {
-                    refresh_token: refresh_token
-                });
-            }
-
-            await clearAuthStorage();
-            await setUser(null);
-        } catch (error) {
-            handleErrors(error.data.errors)
-            console.error("Erro ao sair:", error.data.errors);
-        }
+    async function setUser(user: UserTypes | null) {
+        await AsyncStorage.setItem('@UNAADEB:User', JSON.stringify(user));
+        setUserState(user);
     }
 
     return (
-        <AuthContext.Provider value={{ signed: !!user, user, signIn, signOut, requestPasswordReset, resetPassword, setUser, loading }}>
+        <AuthContext.Provider
+            value={{signed: !!user, user, login, logout, requestPasswordReset, resetPassword, setUser, loading}}>
             {children}
         </AuthContext.Provider>
     );

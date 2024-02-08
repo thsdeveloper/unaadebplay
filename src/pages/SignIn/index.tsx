@@ -9,12 +9,9 @@ import {
     Center,
     Heading,
     HStack,
-    Link,
     VStack,
     Text,
     KeyboardAvoidingView,
-    Icon,
-    IconButton,
     Pressable
 } from "native-base";
 import * as Yup from 'yup';
@@ -22,7 +19,6 @@ import TranslationContext from "../../contexts/TranslationContext";
 import { Image } from "../../components/Image";
 import ConfigContext from "../../contexts/ConfigContext";
 import { Platform } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
 import colors from "../../constants/colors";
 
 const signInSchema = Yup.object({
@@ -34,7 +30,7 @@ type FormDataProps = Yup.InferType<typeof signInSchema>;
 
 
 export default function SignIn({ navigation }: { navigation: any }) {
-    const { signIn } = useAuth();
+    const { login } = useAuth();
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const { t } = useContext(TranslationContext);
@@ -52,7 +48,7 @@ export default function SignIn({ navigation }: { navigation: any }) {
     async function handleSignIn(data: FormDataProps) {
         setLoading(true)
         try {
-            await signIn(data.email, data.password);
+            await login(data.email, data.password);
         } finally {
             setLoading(false)
         }
@@ -63,7 +59,7 @@ export default function SignIn({ navigation }: { navigation: any }) {
             <Center flex={1} px="8" bgColor={'#0E1647'}>
                 <Box>
                     <Box p={4}>
-                        <Image width={'100%'} height={'20'} assetId={config.project_logo} resizeMode={'contain'} />
+                        <Image width={'100%'} height={"12"} assetId={config.project_logo} />
                     </Box>
 
                     <Heading mt="1" color="blue.200" fontWeight="medium" size="xs">

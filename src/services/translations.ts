@@ -1,11 +1,10 @@
-import api from "./api";
+import directusClient from "./api";
+import {readTranslations} from "@directus/sdk";
 
 export async function getTranslation() {
     try {
-        const response = await api.get('/translations');
-        return response.data.data;
+        return await directusClient.request(readTranslations())
     } catch (error) {
-        console.error('Error to fetch translations:', error);
         throw error;
     }
 }

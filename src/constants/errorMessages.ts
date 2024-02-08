@@ -14,4 +14,5 @@ export const ERROR_MESSAGES: Record<string, string> = {
     SERVICE_UNAVAILABLE: "Não foi possível usar o serviço externo",
     UNPROCESSABLE_ENTITY: "Você tentou fazer algo ilegal",
     RECORD_NOT_UNIQUE: "Usuário já cadastrado com esses dados",
+    USER_SUSPENDED: 'Sua conta está suspensa, procure o administrador.'
 };

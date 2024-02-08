@@ -1,5 +1,6 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { getTranslation } from '../services/translations';
+import React, {createContext, ReactNode, useContext, useEffect, useState} from 'react';
+import {getTranslation} from '../services/translations';
+import AlertContext from "./AlertContext";
 
 interface Translation {
     id: string;
@@ -22,26 +23,23 @@ interface TranslationProviderProps {
 
 export const TranslationProvider: React.FC<TranslationProviderProps> = ({ children }) => {
     const [translations, setTranslations] = useState<{ [key: string]: string }>({});
+    const alert = useContext(AlertContext)
 
     useEffect(() => {
         const fetchTranslations = async () => {
             try {
-                const response = await getTranslation(); // Supondo que getTranslation() faça a chamada para a API e retorne a resposta diretamente
-                const fetchedTranslations: Translation[] = response;
-
+                const translates  = await getTranslation();
+                const fetchedTranslations: Translation[] = translates;
                 const translationsMap = fetchedTranslations.reduce((acc, { key, value }) => {
                     acc[key] = value;
                     return acc;
                 }, {} as { [key: string]: string });
-
                 setTranslations(translationsMap);
             } catch (error) {
-                console.error("Erro ao buscar traduções:", error);
-                // Tratar erro, talvez configurando um estado de erro ou exibindo uma mensagem ao usuário
+                alert.error('Erro ao buscar traduções: '+error)
             }
         };
-
-        fetchTranslations();
+        fetchTranslations()
     }, []);
 
     const t = (key: string) => {

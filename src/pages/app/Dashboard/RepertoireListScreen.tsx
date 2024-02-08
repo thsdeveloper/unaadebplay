@@ -21,9 +21,12 @@ const RepertoireListScreen = () => {
     useEffect(() => {
         const loadRepertories = async () => {
             setIsLoadingList(true)
-            const responseRepertories = await getItems<RepertoriesTypes>('repertorios', {
+
+            const params = {
                 fields: '*.*,mp3.*',
-            });
+            }
+
+            const responseRepertories = await getItems<RepertoriesTypes>('repertorios', params);
             setRepertoires(responseRepertories);
             setIsLoadingList(false)
         };

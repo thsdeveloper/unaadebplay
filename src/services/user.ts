@@ -1,47 +1,37 @@
-import api from "./api";
-import {AxiosResponse} from "axios";
+import directusClient from "./api";
 import {UserTypes} from "../types/UserTypes";
 import {GlobalQueryParams} from "../types/GlobalQueryParamsTypes";
 import {GenericItem} from "./items";
-
-export async function getUserId<T extends GenericItem>(id: string, params?: Record<string, unknown>): Promise<UserTypes>{
-    try {
-        const response = await api.get(`/users/${id}`, {
-            params: params,
-        });
-        return response.data.data;
-    } catch (error) {
-        throw error;
-    }
-}
-
-export async function createUser(data: UserTypes): Promise<AxiosResponse<any> | null> {
-    try {
-        return await api.post('/users', data);
-    } catch (error) {
-        console.error('Erro:', error);
-        throw error;
-    }
-}
-
-export async function updateUserMe(data: any): Promise<AxiosResponse<UserTypes> | null> {
-    try {
-        return await api.patch(`/users/me`, data);
-    } catch (error) {
-        console.error('Erro ao atualizar usuário:', error);
-        throw error;
-    }
-}
-
+import {createUser, readUser, readUsers, updateMe} from "@directus/sdk";
 
 export async function getUsers<T extends GenericItem>(params?: GlobalQueryParams):Promise<UserTypes[]> {
     try {
-        const response = await api.get('/users', {
-            params,
-        });
-        return response.data.data;
+        return await directusClient.request<UserTypes[]>(readUsers(params));
     } catch (error) {
-        console.error('Erro ao buscar usuários:', error);
+        throw error;
+    }
+}
+
+export async function getUser<T extends GenericItem>(id: string, params?: GlobalQueryParams): Promise<UserTypes>{
+    try {
+        return await directusClient.request<UserTypes>(readUser(id, params))
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function setUser(userObject: any): Promise<UserTypes> {
+    try {
+        return await directusClient.request<UserTypes>(createUser(userObject))
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function updateUserMe(parcelUserObject: any): Promise<UserTypes> {
+    try {
+        return await directusClient.request<UserTypes>(updateMe(parcelUserObject));
+    } catch (error) {
         throw error;
     }
 }
@@ -54,7 +44,6 @@ export const emailExists = async (email: string): Promise<boolean> => {
             },
         },
     };
-
     try {
         const users = await getUsers(queryParams); // substitua pela sua chamada de API
         return users.length === 1;

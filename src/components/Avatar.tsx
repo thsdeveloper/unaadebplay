@@ -1,4 +1,4 @@
-import { Avatar as NativeBaseAvatar, IAvatarProps, Center, Spinner, Box, Skeleton } from 'native-base';
+import { Avatar as NativeBaseAvatar, IAvatarProps, Box, Skeleton } from 'native-base';
 import { useContext, useEffect, useState } from "react";
 import { Image } from "react-native";
 import ConfigContext from "../contexts/ConfigContext";

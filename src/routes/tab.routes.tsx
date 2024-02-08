@@ -18,8 +18,6 @@ import PostsPage from "../pages/app/Posts";
 import PostDetailsPage from "../pages/app/Posts/PostDetailsPage";
 import UserProfile from "../pages/app/Users/UserProfile";
 import colors from "../constants/colors";
-import {Button} from "../components/Button";
-import {TouchableOpacity} from "react-native";
 import Contribua from "../pages/app/Dashboard/Contribua";
 import YoutubePage from "../pages/app/Youtube";
 import CongressoPage from "../pages/app/Congresso";
@@ -76,7 +74,6 @@ function SettingsScreen() {
 function TabRoutes() {
     return (
         <>
-            <FlashMessage position="top"/>
             <GlobalAudioPlayer/>
 
             <Tab.Navigator screenOptions={{

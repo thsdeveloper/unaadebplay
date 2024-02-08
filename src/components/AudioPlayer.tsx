@@ -1,6 +1,6 @@
 import React, {useCallback, useContext, useEffect, useState} from 'react';
 import {Animated, Dimensions, Easing, ImageBackground, TouchableOpacity, useWindowDimensions} from 'react-native';
-import {Box, Heading, HStack, IconButton, Image, ScrollView, Slider, Spinner, Text, VStack} from 'native-base';
+import {Box, Heading, HStack, IconButton, ScrollView, Slider, Spinner, Text, VStack} from 'native-base';
 import {AntDesign, MaterialIcons} from '@expo/vector-icons';
 import {LinearGradient} from 'expo-linear-gradient';
 import {Audio} from 'expo-av';
@@ -9,9 +9,11 @@ import colors from "../constants/colors";
 import {Sound} from "expo-av/build/Audio/Sound";
 import {useFocusEffect} from '@react-navigation/native';
 import RenderHtml from 'react-native-render-html';
-import {getAssetURI} from "../services/AssetsService";
+import {getAssetURI} from "../services/files";
 import {getItem} from "../services/items";
 import {RepertoriesTypes} from "../types/RepertoriesTypes";
+import AlertContext from "../contexts/AlertContext";
+import {Image} from './Image'
 
 const {height: screenHeight} = Dimensions.get('window');
 
@@ -29,16 +31,25 @@ const AudioPlayer = ({albumID, onClose}) => {
     const [audioURI, setAudioURI] = useState<String | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const alert = useContext(AlertContext)
 
 
     useEffect(() => {
         const loadAlbumAndSound = async () => {
             setIsLoading(true)
-            const albumResponse = await fetchAlbum(albumID);
+
+            const params = {
+                fields: '*.*,mp3.*',
+            }
+            const albumResponse = await getItem<RepertoriesTypes>('repertorios', albumID, params);
+            console.log('albumResponse', albumResponse.mp3.id)
+
+
             setAlbum(albumResponse);
-            const audioURI = await getAssetURI(albumResponse.mp3.id); // assumindo que você tem uma função para obter a URI do asset
-            setAudioURI(audioURI);
-            await loadSound()
+            const audioFile = await getAssetURI(albumResponse.mp3.id);
+            console.log('audioFile', audioFile.id)
+
+            setAudioURI(`${config.url_api}/assets/${audioFile.id}`);
             setIsLoading(false); // finalize o loading
         };
         loadAlbumAndSound();
@@ -47,13 +58,6 @@ const AudioPlayer = ({albumID, onClose}) => {
     useEffect(() => {
         loadSound();
     }, [audioURI]);
-
-    const fetchAlbum = async (albumID) => {
-        const response = await getItem<RepertoriesTypes>('repertorios', albumID, {
-            fields: '*.*,mp3.*',
-        });
-        return response;
-    };
 
     useFocusEffect(
         React.useCallback(() => {
@@ -83,8 +87,8 @@ const AudioPlayer = ({albumID, onClose}) => {
             await sound.unloadAsync();
         }
 
-        if (!audioURI) { // Verifique se audioURI é válido
-            console.log('audioURI is null or undefined');
+        if (!audioURI) {
+            alert.error('Audio não encontrado')
             return;
         }
 
@@ -94,7 +98,7 @@ const AudioPlayer = ({albumID, onClose}) => {
                 {shouldPlay: true, staysActiveInBackground: true},
             );
 
-            console.log('Audio loaded successfully');  // log for debugging
+            alert.success('Música carregada com sucesso')
 
             setSound(newSound);
             setIsPlaying(true);
@@ -192,8 +196,8 @@ const AudioPlayer = ({albumID, onClose}) => {
                             <ScrollView>
                                 <Box>
                                     <VStack alignItems="center">
-                                        <Image source={{uri: `${config.url_api}/assets/${album?.image_cover.id}`}}
-                                               alt="Alternate Text" size="2xl"/>
+                                        <Image width={'64'} height={"64"}
+                                               alt="Alternate Text" size="2xl" assetId={album?.image_cover.id}/>
                                     </VStack>
                                 </Box>
                                 <Box pt={2}>
@@ -253,8 +257,8 @@ const AudioPlayer = ({albumID, onClose}) => {
                             <Box>
                                 <HStack space={4} alignItems={"center"} pr={4}>
                                     <Box>
-                                        <Image source={{uri: `${config.url_api}/assets/${album?.image_cover.id}`}}
-                                               alt="Alternate Text" size="16"/>
+                                        <Image width={'16'} height={"16"}
+                                               alt="Alternate Text" size="2xl" assetId={album?.image_cover.id}/>
                                     </Box>
                                     <VStack flex={1} justifyContent="center">
                                         <Text color="white" fontWeight={"bold"}>{album?.title}</Text>

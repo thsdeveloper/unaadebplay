@@ -10,6 +10,7 @@ type Props = IImageProps & {
 };
 
 export function Image({assetId, width, height}: Props) {
+    // Renomeando `defaultImage` para `avatarPadrao`
     const {url_api, avatar_default} = useContext(ConfigContext);
     const [loading, setLoading] = useState(true);
     const avatarPadrao = `${url_api}/assets/${avatar_default}?fit=cover`;
