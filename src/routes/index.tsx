@@ -1,12 +1,9 @@
 import React from "react";
 import {useAuth} from "../contexts/AuthContext";
-
 import AuthRoutes from "./auth.routes";
 import DrawerRoutes from "./drawer.routes";
-
-
 import {ActivityIndicator, View} from "react-native";
-
+import FlashMessage from "react-native-flash-message";
 
 function Routes() {
     const {signed, loading} = useAuth()
@@ -22,6 +19,7 @@ function Routes() {
 
     return signed ? (
         <>
+            <FlashMessage position="top"/>
             <DrawerRoutes/>
         </>
     ) : <AuthRoutes/>;

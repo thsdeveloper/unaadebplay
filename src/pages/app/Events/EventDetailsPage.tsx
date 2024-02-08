@@ -2,14 +2,13 @@ import React, {useContext, useEffect, useState} from 'react';
 import {Box, Text, VStack, HStack, Badge, ScrollView} from 'native-base';
 import {EventsTypes} from "../../../types/EventsTypes";
 import {Image} from "../../../components/Image"
-import {getUserId} from "../../../services/user";
+import {getUser} from "../../../services/user";
 import {UserTypes} from "../../../types/UserTypes";
-import {formatTime} from "../../../utils/directus";
-import {getItem} from "../../../services/items";
+import {formatTime, handleErrors} from "../../../utils/directus";
+import {getItem, getItems, setCreateItem} from "../../../services/items";
 import SkeletonItem from "../../../components/SkeletonItem";
 import {Button} from "../../../components/Button";
 import AlertContext from "../../../contexts/AlertContext";
-import api, {handleErrors} from "../../../services/api";
 import AuthContext from "../../../contexts/AuthContext";
 import {Ionicons} from '@expo/vector-icons';
 import {TouchableOpacity} from "react-native";
@@ -32,12 +31,22 @@ const EventDetailsPage = ({navigation, route}) => {
                const eventResponse = await getItem<EventsTypes>('events', id);
                setEvent(eventResponse)
 
-               const userResponse = await getUserId(eventResponse.organizer);
+               const userResponse = await getUser(eventResponse.organizer);
                setOrganizer(userResponse);
 
+               const params = {
+                   filter: {
+                       user_id: {
+                           _eq: user?.id
+                       },
+                       event_id: {
+                           _eq: eventResponse.id
+                       }
+                   }
+               };
                // Verifica a inscrição do usuário
-               const subscriptionResponse = await api.get(`/items/event_subscriptions?filter[user_id][_eq]=${user?.id}&filter[event_id][_eq]=${eventResponse.id}`);
-               setIsSubscribed(subscriptionResponse.data.data.length > 0);
+               const subscriptionResponse = await getItems('event_subscriptions', params)
+               setIsSubscribed(subscriptionResponse.length > 0);
            } catch (e) {
 
            } finally {
@@ -55,16 +64,13 @@ const EventDetailsPage = ({navigation, route}) => {
                 event_id: event?.id,
                 user_id: user?.id,
             };
-
-            const response = await api.post('/items/event_subscriptions', subscription);
-            if (response.status === 200) {
-                alert.success('Obrigado! Inscrição realizada com sucesso!')
-                setIsSubscribed(true);  // Atualiza o estado de inscrição após o sucesso
-            } else {
-                alert.error(`inscrição não foi realizada`)
+            const eventSubscriptions = await setCreateItem('event_subscriptions', subscription)
+            if (eventSubscriptions) {
+                alert.success('Inscrição realizada com sucesso!')
+                setIsSubscribed(true);
             }
         } catch (error) {
-            const message = handleErrors(error.response.data.errors);
+            const message = handleErrors(error.errors);
             alert.error(`Error ao inscrever o usuário: ${message}`)
         } finally {
             setLoadingSubscriptions(false)

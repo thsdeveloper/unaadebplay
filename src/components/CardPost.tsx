@@ -2,7 +2,7 @@ import {Box, AspectRatio, Stack, Heading, Text, Pressable} from 'native-base'
 import React, {useEffect, useState} from "react";
 import {formatTime} from "../utils/directus";
 import {Image} from "./Image";
-import {getUserId} from "../services/user";
+import {getUser} from "../services/user";
 import {PostsTypes} from "../types/PostsTypes";
 import {UserTypes} from "../types/UserTypes";
 import {useNavigation} from "@react-navigation/native";
@@ -18,7 +18,7 @@ export function CardPost({post}: Props) {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const responseUser = await getUserId(post.user_created);
+                const responseUser = await getUser(post.user_created);
                 setUser(responseUser);
             } catch (error) {
                 console.error("Error fetching user:", error);
@@ -43,7 +43,7 @@ export function CardPost({post}: Props) {
                              bg={isPressed ? 'coolGray.100' : isHovered ? 'coolGray.200' : 'white'}>
                             <Box>
                                 <AspectRatio w="100%" ratio={16 / 9}>
-                                    <Image assetId={post.image} alt={post.title}/>
+                                    <Image assetId={post.image} width={'100%'} height={'100%'} alt={post.title}/>
                                 </AspectRatio>
                             </Box>
                             <Stack p="4" space={3}>

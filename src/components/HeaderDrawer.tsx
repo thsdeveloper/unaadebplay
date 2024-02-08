@@ -10,7 +10,6 @@ import {ScrollViewProps, ScrollView, Alert} from 'react-native';
 import {TouchableOpacity} from 'react-native';
 import colors from "../constants/colors";
 import {useNavigation} from "@react-navigation/native";
-import * as Updates from "expo-updates";
 import AlertContext from "../contexts/AlertContext";
 import {updateUserMe} from "../services/user";
 
@@ -31,15 +30,13 @@ export function HeaderDrawer(props: JSX.IntrinsicAttributes & ScrollViewProps & 
                     {
                         text: "Excluir",
                         onPress: async () => {
-
                             const userData = {
                                status: 'suspended'
                             }
                             await updateUserMe(userData);
 
                             alert.success('Solicitação enviada com sucesso!')
-                            signOut();
-
+                            logout();
                         }
                     },
                     {

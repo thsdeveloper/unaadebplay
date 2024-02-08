@@ -14,14 +14,12 @@ import RenderHtml from 'react-native-render-html';
 import * as Yup from "yup";
 import {Controller, useForm} from "react-hook-form";
 import {yupResolver} from "@hookform/resolvers/yup/dist/yup";
-import {loadSectors, SectorItem} from "../../services/sector";
 import {useContext, useEffect, useState} from "react";
 import {Button} from '../../components/Button'
 import {CustomSelect} from '../../components/Select'
 import {Input} from '../../components/input'
 import {Platform} from "react-native";
-import {createUser, emailExists} from "../../services/user";
-import {AxiosError} from "axios";
+import {emailExists, setUser} from "../../services/user";
 import {getItems} from "../../services/items";
 import {LegalDocumentsTypes} from "../../types/LegalDocumentsTypes";
 import ConfigContext from "../../contexts/ConfigContext";
@@ -29,10 +27,11 @@ import TranslationContext from "../../contexts/TranslationContext";
 import CheckboxCustom from "../../components/Checkbox";
 import {Image} from "../../components/Image";
 import {useAuth} from "../../contexts/AuthContext";
-import {handleErrors} from "../../services/api";
 import colors from "../../constants/colors";
 import AlertContext from "../../contexts/AlertContext";
-import {RadioInput} from "../../components/Radio";
+import {Sector} from "../../types/Sector";
+import {GlobalQueryParams} from "../../types/GlobalQueryParamsTypes";
+import {handleErrors} from "../../utils/directus";
 
 
 const signUpSchema = Yup.object({
@@ -60,28 +59,29 @@ type FormDataProps = Yup.InferType<typeof signUpSchema>;
 const FormSigUpUser = () => {
     const window = useWindowDimensions();
     const contentWidth = window.width;
-    const {signed, signIn} = useAuth();
+    const {login} = useAuth();
 
-    //Informacoes de configuracoes
-    const config = useContext(ConfigContext);
+    const {id_role_default, project_logo} = useContext(ConfigContext);
     const {t} = useContext(TranslationContext);
 
     const [loading, setLoading] = useState(false);
-    const [sectors, setSectors] = useState<SectorItem[]>([]);
+    const [sectors, setSectors] = useState<Sector[]>([]);
 
     const [legalDocuments, setLegalDocuments] = useState<LegalDocumentsTypes[]>([]);
     const [activeDocument, setActiveDocument] = useState<"terms" | "privacy" | null>(null);
 
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string>('');
     const [isTermsModalVisible, setIsTermsModalVisible] = useState(false);
     const alert = useContext(AlertContext)
 
     useEffect(() => {
-        loadSectors(setSectors, setIsLoading, setError);
-
         async function fetchData() {
-            const infosLegalDocuments = await getItems<LegalDocumentsTypes>('legal_documents');
+            const params: GlobalQueryParams = {
+                filter: { status: { _eq: 'published' } },
+                sort: 'name'
+            }
+            const infosLegalDocuments = await getItems('legal_documents');
+            const setores = await getItems('setores', params);
+            setSectors(setores)
             setLegalDocuments(infosLegalDocuments)
         }
 
@@ -100,25 +100,21 @@ const FormSigUpUser = () => {
     async function handleSignUp(dataUserForm: FormDataProps) {
         setLoading(true)
 
-        const user = {
+        const userObject = {
             ...dataUserForm,
             title: t('member_unaadeb'),
             description: t('member_description'),
-            role: config.id_role_default,
+            role: id_role_default,
         }
         try {
-            const response = await createUser(user);
-            if(response?.status === 200){
-                await signIn(dataUserForm.email, dataUserForm.password);
+            const user = await setUser(userObject);
+            if(user){
+                await login(userObject.email, userObject.password);
                 alert.success(`Usuário ${user.first_name} cadastrado com sucesso`)
             }
         } catch (error) {
-            if (error instanceof AxiosError) {
-                const message = handleErrors(error.response.data.errors);
-                alert.error(message)
-            } else {
-                alert.error('Error: 748, Entre em contato com o administrador!')
-            }
+            const message = handleErrors(error.errors);
+            alert.error(message)
         } finally {
             setLoading(false)
         }
@@ -129,7 +125,7 @@ const FormSigUpUser = () => {
     const renderItem = () => (
         <VStack>
             <Box backgroundColor={colors.secundary} p={4}>
-                <Image assetId={config.project_logo}
+                <Image assetId={project_logo}
                        alt={'title'}
                        width={'100%'}
                        height={'10'}

@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {StyleSheet, useWindowDimensions} from 'react-native';
 import {Text,ScrollView, Box, VStack, HStack, Tag, Heading} from 'native-base';
-import {getUserId} from "../../../services/user";
+import {getUser} from "../../../services/user";
 import {UserTypes} from "../../../types/UserTypes";
 import {PostsTypes} from "../../../types/PostsTypes";
 import {getItem} from "../../../services/items";
@@ -23,7 +23,7 @@ const PostDetailsPage = ({route}: any) => {
             const responsePost = await getItem<PostsTypes>('posts', id);
             setPost(responsePost);
 
-            const creator = await getUserId(responsePost.user_created);
+            const creator = await getUser(responsePost.user_created);
             setCreator(creator);
             setIsLoading(false);
         };

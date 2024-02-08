@@ -11,8 +11,8 @@ import TranslationContext from "../../../contexts/TranslationContext";
 import AlertContext from "../../../contexts/AlertContext";
 import authContext from "../../../contexts/AuthContext";
 import AvatarUpdated from "../../../components/AvatarUpdated";
+import {handleErrors} from "../../../utils/directus";
 import {RadioInput} from "../../../components/Radio";
-import {handleErrors} from "../../../services/api";
 
 
 const signUpSchema = Yup.object({
@@ -44,16 +44,21 @@ export default function Settings({navigation}: { navigation: any }) {
                 ...dataUserForm,
                 title: t('member_unaadeb'),
             }
-            const {data} = await updateUserMe(userData);
-            await setUser(data.data)
-            alert.success(`Usuário atualizado com sucesso`)
+            const user = await updateUserMe(userData);
+            await setUser(user)
+            alert.success(`Atualizado com sucesso`)
         } catch (error) {
-            const message = handleErrors(error.response.data.errors);
+            const message = handleErrors(error.errors);
             alert.error(`Error ao atualizar o usuário: ${message}`)
         } finally {
             setLoading(false)
         }
     }
+
+    const radioOptions = [
+        { value: 'masculino', label: 'Masculino' },
+        { value: 'feminino', label: 'Feminino' },
+    ];
 
     return (
         <KeyboardAvoidingView
@@ -178,6 +183,20 @@ export default function Settings({navigation}: { navigation: any }) {
                                     placeholder={'Escreva uma descrição sobre você!'}
                                     placeholderTextColor={'gray.400'}
                                     onChangeText={onChange}
+                                    errorMessage={errors.description?.message}
+                                />
+                            )}
+                        />
+                        <Controller
+                            control={control}
+                            name={'gender'}
+                            defaultValue={user?.gender}
+                            render={({field: {onChange, value}}) => (
+                                <RadioInput
+                                    message="Qual o seu gênero?"
+                                    value={value}
+                                    options={radioOptions}
+                                    onChange={onChange}
                                     errorMessage={errors.description?.message}
                                 />
                             )}

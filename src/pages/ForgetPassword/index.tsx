@@ -6,7 +6,6 @@ import { VStack, Box, Text } from "native-base";
 import { Button } from "../../components/Button";
 import { Input } from "../../components/input";
 import { View } from 'react-native';
-import LottieView from 'lottie-react-native';
 import TranslationContext from "../../contexts/TranslationContext";
 import AuthContext from "../../contexts/AuthContext";
 import {emailExists} from "../../services/user";
@@ -38,18 +37,13 @@ export default function ForgetPassword() {
 
     const handleResetPassword = async (data: FormDataProps) => {
         setLoading(true);
-
         try {
             if (!(await emailExists(data.email))) {
                 alert.error('O email informado não está associado a uma conta existente. Verifique se digitou o email corretamente ou crie uma nova conta.')
                 setLoading(false);
                 return;
             }
-
             await requestPasswordReset(data.email);
-            alert.success(`Solicitação de redefinição de senha enviada para ${data.email}`)
-        } catch (error) {
-            alert.error('Ocorreu um erro ao processar a solicitação')
         } finally {
             setLoading(false);
         }
@@ -59,18 +53,6 @@ export default function ForgetPassword() {
     return (
         <View>
             <VStack p={10}>
-                <Box alignItems="center" justifyContent="center">
-                    <LottieView
-                        autoPlay
-                        ref={animation}
-                        style={{
-                            width: '100%',
-                            height: 200,
-                            aspectRatio: 1,
-                        }}
-                        source={require('../../assets/128278-reset-password.json')}
-                    />
-                </Box>
                 <Box>
                     <Text>
                         {t('reset_password_description')}

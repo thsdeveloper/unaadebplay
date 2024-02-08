@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, VStack, Text, HStack, Center } from 'native-base';
-import { getUserId } from "../../../services/user";
+import { getUser } from "../../../services/user";
 import { UserTypes } from "../../../types/UserTypes";
 import { Avatar } from "../../../components/Avatar";
 import colors from "../../../constants/colors";
@@ -15,7 +15,7 @@ const UserProfile = ({ route }: any) => {
 
     useEffect(() => {
         const fetchUser = async () => {
-            const response = await getUserId<UserTypes>(id, {
+            const response = await getUser<UserTypes>(id, {
                 fields: '*.*,sector.*.*',
             });
             console.log('Setor >>>', response)

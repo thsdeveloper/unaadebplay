@@ -9,12 +9,9 @@ import {
     Center,
     Heading,
     HStack,
-    Link,
     VStack,
     Text,
     KeyboardAvoidingView,
-    Icon,
-    IconButton,
     Pressable
 } from "native-base";
 import * as Yup from 'yup';
@@ -22,7 +19,6 @@ import TranslationContext from "../../contexts/TranslationContext";
 import { Image } from "../../components/Image";
 import ConfigContext from "../../contexts/ConfigContext";
 import { Platform } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
 import colors from "../../constants/colors";
 
 const signInSchema = Yup.object({
@@ -63,7 +59,7 @@ export default function SignIn({ navigation }: { navigation: any }) {
             <Center flex={1} px="8" bgColor={'#0E1647'}>
                 <Box>
                     <Box p={4}>
-                        <Image width={'100%'} height={'20'} assetId={config.project_logo} resizeMode={'contain'} />
+                        <Image width={'100%'} height={"12"} assetId={config.project_logo} />
                     </Box>
 
                     <Heading mt="1" color="blue.200" fontWeight="medium" size="xs">

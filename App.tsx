@@ -9,7 +9,7 @@ import {TranslationProvider} from "./src/contexts/TranslationContext";
 import {AudioPlayerProvider} from "./src/contexts/AudioPlayerContext";
 import * as SplashScreen from 'expo-splash-screen';
 import {useEffect, useState} from "react";
-import {getConfig} from "./src/services/config";
+import {getConfig} from "./src/services/settings";
 
 export default function App() {
     const [appIsReady, setAppIsReady] = useState(false);

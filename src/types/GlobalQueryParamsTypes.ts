@@ -1,7 +1,11 @@
 export interface GlobalQueryParams {
-    limit?: number;
-    offset?: number;
-    sort?: string;
-    fields?: string[];
     filter?: any;
+    limit?: number | undefined;
+    fields?: string[];
+    alias?: any;
+    deep?: any;
+    offset?: number | undefined;
+    page?: number | undefined;
+    search?: string | undefined;
+    sort?: any;
 }
