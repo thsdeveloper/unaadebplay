@@ -79,6 +79,7 @@ export function HeaderDrawer(props: JSX.IntrinsicAttributes & ScrollViewProps & 
             <Box flex={1}>
                 <VStack space={4} my={4}>
                     <Box>
+                        <TouchableOpacity onPress={() => navigation.navigate('Configuracoes')}>
                         <Flex alignItems={'center'} direction="row" borderBottomWidth={'2'}
                               borderBottomColor={'lightBlue.900'}>
                             <Box p={4}>
@@ -91,6 +92,7 @@ export function HeaderDrawer(props: JSX.IntrinsicAttributes & ScrollViewProps & 
                                     acesso: {relativeTime(user?.last_access)}</Text>
                             </Box>
                         </Flex>
+                        </TouchableOpacity>
                     </Box>
                 </VStack>
                 <Box>

@@ -12,11 +12,11 @@ type Props = IAvatarProps & {
 export function Avatar({ userAvatarID, width, height, ...rest }: Props) {
     const { url_api, avatar_default } = useContext(ConfigContext);
     const [loading, setLoading] = useState(true);
-    const defaultImage = `${url_api}/assets/${avatar_default}?fit=cover`;
+    const defaultImage = `${url_api}/assets/${avatar_default}?fit=cover&timestamp=${new Date().getTime()}`;
     const [imageSrc, setImageSrc] = useState<string>(defaultImage);
 
     useEffect(() => {
-        const userImage = userAvatarID ? `${url_api}/assets/${userAvatarID}?fit=cover` : defaultImage;
+        const userImage = userAvatarID ? `${url_api}/assets/${userAvatarID}?fit=cover&timestamp=${new Date().getTime()}` : defaultImage;
         setImageSrc(userImage);
     }, [userAvatarID, avatar_default, url_api]);
 

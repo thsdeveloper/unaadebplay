@@ -62,8 +62,8 @@ export const AuthProvider: React.FC<Props> = ({children}) => {
 
     async function logout() {
         try {
-            await signOut();
             await setUser(null);
+            await signOut();
         } catch (error) {
             const message = handleErrors(error.errors);
             alert.error(message)

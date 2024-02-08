@@ -7,7 +7,6 @@ import colors from "../../../constants/colors";
 import AlertContext from "../../../contexts/AlertContext";
 import * as Updates from "expo-updates";
 import BannerCarouselUsers from "../../../components/BannerCarouselUsers";
-import ConfigContext from "../../../contexts/ConfigContext";
 import {FontAwesome5, MaterialIcons, FontAwesome, Entypo} from '@expo/vector-icons';
 import AvatarGroup from "../../../components/AvatarGroup";
 
@@ -15,7 +14,6 @@ export default function Dashboard({navigation}: { navigation: any }) {
     const [refreshing, setRefreshing] = useState(false);
     const {t} = useContext(TranslationContext);
     const alert = useContext(AlertContext);
-    const config = useContext(ConfigContext);
 
     const checkForUpdate = async () => {
         if (__DEV__) {
@@ -33,9 +31,7 @@ export default function Dashboard({navigation}: { navigation: any }) {
                         {
                             text: "Sim, atualizar!",
                             onPress: async () => {
-                                await Updates.fetchUpdateAsync();
-                                // ... atualiza o aplicativo ...
-                                await Updates.reloadAsync();
+                                await updatedAppVersion()
                             }
                         },
                         {
@@ -45,9 +41,20 @@ export default function Dashboard({navigation}: { navigation: any }) {
                 );
             }
         } catch (e) {
-            console.error(e); // log the error to console
+            console.error(e);
+            alert.error('Erro ao atualizar o aplicativo')
         }
     };
+
+    async function updatedAppVersion() {
+       try {
+           await Updates.fetchUpdateAsync();
+           await Updates.reloadAsync();
+           alert.success('App atualizado com sucesso!')
+       } catch (error){
+           alert.error('Erro ao atualizar o aplicativo')
+       }
+    }
 
     useEffect(() => {
         checkForUpdate()
@@ -55,6 +62,7 @@ export default function Dashboard({navigation}: { navigation: any }) {
 
     const onRefresh = async () => {
         setRefreshing(true);
+        alert.success('Atualizado!')
     };
 
 
@@ -70,7 +78,8 @@ export default function Dashboard({navigation}: { navigation: any }) {
 
                 <HStack space={2}>
 
-                    <Box width={'1/4'} height={20} bgColor={colors.secundary2} borderRadius={10} justifyContent={"center"}>
+                    <Box width={'1/4'} height={20} bgColor={colors.secundary2} borderRadius={10}
+                         justifyContent={"center"}>
                         <TouchableOpacity onPress={() => navigation.navigate('Congresso')}>
                             <Box alignItems={"center"} justifyContent={"center"}>
                                 <Icon ml={2} as={FontAwesome5} name="fire" size={"2xl"} color={colors.primary}/>
@@ -79,7 +88,8 @@ export default function Dashboard({navigation}: { navigation: any }) {
                         </TouchableOpacity>
                     </Box>
 
-                    <Box width={'1/4'} height={20} bgColor={colors.secundary2} borderRadius={10} justifyContent={"center"}>
+                    <Box width={'1/4'} height={20} bgColor={colors.secundary2} borderRadius={10}
+                         justifyContent={"center"}>
                         <TouchableOpacity onPress={() => navigation.navigate('RepertoireList')}>
                             <Box alignItems={"center"} justifyContent={"center"}>
                                 <Icon as={FontAwesome} name="music" size={"2xl"} color={colors.primary}/>
@@ -88,7 +98,8 @@ export default function Dashboard({navigation}: { navigation: any }) {
                         </TouchableOpacity>
                     </Box>
 
-                    <Box width={'1/4'} height={20} bgColor={colors.secundary2} borderRadius={10} justifyContent={"center"}>
+                    <Box width={'1/4'} height={20} bgColor={colors.secundary2} borderRadius={10}
+                         justifyContent={"center"}>
                         <TouchableOpacity onPress={() => navigation.navigate('Youtube')}>
                             <Box alignItems={"center"} justifyContent={"center"}>
                                 <Icon as={Entypo} name="youtube" size={"2xl"} color={colors.primary}/>
@@ -99,7 +110,7 @@ export default function Dashboard({navigation}: { navigation: any }) {
 
                 </HStack>
 
-                <Divider mt={4} />
+                <Divider mt={4}/>
             </Box>
             <Box>
                 <Stack m={2} space={"sm"} direction={"row"} alignItems={"center"}>
@@ -148,7 +159,7 @@ export default function Dashboard({navigation}: { navigation: any }) {
             </Box>
 
             <Box py={4} bgColor={colors.secundary2} mt={4} borderTopWidth={4} borderColor={colors.darkRed}>
-                <AvatarGroup />
+                <AvatarGroup/>
             </Box>
         </ScrollView>
     );

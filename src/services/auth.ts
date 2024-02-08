@@ -1,5 +1,5 @@
 import {UserTypes} from "../types/UserTypes";
-import {createUser, passwordRequest, passwordReset, readMe} from "@directus/sdk";
+import {passwordRequest, passwordReset, readMe} from "@directus/sdk";
 import directusClient from "./api";
 
 export async function signIn(email, password): Promise<UserTypes> {
