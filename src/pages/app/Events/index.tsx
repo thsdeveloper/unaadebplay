@@ -21,7 +21,6 @@ const EventPage = () => {
     const { setAlbumID } = useAudioPlayer();
     const navigation = useNavigation();
 
-
     const loadEvents = async () => {
         setIsLoadingList(true);
         let response = await getItems<EventsTypes>('events');
@@ -47,12 +46,9 @@ const EventPage = () => {
         setIsLoadingList(false);
     };
 
-
-
     useEffect(() => {
         loadEvents();
     }, []);
-
 
     const handleEventPress = async (event: EventsTypes) => {
         navigation.navigate('EventsDetails', {id: event.id})

@@ -55,7 +55,7 @@ const EventDetailsPage = ({navigation, route}) => {
         };
 
         loadOrganizerAndCheckSubscription();
-    }, [event]);
+    }, [id]);
 
     const subscribeToEvent = async () => {
         setLoadingSubscriptions(true)

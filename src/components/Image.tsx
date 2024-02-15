@@ -13,12 +13,12 @@ export function Image({assetId, width, height}: Props) {
     // Renomeando `defaultImage` para `avatarPadrao`
     const {url_api, avatar_default} = useContext(ConfigContext);
     const [loading, setLoading] = useState(true);
-    const avatarPadrao = `${url_api}/assets/${avatar_default}?fit=cover`;
+    const avatarPadrao = `${url_api}/assets/${avatar_default}?fit=cover&timestamp=${new Date().getTime()}`;
     const [imageSrc, setImageSrc] = useState<string>(avatarPadrao);
 
     useEffect(() => {
         const userImage = assetId
-            ? `${url_api}/assets/${assetId}?fit=cover`
+            ? `${url_api}/assets/${assetId}?fit=cover&timestamp=${new Date().getTime()}`
             : avatarPadrao;
         setImageSrc(userImage);
     }, [assetId, avatar_default, url_api]);
