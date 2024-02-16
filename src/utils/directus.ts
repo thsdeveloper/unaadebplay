@@ -19,3 +19,13 @@ export function handleErrors(errors: any[]): string {
     }
     return 'Nenhum erro especificado.';
 }
+
+export function formatPhoneNumber(phoneNumber) {
+    // Remove caracteres não numéricos
+    const numericPhoneNumber = phoneNumber.replace(/\D/g, '');
+
+    // Adiciona o código do país ao número formatado
+    const formattedPhoneNumber = `+55${numericPhoneNumber}`;
+
+    return formattedPhoneNumber;
+}

@@ -19,6 +19,7 @@ const signUpSchema = Yup.object({
     first_name: Yup.string().trim().min(2, 'O primeiro nome deve ter pelo menos 2 caracteres').required('O campo nome é obrigatório'),
     last_name: Yup.string().trim().min(2, 'O sobrenome deve ter pelo menos 2 caracteres').required('O campo sobrenome é obrigatório'),
     email: Yup.string().email('Digite um email válido').required('Email é obrigatório'),
+    gender: Yup.string().required('O campo gênero deve ser preenchido'),
     location: Yup.string().trim().min(2, 'O campo localização é obrigatório').required('O campo localização é obrigatório'),
     description: Yup.string().trim().min(20, 'O campo descrição deve conter pelo menos 20 caracteres'),
 })
@@ -197,7 +198,7 @@ export default function Settings({navigation}: { navigation: any }) {
                                     value={value}
                                     options={radioOptions}
                                     onChange={onChange}
-                                    errorMessage={errors.description?.message}
+                                    errorMessage={errors.gender?.message}
                                 />
                             )}
                         />

@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {authentication, createDirectus, rest} from '@directus/sdk';
+import {authentication, createDirectus, rest, readExtensions} from '@directus/sdk';
 import {Sector} from "../types/Sector";
 
 const url = 'https://back-unaadeb.onrender.com'
@@ -20,7 +20,7 @@ interface Schema {
 }
 
 
-
 const directusClient = createDirectus<Schema>(url).with(authentication('json', {storage})).with(rest());
+
 
 export default directusClient;
