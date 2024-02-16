@@ -432,7 +432,7 @@ const FormSigUpUser = () => {
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={{flex: 1}}
             >
-                {step === 2 && (
+                {step === 1 && (
                     <>
                         <FlatList
                             data={[0]} // Fornecer um único elemento para renderizar
@@ -464,7 +464,7 @@ const FormSigUpUser = () => {
                     </>
                 )}
 
-                {step === 1 && (
+                {step === 2 && (
                     <Box p={10} width={'100%'}>
                         <Box alignContent={'center'} alignItems={'center'} p={10}>
                             <FontAwesome6 name="comment-sms" size={150} color={colors.secundary3} />
