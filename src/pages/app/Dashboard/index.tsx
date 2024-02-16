@@ -1,64 +1,19 @@
-import React, {useContext, useEffect, useState} from "react";
-import {RefreshControl, Alert, TouchableOpacity} from "react-native";
+import React, {useContext, useState} from "react";
+import {RefreshControl, TouchableOpacity} from "react-native";
 import {Box, Text, ScrollView, Stack, VStack, HStack, Icon, Heading, Divider} from "native-base";
 import BannerCarousel from "../../../components/BannerCarousel";
 import TranslationContext from "../../../contexts/TranslationContext";
 import colors from "../../../constants/colors";
 import AlertContext from "../../../contexts/AlertContext";
-import * as Updates from "expo-updates";
 import BannerCarouselUsers from "../../../components/BannerCarouselUsers";
 import {FontAwesome5, MaterialIcons, FontAwesome, Entypo} from '@expo/vector-icons';
 import AvatarGroup from "../../../components/AvatarGroup";
+import AppUpdateManager from "../../../components/AppUpdateManager";
 
 export default function Dashboard({navigation}: { navigation: any }) {
     const [refreshing, setRefreshing] = useState(false);
     const {t} = useContext(TranslationContext);
     const alert = useContext(AlertContext);
-
-    const checkForUpdate = async () => {
-        if (__DEV__) {
-            console.log('Cannot check for updates in development mode');
-            return;
-        }
-
-        try {
-            const update = await Updates.checkForUpdateAsync();
-            if (update.isAvailable) {
-                Alert.alert(
-                    "Nova atualização disponível",
-                    "Deseja atualizar o aplicativo UNAADEB Play agora?",
-                    [
-                        {
-                            text: "Sim, atualizar!",
-                            onPress: async () => {
-                                await updatedAppVersion()
-                            }
-                        },
-                        {
-                            text: "Não",
-                        }
-                    ]
-                );
-            }
-        } catch (e) {
-            console.error(e);
-            alert.error('Erro ao atualizar o aplicativo')
-        }
-    };
-
-    async function updatedAppVersion() {
-       try {
-           await Updates.fetchUpdateAsync();
-           await Updates.reloadAsync();
-           alert.success('App atualizado com sucesso!')
-       } catch (error){
-           alert.error('Erro ao atualizar o aplicativo')
-       }
-    }
-
-    useEffect(() => {
-        checkForUpdate()
-    }, []);
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -70,6 +25,7 @@ export default function Dashboard({navigation}: { navigation: any }) {
         <ScrollView
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} title={t('text_search')}/>}>
             <Box alignItems={"center"} pt={4}>
+                <AppUpdateManager />
 
                 <Box alignItems={"center"} pb={4}>
                     <Heading color={colors.dark} fontWeight={"extrabold"}>#GeradosNoAltar2024</Heading>

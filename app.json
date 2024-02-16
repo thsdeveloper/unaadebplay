@@ -19,6 +19,12 @@
         {
           "photosPermission": "The $(PRODUCT_NAME) app accesses your photos to allow you to share them on your profile."
         }
+      ],
+      [
+        "expo-updates",
+        {
+          "username": "thsdeveloper"
+        }
       ]
     ],
     "assetBundlePatterns": [
