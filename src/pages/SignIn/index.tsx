@@ -78,6 +78,7 @@ export default function SignIn({ navigation }: { navigation: any }) {
                                     onBlur={onBlur}
                                     value={value}
                                     errorMessage={errors.email?.message}
+                                    keyboardType={'email-address'}
                                     autoCapitalize="none"
                                     autoCorrect={false}
                                 />
