@@ -4,6 +4,18 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "android": {
+      "release": {
+        "workflow": "managed",
+        "image": "latest"
+      }
+    },
+    "ios": {
+      "release": {
+        "workflow": "managed",
+        "image": "latest"
+      }
+    },
     "development": {
       "developmentClient": true,
       "distribution": "internal",
