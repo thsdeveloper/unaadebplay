@@ -1,9 +1,10 @@
 import React, {createContext, useContext, useEffect, useState} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {signOut, signIn, requestPassword, requestResetPassword} from "../services/auth";
-import {UserTypes} from "../types/UserTypes";
+import {signOut, signIn, requestPassword, requestResetPassword} from "@/services/auth";
+import {UserTypes} from "@/types/UserTypes";
 import AlertContext from "./AlertContext";
-import {handleErrors} from "../utils/directus";
+import {handleErrors} from "@/utils/directus";
+import {useRouter} from "expo-router";
 
 interface Props {
     children: React.ReactNode;
@@ -33,30 +34,37 @@ export const AuthProvider: React.FC<Props> = ({children}) => {
     const [user, setUserState] = useState<UserTypes | null>(null);
     const [loading, setLoading] = useState(false);
     const alert = useContext(AlertContext)
+    const router = useRouter();
 
     useEffect(() => {
         async function loadStorageData() {
-            setLoading(true);
-            const keys = ['@UNAADEB:User'];
-            const [[, user]] = await AsyncStorage.multiGet(keys);
-            if (user) {
-                setUserState(JSON.parse(user));
+            try {
+                const storedUser = await AsyncStorage.getItem('@UNAADEB:User');
+                if (storedUser) {
+                    setUserState(JSON.parse(storedUser));
+                }
+            } catch (e) {
+                alert.error('Falha ao restaurar informações de autenticação.');
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         }
-
         loadStorageData();
     }, []);
 
     async function login(email: string, password: string) {
+        setLoading(true);
         try {
-            const user = await signIn(email, password)
+            const user = await signIn(email, password);
             if (user.status === 'active') {
                 await setUser(user);
+                router.push('/(tabs)/(home)/')
             }
         } catch (error) {
             const message = handleErrors(error.errors);
-            alert.error(message)
+            alert.error(message);
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -66,7 +74,7 @@ export const AuthProvider: React.FC<Props> = ({children}) => {
             await signOut();
         } catch (error) {
             const message = handleErrors(error.errors);
-            alert.error(message)
+            alert.error(message);
         }
     }
 
@@ -90,7 +98,11 @@ export const AuthProvider: React.FC<Props> = ({children}) => {
     }
 
     async function setUser(user: UserTypes | null) {
-        await AsyncStorage.setItem('@UNAADEB:User', JSON.stringify(user));
+        if (user) {
+            await AsyncStorage.setItem('@UNAADEB:User', JSON.stringify(user));
+        } else {
+            await AsyncStorage.removeItem('@UNAADEB:User');
+        }
         setUserState(user);
     }
 

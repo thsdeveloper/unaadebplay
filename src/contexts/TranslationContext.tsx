@@ -1,5 +1,5 @@
 import React, {createContext, ReactNode, useContext, useEffect, useState} from 'react';
-import {getTranslation} from '../services/translations';
+import {getTranslation} from '@/services/translations';
 import AlertContext from "./AlertContext";
 
 interface Translation {

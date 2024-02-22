@@ -1,11 +1,11 @@
 import {Box, AspectRatio, Stack, Heading, Text, Pressable} from 'native-base'
 import React, {useEffect, useState} from "react";
-import {formatTime} from "../utils/directus";
-import {Image} from "./Image";
-import {getUser} from "../services/user";
-import {PostsTypes} from "../types/PostsTypes";
-import {UserTypes} from "../types/UserTypes";
-import {useNavigation} from "@react-navigation/native";
+import {formatTime} from "@/utils/directus";
+import {Image} from "@/components/Image";
+import {getUser} from "@/services/user";
+import {PostsTypes} from "@/types/PostsTypes";
+import {UserTypes} from "@/types/UserTypes";
+import {Link} from "expo-router";
 
 type Props = {
     post: PostsTypes;
@@ -13,8 +13,6 @@ type Props = {
 
 export function CardPost({post}: Props) {
     const [user, setUser] = useState<UserTypes>();
-    const navigation = useNavigation();
-
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -27,15 +25,9 @@ export function CardPost({post}: Props) {
 
         fetchData();
     }, [post.user_created]);
-
-    const handlePostPress = async () => {
-        // @ts-ignore
-        navigation.navigate('PostsDetails', {id: post.id})
-    };
-
-
     return (
-        <Pressable onPress={() => handlePostPress()}>
+        <Link href={`post/${post.id}`} asChild>
+        <Pressable>
             {({isHovered, isFocused, isPressed}) => {
                 return (
                     <Box m={'2'}>
@@ -73,5 +65,6 @@ export function CardPost({post}: Props) {
                 )
             }}
         </Pressable>
+        </Link>
     )
 }

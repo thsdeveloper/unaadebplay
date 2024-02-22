@@ -1,29 +1,26 @@
 import React, {useEffect, useState} from 'react';
-import { Dimensions, StyleSheet } from 'react-native';
-import { Box, FlatList, Pressable, Skeleton, Text } from 'native-base';
-import { LinearGradient } from 'expo-linear-gradient';
+import {Dimensions, StyleSheet} from 'react-native';
+import {Box, FlatList, Pressable, Skeleton, Text} from 'native-base';
+import {LinearGradient} from 'expo-linear-gradient';
 
-import { BannerTypes } from '../types/BannerTypes';
-import { Image } from './Image';
-import PaginationDots from "./PaginationDots";
-import { NavigationProp, ParamListBase } from '@react-navigation/native';
-import {getItems} from "../services/items";
+import {BannerTypes} from '@/types/BannerTypes';
+import {Image} from '@/components/Image';
+import PaginationDots from "@/components/PaginationDots";
+import {getItems} from "@/services/items";
+import {Link} from "expo-router";
 
 
-const { width: screenWidth } = Dimensions.get('window');
+const {width: screenWidth} = Dimensions.get('window');
 
 interface PropsBanners {
-    navigation: NavigationProp<ParamListBase>;
     refreshing: any,
     setRefreshing: any
 }
 
-const BannerCarousel = ({navigation, refreshing, setRefreshing}: PropsBanners) => {
+export default function BannerCarousel({refreshing, setRefreshing}: PropsBanners) {
     const [loading, setLoading] = useState(true);
     const [activeIndex, setActiveIndex] = useState(0);
     const [banners, setBanners] = useState<BannerTypes[]>([]);
-
-    console.log('refreshing', refreshing)
 
     useEffect(() => {
         const loadBanners = async () => {
@@ -37,46 +34,43 @@ const BannerCarousel = ({navigation, refreshing, setRefreshing}: PropsBanners) =
         loadBanners()
     }, [refreshing]);
 
-
-
-    const handleBannerPress = (item: BannerTypes) => {
-        // Adicione a lógica de navegação aqui para redirecionar o usuário para uma tela específica
-        navigation.navigate(item.page_route, { screen: item.screen, params: { id: item.params_id }});
-    };
-
     const width = screenWidth * 0.8;
     const height = 120;
 
-    const renderItem = ({item}: any) => (
-        <Pressable onPress={() => handleBannerPress(item)} ml={2}>
-            <Box>
-                <Image
-                    borderRadius={10}
-                    assetId={item.image}
-                    width={String(width)}
-                    height={String(height)}
-                    resizeMode="cover"
-                />
-                {item.title && item.description ? (
-                    <LinearGradient
-                        colors={['transparent', 'rgba(0, 0, 0, 1.8)']}
-                        style={styles.textBackground}
-                    />
-                ): (
-                   <></>
-                )}
-                <Box position={"absolute"} bottom={4} left={4} right={4}>
-                    <Text style={styles.bannerTitle}>{item.title}</Text>
-                    <Text style={styles.bannerDescription}>{item.description}</Text>
-                </Box>
+    //navigation.navigate(item.page_route, { screen: item.screen, params: { id: item.params_id }});
 
-            </Box>
-        </Pressable>
+    const renderItem = ({item}: any) => (
+        <Link href={`/(tabs)/(events)`} asChild>
+            <Pressable ml={2}>
+                <Box>
+                    <Image
+                        borderRadius={10}
+                        assetId={item.image}
+                        width={String(width)}
+                        height={String(height)}
+                        resizeMode="cover"
+                    />
+                    {item.title && item.description ? (
+                        <LinearGradient
+                            colors={['transparent', 'rgba(0, 0, 0, 1.8)']}
+                            style={styles.textBackground}
+                        />
+                    ) : (
+                        <></>
+                    )}
+                    <Box position={"absolute"} bottom={4} left={4} right={4}>
+                        <Text style={styles.bannerTitle}>{item.title}</Text>
+                        <Text style={styles.bannerDescription}>{item.description}</Text>
+                    </Box>
+
+                </Box>
+            </Pressable>
+        </Link>
     );
 
     const renderLoader = () => (
         <Box m={4}>
-            <Skeleton width={width} height={height} />
+            <Skeleton width={width} height={height}/>
         </Box>
     );
 
@@ -85,26 +79,26 @@ const BannerCarousel = ({navigation, refreshing, setRefreshing}: PropsBanners) =
             {loading ? (
                 renderLoader()
             ) : (
-               <>
-                   <FlatList
-                       horizontal
-                       data={banners}
-                       renderItem={renderItem}
-                       snapToInterval={screenWidth * 0.8}
-                       decelerationRate="fast"
-                       keyExtractor={(item: BannerTypes) => item.id}
-                       contentContainerStyle={styles.flatListContainer}
-                       showsHorizontalScrollIndicator={false}
-                       onScroll={(event) => {
-                           const newIndex = Math.round(event.nativeEvent.contentOffset.x / width);
-                           if (newIndex !== activeIndex) {
-                               setActiveIndex(newIndex);
-                           }
-                       }}
-                       scrollEventThrottle={16}
-                   />
-                   <PaginationDots data={banners} activeIndex={activeIndex} />
-               </>
+                <>
+                    <FlatList
+                        horizontal
+                        data={banners}
+                        renderItem={renderItem}
+                        snapToInterval={screenWidth * 0.8}
+                        decelerationRate="fast"
+                        keyExtractor={(item: BannerTypes) => item.id}
+                        contentContainerStyle={styles.flatListContainer}
+                        showsHorizontalScrollIndicator={false}
+                        onScroll={(event) => {
+                            const newIndex = Math.round(event.nativeEvent.contentOffset.x / width);
+                            if (newIndex !== activeIndex) {
+                                setActiveIndex(newIndex);
+                            }
+                        }}
+                        scrollEventThrottle={16}
+                    />
+                    <PaginationDots data={banners} activeIndex={activeIndex}/>
+                </>
             )}
         </Box>
     );
@@ -137,6 +131,3 @@ const styles = StyleSheet.create({
         marginTop: 8,
     },
 });
-
-export default BannerCarousel;
-

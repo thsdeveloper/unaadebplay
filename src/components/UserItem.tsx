@@ -3,8 +3,7 @@ import { TouchableOpacity } from 'react-native';
 import { Box, Text, VStack, Divider, Stack } from 'native-base';
 import colors from "../constants/colors";
 import {Avatar} from "./Avatar";
-
-const UserItem = React.memo(({ item, handleUserPress }) => (
+const UserItem = React.memo(({ item, handleUserPress }: any) => (
     <TouchableOpacity onPress={() => handleUserPress(item)}>
         <Stack direction="row" space={"sm"} p={2}>
             <Box>
@@ -28,5 +27,4 @@ const UserItem = React.memo(({ item, handleUserPress }) => (
         <Divider/>
     </TouchableOpacity>
 ));
-
 export default UserItem;

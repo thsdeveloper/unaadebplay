@@ -1,16 +1,16 @@
 import React, {useContext, useEffect, useState} from 'react';
 import {Avatar, Center, Text} from 'native-base';
-import {getUsers} from "../services/user";
-import {UserTypes} from "../types/UserTypes";
-import ConfigContext from "../contexts/ConfigContext";
+import {getUsers} from "@/services/user";
+import {UserTypes} from "@/types/UserTypes";
+import ConfigContext from "@/contexts/ConfigContext";
 import colors from "../constants/colors";
 import {TouchableOpacity} from "react-native";
-import {useNavigation} from "@react-navigation/native";
+import {useNavigation, useRouter} from "expo-router";
 
 const AvatarGroup = () => {
     const [users, setUsers] = useState<UserTypes[]>([]);
     const config = useContext(ConfigContext)
-    const navigation = useNavigation();
+    const router = useRouter();
 
 
     useEffect(() => {
@@ -24,14 +24,13 @@ const AvatarGroup = () => {
     }, []);
 
     return (
-        <TouchableOpacity onPress={() => navigation.navigate('UserListPage')}>
+        <TouchableOpacity onPress={() => router.push('/users')}>
             <Center>
                 <Text color={colors.light} pb={4} fontWeight={"bold"}>Junte-se a milhares de adolescentes com
                     propósitos!</Text>
                 <Avatar.Group space={-4} max={5} _avatar={{size: "lg"}}>
                     {users && users.slice(0, 10).map((user, index) => {
                         const initials = `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`;
-
                         return (
                             <Avatar
                                 backgroundColor={colors.primary}
