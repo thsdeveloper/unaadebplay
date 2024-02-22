@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { MessageType, showMessage} from "react-native-flash-message"
-
 interface AlertContextData {
     type: MessageType
     message: string

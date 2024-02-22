@@ -1,6 +1,6 @@
 import React, {createContext, useState, useEffect, ReactNode, useContext} from 'react';
-import { getSettings } from "../services/settings";
-import {handleErrors} from "../utils/directus";
+import { getSettings } from "@/services/settings";
+import {handleErrors} from "@/utils/directus";
 import AlertContext from "./AlertContext";
 
 interface ConfigContextData {

@@ -9,11 +9,11 @@ import colors from "../constants/colors";
 import {Sound} from "expo-av/build/Audio/Sound";
 import {useFocusEffect} from '@react-navigation/native';
 import RenderHtml from 'react-native-render-html';
-import {getAssetURI} from "../services/files";
-import {getItem} from "../services/items";
-import {RepertoriesTypes} from "../types/RepertoriesTypes";
-import AlertContext from "../contexts/AlertContext";
-import {Image} from './Image'
+import {getAssetURI} from "@/services/files";
+import {getItem} from "@/services/items";
+import {RepertoriesTypes} from "@/types/RepertoriesTypes";
+import AlertContext from "@/contexts/AlertContext";
+import {Image} from '@/components/Image'
 
 const {height: screenHeight} = Dimensions.get('window');
 

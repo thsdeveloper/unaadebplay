@@ -25,11 +25,13 @@ export function Input({ errorMessage = null, isInvalid, isPassword, mask, ...res
     return (
         <FormControl isInvalid={invalid}>
             <InputComponent
-                size={'xl'}
+                height={12}
+                size={'lg'}
                 isInvalid={invalid}
                 _invalid={{
                     borderWidth: 1
                 }}
+                variant="rounded"
                 secureTextEntry={isPassword && !showPassword}
                 InputRightElement={isPassword && (
                     <IconButton

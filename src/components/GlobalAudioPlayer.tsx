@@ -1,6 +1,7 @@
 import React from 'react';
-import {useAudioPlayer} from "../contexts/AudioPlayerContext";
+import {useAudioPlayer} from "@/contexts/AudioPlayerContext";
 import AudioPlayer from "./AudioPlayer";
+import {SafeAreaView} from "react-native";
 
 const GlobalAudioPlayer = () => {
     const { albumID, setAlbumID } = useAudioPlayer();
@@ -10,10 +11,13 @@ const GlobalAudioPlayer = () => {
     }
 
     return (
-        <AudioPlayer
-            albumID={albumID}
-            onClose={() => setAlbumID(null)}
-        />
+        <SafeAreaView>
+            <AudioPlayer
+                albumID={albumID}
+                onClose={() => setAlbumID(null)}
+            />
+        </SafeAreaView>
+
     );
 };
 

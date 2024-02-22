@@ -1,54 +1,27 @@
 import Dashboard from '../pages/app/Dashboard';
-import {Ionicons, FontAwesome5, FontAwesome} from '@expo/vector-icons'
-import Colors from '../constants/colors'
+import {Ionicons, FontAwesome5, FontAwesome, Feather} from '@expo/vector-icons'
 
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs'
 import {createNativeStackNavigator} from "@react-navigation/native-stack";
-
-import Contact from "../pages/app/Contact";
-import Settings from "../pages/app/Settings";
-
+import Settings from "../pages/app/Index";
 import Events from "../pages/app/Events";
-import RepertoireListScreen from "../pages/app/Dashboard/RepertoireListScreen";
 import React from "react";
-import GlobalAudioPlayer from "../components/GlobalAudioPlayer";
-import FlashMessage from "react-native-flash-message";
 import EventDetailsPage from "../pages/app/Events/EventDetailsPage";
 import PostsPage from "../pages/app/Posts";
 import PostDetailsPage from "../pages/app/Posts/PostDetailsPage";
-import UserProfile from "../pages/app/Users/UserProfile";
-import colors from "../constants/colors";
-import Contribua from "../pages/app/Dashboard/Contribua";
-import YoutubePage from "../pages/app/Youtube";
-import CongressoPage from "../pages/app/Congresso";
-import UserListPage from "../pages/app/Users/UsersList";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-
-function DashboardScreen() {
-    return (
-        <>
-            <Stack.Navigator>
-                <Stack.Screen name="Home" component={Dashboard} options={{headerShown: false}}/>
-                <Stack.Screen name="Contact" component={Contact} options={{headerShown: false}}/>
-                <Stack.Screen name="RepertoireList" component={RepertoireListScreen} options={{headerShown: false}}/>
-                <Stack.Screen name="UserProfile" component={UserProfile} options={{headerShown: false}}/>
-                <Stack.Screen name="UserListPage" component={UserListPage} options={{headerShown: false}}/>
-                <Stack.Screen name="Contribua" component={Contribua} options={{headerShown: false}}/>
-                <Stack.Screen name="Congresso" component={CongressoPage} options={{headerShown: false}}/>
-                <Stack.Screen name="Youtube" component={YoutubePage} options={{headerShown: false}}/>
-            </Stack.Navigator>
-        </>
-    );
-}
-
 function PostsScreen() {
     return (
         <Stack.Navigator screenOptions={{headerShown: false}}>
-            <Stack.Screen name="Posts" component={PostsPage}/>
-            <Stack.Screen name="PostsDetails" component={PostDetailsPage}/>
+            <Stack.Screen name="home" component={PostsPage}/>
+            <Stack.Screen name="details" component={PostDetailsPage} options={{
+                headerShown: true,
+                headerBackTitle: "Voltar",
+                title: 'Notícias'
+            }}/>
         </Stack.Navigator>
     );
 }
@@ -56,8 +29,12 @@ function PostsScreen() {
 function EventosScreen() {
     return (
         <Stack.Navigator screenOptions={{headerShown: false}}>
-            <Stack.Screen name="Events" component={Events}/>
-            <Stack.Screen name="EventsDetails" component={EventDetailsPage}/>
+            <Stack.Screen name="home" component={Events}/>
+            <Stack.Screen name="details" component={EventDetailsPage} options={{
+                headerShown: true,
+                headerBackTitle: "Voltar", // Personaliza o texto do botão de voltar (iOS principalmente)
+                title: 'Eventos'
+            }}/>
         </Stack.Navigator>
     );
 }
@@ -65,50 +42,26 @@ function EventosScreen() {
 function SettingsScreen() {
     return (
         <Stack.Navigator screenOptions={{headerShown: false}}>
-            <Stack.Screen name="Settings" component={Settings}/>
+            <Stack.Screen name="home" component={Settings}/>
         </Stack.Navigator>
     );
 }
 
-
-function TabRoutes() {
+export default function TabRoutes() {
     return (
         <>
-            <GlobalAudioPlayer/>
-
-            <Tab.Navigator screenOptions={{
-                headerStyle: {
-                    backgroundColor: colors.primary
-                },
-                tabBarIconStyle: {
-                    color: colors.primary,
-                    // backgroundColor: colors.primary,
-                    // borderWidth: 1,
-                    // borderRadius: '100%',
-                    // width: '100%'
-                },
-                tabBarStyle: {
-                    backgroundColor: Colors.secundary,
-                    // paddingHorizontal: 0,
-                    // paddingVertical: 0,
-                    // height: 60
-                },
-                tabBarLabelStyle: {
-                    color: Colors.text,
-                    // marginBottom: 5
-                }
-            }}>
-                <Tab.Screen name="Dashboard" component={DashboardScreen} options={
+            <Tab.Navigator>
+                <Tab.Screen name="dashboard" component={Dashboard} options={
                     {
                         headerShown: false,
                         // tabBarShowLabel: false,
                         tabBarLabel: 'UNAADEB',
                         tabBarIcon: ({color, size}) => (
-                            <FontAwesome5 name={'fire'} color={color} size={size}/>
+                            <Feather name="youtube" size={size} color={color} />
                         )
                     }
                 }/>
-                <Tab.Screen name="News" component={PostsScreen} options={
+                <Tab.Screen name="posts" component={PostsScreen} options={
                     {
                         headerShown: false,
                         tabBarLabel: 'Notícias',
@@ -117,7 +70,7 @@ function TabRoutes() {
                         )
                     }
                 }/>
-                <Tab.Screen name="Eventos" component={EventosScreen} options={
+                <Tab.Screen name="events" component={EventosScreen} options={
                     {
                         headerShown: false,
                         tabBarLabel: 'Eventos',
@@ -126,7 +79,7 @@ function TabRoutes() {
                         )
                     }
                 }/>
-                <Tab.Screen name="Configuracoes" component={SettingsScreen} options={
+                <Tab.Screen name="settings" component={SettingsScreen} options={
                     {
                         headerShown: false,
                         tabBarLabel: 'Meu Perfil',
@@ -136,8 +89,7 @@ function TabRoutes() {
                     }
                 }/>
             </Tab.Navigator>
+
         </>
     );
 }
-
-export default TabRoutes;

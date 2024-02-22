@@ -2,27 +2,24 @@ import React from "react";
 import {useAuth} from "../contexts/AuthContext";
 import AuthRoutes from "./auth.routes";
 import DrawerRoutes from "./drawer.routes";
-import {ActivityIndicator, View} from "react-native";
 import FlashMessage from "react-native-flash-message";
 
+import { NavigationContainer } from '@react-navigation/native'
+import GlobalAudioPlayer from "../components/GlobalAudioPlayer";
+
 function Routes() {
-    const {signed, loading} = useAuth()
-
-    if (loading) {
-        return (
-            <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-                <ActivityIndicator size={'large'} color={'#666'}/>
-            </View>
-        )
-    }
-
-
-    return signed ? (
-        <>
-            <FlashMessage position="top"/>
-            <DrawerRoutes/>
-        </>
-    ) : <AuthRoutes/>;
+    const {signed} = useAuth()
+    return (
+       <>
+           <NavigationContainer>
+               {signed ? (
+                   <DrawerRoutes/>
+               ): (
+                   <AuthRoutes />
+               )}
+           </NavigationContainer>
+       </>
+    );
 }
 
 export default Routes;

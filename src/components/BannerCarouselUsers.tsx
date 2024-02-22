@@ -1,26 +1,23 @@
 import React, {useEffect, useState} from 'react';
 import {Dimensions, StyleSheet} from 'react-native';
 import {Box, FlatList, HStack, Pressable, Skeleton} from 'native-base';
-import {NavigationProp, ParamListBase} from '@react-navigation/native';
-import {UserTypes} from "../types/UserTypes";
-import {Avatar} from "./Avatar";
-import {getUsers} from "../services/user";
-import colors from "../constants/colors";
-
+import {UserTypes} from "@/types/UserTypes";
+import {Avatar} from "@/components/Avatar";
+import {getUsers} from "@/services/user";
+import colors from "@/constants/colors";
+import {Link} from "expo-router";
 
 const {width: screenWidth} = Dimensions.get('window');
 
 interface PropsBanners {
-    navigation: NavigationProp<ParamListBase>;
     refreshing: any,
     setRefreshing: any
 }
 
-const BannerCarouselUsers = ({navigation, refreshing, setRefreshing}: PropsBanners) => {
+const BannerCarouselUsers = ({refreshing, setRefreshing}: PropsBanners) => {
     const [loading, setLoading] = useState(true);
     const [activeIndex, setActiveIndex] = useState(0);
     const [users, setUsers] = useState<UserTypes[]>([]);
-
 
     useEffect(() => {
         const loadBanners = async () => {
@@ -40,23 +37,19 @@ const BannerCarouselUsers = ({navigation, refreshing, setRefreshing}: PropsBanne
         loadBanners()
     }, [refreshing]);
 
-
-    const handleBannerPress = (item: UserTypes) => {
-        // Adicione a lógica de navegação aqui para redirecionar o usuário para uma tela específica
-        navigation.navigate('Dashboard', {screen: 'UserProfile', params: {id: item.id}});
-    };
-
     const renderItem = ({item}: { item: UserTypes }) => (
         <Box>
-            <Pressable onPress={() => handleBannerPress(item)} ml={2}>
-                <Avatar
-                    borderColor={colors.bag2Bg}
-                    borderWidth={3}
-                    userAvatarID={item?.avatar}
-                    width={20}
-                    height={20}
-                />
-            </Pressable>
+            <Link href={`/(tabs)/(home)/(profile)/${item.id}`} asChild>
+                <Pressable ml={2}>
+                    <Avatar
+                        borderColor={colors.bag2Bg}
+                        borderWidth={3}
+                        userAvatarID={item?.avatar}
+                        width={20}
+                        height={20}
+                    />
+                </Pressable>
+            </Link>
         </Box>
     );
 
@@ -96,7 +89,6 @@ const BannerCarouselUsers = ({navigation, refreshing, setRefreshing}: PropsBanne
                         }}
                         scrollEventThrottle={16}
                     />
-                    {/*<PaginationDots data={users} activeIndex={activeIndex}/>*/}
                 </>
             )}
         </Box>

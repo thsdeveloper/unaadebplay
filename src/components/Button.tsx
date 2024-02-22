@@ -6,7 +6,7 @@ type Props = IButtonProps & {
 
 export function Button({title, ...rest}: Props){
     return (
-        <NativeBaseButton backgroundColor={'#E51C44'} {...rest}>
+        <NativeBaseButton backgroundColor={'#E51C44'} {...rest} height={12} rounded={'full'}>
             <Text color={'white'}>{title}</Text>
         </NativeBaseButton>
     )

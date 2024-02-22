@@ -25,13 +25,19 @@
         {
           "username": "thsdeveloper"
         }
-      ]
+      ],
+      "expo-router"
     ],
     "assetBundlePatterns": [
       "**/*"
     ],
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "experiments": {
+      "typedRoutes": true,
+      "tsconfigPaths": true
     },
     "extra": {
       "eas": {
