@@ -48,28 +48,15 @@ export default function RootLayout() {
 
     return (
         <NativeBaseProvider>
-            <StatusBar backgroundColor="#0E1647" barStyle="dark-content"/>
+            <StatusBar backgroundColor="#0E1647" barStyle="light-content"/>
             <AlertProvider>
                 <AuthProvider>
                     <ConfigProvider value={config}>
                         <TranslationProvider>
                             <AudioPlayerProvider>
-
                                 <FlashMessage position="top"/>
-                                <AppUpdateManager />
+                                <AppUpdateManager/>
                                 <Slot/>
-                                {/*<Stack>*/}
-                                {/*    <Stack.Screen name="(auth)" options={{*/}
-                                {/*        headerShown: false*/}
-                                {/*    }}/>*/}
-                                {/*    <Stack.Screen name="(tabs)" options={{*/}
-                                {/*        headerShown: false*/}
-                                {/*    }} />*/}
-                                {/*    <Stack.Screen name="modal" options={{*/}
-                                {/*        headerShown: true,*/}
-                                {/*        presentation: 'modal'*/}
-                                {/*    }} />*/}
-                                {/*</Stack>*/}
                             </AudioPlayerProvider>
                         </TranslationProvider>
                     </ConfigProvider>

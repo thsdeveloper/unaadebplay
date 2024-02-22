@@ -1,6 +1,20 @@
-import {Stack} from 'expo-router';
-import React from "react";
+import {Redirect, Stack, useRouter} from 'expo-router';
+import React, {useEffect} from "react";
+import {useAuth} from "@/contexts/AuthContext";
 export default function AuthLayout() {
+    const {signed} = useAuth()
+    const router = useRouter()
+
+    useEffect(() => {
+        if (signed) {
+            router.push('/(tabs)/(home)/')
+        }
+    }, [signed]);
+
+    if(signed) {
+        return null;
+    }
+
     return (
        <>
            <Stack>

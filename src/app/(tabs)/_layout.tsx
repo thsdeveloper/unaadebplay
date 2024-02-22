@@ -17,7 +17,7 @@ export default function TabsLayout() {
     return (
         <>
             <Tabs screenOptions={{
-                headerShown: true,
+                headerShown: false,
             }}>
                 <Tabs.Screen name={'(home)'} options={{
                     title: 'Início',
@@ -26,21 +26,18 @@ export default function TabsLayout() {
                     )
                 }} />
                 <Tabs.Screen name={'(posts)'} options={{
-                    headerShown: true,
                     title: 'Notícias',
                     tabBarIcon: ({color, size}) => (
                         <Feather name="rss" size={size} color={color} />
                     )
                 }} />
                 <Tabs.Screen name={'(events)'} options={{
-                    headerShown: true,
                     title: 'Eventos',
                     tabBarIcon: ({color, size}) => (
                         <Feather name="calendar" size={size} color={color} />
                     )
                 }} />
                 <Tabs.Screen name={'(settings)'} options={{
-                    headerShown: true,
                     title: 'Configurações',
                     tabBarIcon: ({color, size}) => (
                         <Feather name="settings" size={size} color={color} />

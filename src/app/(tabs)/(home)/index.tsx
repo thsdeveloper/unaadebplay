@@ -1,12 +1,12 @@
 import React, {useContext, useState, useLayoutEffect} from "react";
 import {RefreshControl, TouchableOpacity, SafeAreaView, Platform} from "react-native";
-import {Box, Text, ScrollView, Stack, VStack, HStack, Icon, Heading, Divider, Button} from "native-base";
+import {Box, Text, ScrollView, Stack, VStack, HStack, Icon, Heading, Divider, Button, Pressable} from "native-base";
 import BannerCarousel from "@/components/BannerCarousel";
 import TranslationContext from "@/contexts/TranslationContext";
 import colors from "@/constants/colors";
 import AlertContext from "@/contexts/AlertContext";
 import BannerCarouselUsers from "@/components/BannerCarouselUsers";
-import {FontAwesome5, MaterialIcons, FontAwesome, Entypo} from '@expo/vector-icons';
+import {FontAwesome5, MaterialIcons, FontAwesome, Entypo, Feather} from '@expo/vector-icons';
 import AvatarGroup from "@/components/AvatarGroup";
 import AppUpdateManager from "@/components/AppUpdateManager";
 import EventCarousel from "@/components/EventCarousel";
@@ -23,16 +23,6 @@ export default function HomeTabs() {
     const navigation = useNavigation();
     const {user} = useAuth()
     const router = useRouter();
-
-    useLayoutEffect(() => {
-        navigation.setOptions({
-            headerRight: () => (
-                <Link href={'/modal'}>
-                    <Avatar userAvatarID={user?.avatar} height={10} width={10}/>
-                </Link>
-            ),
-        })
-    }, [])
 
     // Estado para armazenar a cor de fundo atual
     const [backgroundColor, setBackgroundColor] = useState('corInicial');
@@ -74,28 +64,26 @@ export default function HomeTabs() {
     ]
 
     return (
-        <ScrollView
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh}
-                                            title={t('text_search')}/>} backgroundColor={backgroundColor}>
-
-            <SafeAreaView style={{flex: 1}}>
-
-                {Platform.OS !== 'web' && (
+        <SafeAreaView style={{flex: 1}}>
+            <ScrollView
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh}
+                                                title={t('text_search')}/>} contentContainerStyle={{flexGrow: 1}}>
+                <Box flex={1} backgroundColor={backgroundColor} justifyContent="center">
                     <Box>
                         <EventCarousel events={events} onActiveColorChange={onCarouselItemSelect}/>
                     </Box>
-                )}
 
-                <Box alignItems={"center"} pt={4}>
-                    <Box alignItems={"center"} pb={4}>
-                        <Heading color={colors.light} fontWeight={"extrabold"}>#ChamadosParaReconstruir</Heading>
-                        <Heading color={colors.light} fontSize={14}>CONGRESSO GERAL DA UNAADEB 2024</Heading>
+                    <Box alignItems={"center"} pt={4}>
+                        <Box alignItems={"center"} pb={4}>
+                            <Heading color={colors.light} fontWeight={"extrabold"}>#ChamadosParaReconstruir</Heading>
+                            <Heading color={colors.light} fontSize={14}>CONGRESSO GERAL DA UNAADEB 2024</Heading>
+                        </Box>
                     </Box>
-                    <Divider mt={4}/>
                 </Box>
+
                 <Box>
                     <Stack m={2} space={"sm"} direction={"row"} alignItems={"center"}>
-                        <Text fontWeight={'bold'} fontSize={'lg'} color={colors.light}>
+                        <Text fontWeight={'bold'} fontSize={'lg'} color={colors.dark}>
                             {t('text_section_diretoria')}
                         </Text>
                     </Stack>
@@ -105,29 +93,21 @@ export default function HomeTabs() {
                 </Box>
                 <Box>
                     <Stack space={"sm"} m={2} direction={"row"} alignItems={"center"}>
-                        <Text fontWeight={'bold'} fontSize={'lg'} color={colors.light}>
+                        <Text fontWeight={'bold'} fontSize={'lg'} color={colors.dark}>
                             {t('text_section_banner')}
                         </Text>
                     </Stack>
                     <BannerCarousel refreshing={refreshing} setRefreshing={setRefreshing}/>
                 </Box>
-                <Box>
-                    <Stack space={"sm"} mx={2} mt={2} direction={"row"} alignItems={"center"}>
-                        <Text fontWeight={'bold'} fontSize={'lg'} color={colors.light}>
-                            Contribua no congresso
-                        </Text>
-                    </Stack>
-                </Box>
 
-                <Box py={1} px={2}>
+                <Box>
                     <Link href={'/contribua'} asChild>
-                        <TouchableOpacity>
-                            <Box backgroundColor={colors.secundary3} width={'100%'} height={'24'} borderRadius={4}
+                        <TouchableOpacity activeOpacity={0.9}>
+                            <Box backgroundColor={colors.secundary3} width={'100%'} height={'24'}
                                  justifyContent={"center"} alignItems={"center"}>
-                                <HStack space={2} alignItems={"center"} justifyContent={"center"} px={4}>
+                                <HStack space={4} alignItems={"center"} justifyContent={"center"} px={4}>
                                     <Box>
-                                        <Icon as={MaterialIcons} name="attach-money" size={"4xl"}
-                                              color={colors.yellow}/>
+                                        <Feather name="dollar-sign" size={40} color={colors.light}/>
                                     </Box>
                                     <VStack>
                                         <Text fontSize={20} fontWeight={"bold"} color={colors.text}>
@@ -142,23 +122,40 @@ export default function HomeTabs() {
                 </Box>
 
                 <Box>
-                    <Stack space={"sm"} mx={2} mt={2} direction={"row"} alignItems={"center"}>
-                        <Link href={'/youtube'}>
-                            <Text fontWeight={'bold'} fontSize={'lg'} color={colors.light}>
-                                Youtube
-                            </Text>
-                        </Link>
-                    </Stack>
+                    <Link href={'/youtube'} asChild>
+                        <TouchableOpacity activeOpacity={0.9}>
+                            <HStack background={'muted.900'} width={'full'} flex={1} alignItems={"center"} p={4}
+                                    space={4}>
+                                <Box>
+                                    <Feather name="youtube" size={40} color={colors.light}/>
+                                </Box>
+                                <Box>
+                                    <Text fontWeight={'bold'} fontSize={'2xl'} color={'muted.50'}>
+                                        Acesse nosso canal
+                                    </Text>
+                                    <Text color={'muted.50'}>
+                                        Todos os vídeos do congresso
+                                    </Text>
+                                </Box>
+                            </HStack>
+                        </TouchableOpacity>
+                    </Link>
                 </Box>
 
-                <Box py={4} bgColor={colors.secundary2} mt={4} borderTopWidth={4} borderColor={colors.darkRed}>
+
+                <Box py={4} bgColor={colors.secundary2} borderTopWidth={4} borderColor={colors.darkRed}>
                     <AvatarGroup/>
                 </Box>
-            </SafeAreaView>
 
-            <Box>
-                <GlobalAudioPlayer/>
-            </Box>
-        </ScrollView>
+                <Box>
+                    <GlobalAudioPlayer/>
+                </Box>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
+<Link href={'/youtube'}>
+    <Text fontWeight={'bold'} fontSize={'lg'} color={colors.dark}>
+        Youtube
+    </Text>
+</Link>
