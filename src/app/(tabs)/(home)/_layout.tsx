@@ -11,11 +11,12 @@ export default function HomeLayout() {
     return (
         <>
             <Stack screenOptions={{
-                // headerShadowVisible: false,
-                headerTintColor: colors.white,
-                headerStyle: {backgroundColor: colors.secundary2},
+                headerTransparent: false,
+                headerTintColor: colors.dark,
             }}>
                 <Stack.Screen name={'index'} options={{
+                    headerTransparent: true,
+                    headerTintColor: colors.white,
                     title: `Olá ${user?.first_name}`,
                     headerRight: () => (
                         <Link href={'/users'}>
