@@ -24,7 +24,7 @@ const AvatarGroup = () => {
     }, []);
 
     return (
-        <TouchableOpacity onPress={() => router.push('/users')}>
+        <TouchableOpacity onPress={() => router.push('/users')} activeOpacity={0.9}>
             <Center>
                 <Text color={colors.light} pb={4} fontWeight={"bold"}>Junte-se a milhares de adolescentes com
                     propósitos!</Text>

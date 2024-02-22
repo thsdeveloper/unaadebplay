@@ -211,8 +211,6 @@ export default function Index() {
                                     isLoading={loading}
                                     isLoadingText="Cadastrando..."/>
                         </Box>
-
-                        <HeaderDrawer />
                     </Box>
             </ScrollView>
         </KeyboardAvoidingView>
