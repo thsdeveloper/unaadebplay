@@ -15,7 +15,13 @@
     },
     "production": {
       "channel": "master",
-      "autoIncrement": true
+      "autoIncrement": true,
+      "android": {
+        "image": "default"
+      },
+      "ios": {
+        "image": "latest"
+      }
     }
   },
   "submit": {
