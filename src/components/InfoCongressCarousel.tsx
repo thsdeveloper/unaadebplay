@@ -49,7 +49,7 @@ export default function InfoCongressCarousel() {
         } : {};
 
         return (
-            <Link href={'/congresso'} asChild>
+            <Link href={`/(tabs)/(home)/(congresso)/${item.id}`} asChild>
                 <TouchableOpacity activeOpacity={0.9}>
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                         <Box shadow={6} p={4}>
@@ -64,6 +64,9 @@ export default function InfoCongressCarousel() {
                         </Box>
                         <Text color={colors.text}>{item.name}</Text>
                     </View>
+                    <Box alignItems={"center"} p={0}>
+                        <Feather name="chevron-down" size={30} color={colors.light}/>
+                    </Box>
                 </TouchableOpacity>
             </Link>
         );
