@@ -30,7 +30,7 @@ export default function HomeLayout() {
                     )
                 }}/>
                 <Stack.Screen name={'contribua'} options={{title: 'Contribua com a UNAADEB'}}/>
-                <Stack.Screen name={'congresso'} options={{title: 'Home page de Tabs'}}/>
+                <Stack.Screen name={'(congresso)/[id]'} options={{title: 'Home page de Tabs'}}/>
                 <Stack.Screen name={'[itemId]'} options={{title: 'Details itemID'}}/>
                 <Stack.Screen name={'users'} options={{title: 'Usuários'}}/>
                 <Stack.Screen name={'(profile)/[id]'} options={{title: 'Perfil'}}/>

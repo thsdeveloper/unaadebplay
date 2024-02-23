@@ -5,7 +5,7 @@ import Repertories from "../app/(tabs)/(home)/repertories";
 import UserProfile from "../pages/app/Users/UserProfile";
 import UserListPage from "../app/(tabs)/(home)/users";
 import Contribua from "@/app/(tabs)/(home)/contribua";
-import CongressoPage from "../pages/app/Congresso";
+import CongressoPage from "../pages/app/Id";
 import YoutubePage from "../app/(tabs)/(home)/youtube";
 import React from "react";
 
@@ -34,7 +34,7 @@ export default function StackRoutes() {
             <Stack.Screen name="congresso" component={CongressoPage} options={{
                 headerShown: true,
                 headerBackTitle: "Voltar",
-                title: 'O Congresso'
+                title: 'O Id'
             }}/>
             <Stack.Screen name="youtube" component={YoutubePage} options={{
                 headerShown: true,
