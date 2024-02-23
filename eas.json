@@ -17,7 +17,7 @@
       "channel": "master",
       "autoIncrement": true,
       "android": {
-        "image": "default"
+        "image": "latest"
       },
       "ios": {
         "image": "latest"
