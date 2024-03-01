@@ -3,7 +3,6 @@ import {Feather} from "@expo/vector-icons";
 import React from "react";
 import {useAuth} from "@/contexts/AuthContext";
 import {Redirect} from "expo-router";
-import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 export default function TabsLayout() {
     const {signed, loading} = useAuth();
     // // Only require authentication within the (tabs) group's layout as users

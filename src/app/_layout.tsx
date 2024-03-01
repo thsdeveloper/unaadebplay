@@ -1,6 +1,6 @@
-import React, {useContext, useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {NativeBaseProvider, StatusBar} from "native-base";
-import AuthContext, {AuthProvider, useAuth} from '@/contexts/AuthContext';
+import {AuthProvider} from '@/contexts/AuthContext';
 import {AlertProvider} from "@/contexts/AlertContext";
 import 'react-native-gesture-handler';
 import {ConfigProvider} from "@/contexts/ConfigContext";
@@ -11,7 +11,6 @@ import {getSettings} from "@/services/settings";
 import FlashMessage from "react-native-flash-message";
 import {Stack, Slot} from 'expo-router'
 import AppUpdateManager from "@/components/AppUpdateManager";
-import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 
 export default function RootLayout() {
     const [appIsReady, setAppIsReady] = useState(false);

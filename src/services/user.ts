@@ -1,6 +1,6 @@
 import directusClient from "./api";
-import {UserTypes} from "../types/UserTypes";
-import {GlobalQueryParams} from "../types/GlobalQueryParamsTypes";
+import {UserTypes} from "@/types/UserTypes";
+import {GlobalQueryParams} from "@/types/GlobalQueryParamsTypes";
 import {GenericItem} from "./items";
 import {createUser, readUser, readUsers, updateMe} from "@directus/sdk";
 

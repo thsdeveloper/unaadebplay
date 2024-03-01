@@ -89,40 +89,44 @@ export default function InfoCongressCarousel() {
     return (
 
         <LinearGradient
-            colors={isLoading ? ['#ff0000', '#e11313'] : [`${congress[activeIndex]?.primary_color}`, `${congress[activeIndex]?.second_color}`]} // Usa as cores do evento ativo
+            colors={isLoading ? ['#0b2a86', '#0d0f17'] : [`${congress[activeIndex]?.primary_color}`, `${congress[activeIndex]?.second_color}`]} // Usa as cores do evento ativo
             style={{flex: 1}}
         >
             <SafeAreaView>
                 {isLoading ? (
                     // Placeholder ou indicador de carregamento
-                    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-                        <ActivityIndicator size="large" color={colors.primary}/>
+                    <Box alignItems={"center"} justifyContent={"center"} flex={1} py={4}>
+                        <ActivityIndicator size="large" color={colors.light}/>
                         {/* Adicione aqui um componente de skeleton screen se desejar */}
-                    </View>
+                    </Box>
                 ) : (
-                    <Carousel
-                        data={congress}
-                        renderItem={renderItem}
-                        onSnapToItem={onItemChange}
-                        sliderWidth={windowWidth}
-                        itemWidth={windowWidth * 0.8}
-                        loop={true} // Ativa o efeito de borda infinita
-                        autoplay={false} // Opcional: move o carrossel automaticamente
-                        autoplayDelay={500}
-                        autoplayInterval={3000}
-                        inactiveSlideOpacity={0.4}
-                        inactiveSlideScale={0.9}
-                        snapToAlignment={'start'}
-                        snapToInterval={windowWidth * 0.8 + 10} // Largura do item + espaçamento
-                    />
+                    <>
+                        <Carousel
+                            data={congress}
+                            renderItem={renderItem}
+                            onSnapToItem={onItemChange}
+                            sliderWidth={windowWidth}
+                            itemWidth={windowWidth * 0.8}
+                            loop={true} // Ativa o efeito de borda infinita
+                            autoplay={false} // Opcional: move o carrossel automaticamente
+                            autoplayDelay={500}
+                            autoplayInterval={3000}
+                            inactiveSlideOpacity={0.4}
+                            inactiveSlideScale={0.9}
+                            snapToAlignment={'start'}
+                            snapToInterval={windowWidth * 0.8 + 10} // ssLargura do item + espaçamento
+                        />
+                        <Box alignItems={"center"}>
+                            <Box alignItems={"center"} pb={4}>
+                                <Heading color={colors.light}
+                                         fontWeight={"extrabold"}>{congress[activeIndex]?.theme}</Heading>
+                                <Heading color={colors.light}
+                                         fontSize={14}>{congress[activeIndex]?.description}</Heading>
+                            </Box>
+                        </Box>
+                    </>
                 )}
 
-                <Box alignItems={"center"}>
-                    <Box alignItems={"center"} pb={4}>
-                        <Heading color={colors.light} fontWeight={"extrabold"}>{congress[activeIndex]?.theme}</Heading>
-                        <Heading color={colors.light} fontSize={14}>{congress[activeIndex]?.description}</Heading>
-                    </Box>
-                </Box>
 
             </SafeAreaView>
 

@@ -8,7 +8,7 @@ import BannerCarouselUsers from "@/components/BannerCarouselUsers";
 import {Feather} from '@expo/vector-icons';
 import AvatarGroup from "@/components/AvatarGroup";
 import InfoCongressCarousel from "@/components/InfoCongressCarousel";
-import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
+// import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 import {Link} from "expo-router";
 import {useNavigation} from "expo-router";
 import {BlurView} from 'expo-blur';
@@ -19,9 +19,10 @@ export default function HomeTabs() {
     const navigation = useNavigation()
     const [scrollY, setScrollY] = useState(new Animated.Value(0));
 
+
     const headerBackgroundColor = scrollY.interpolate({
-        inputRange: [0, 50], // Ajuste conforme necessário
-        outputRange: ['transparent', '#0f4652'], // Substitua '#desiredColor' pela cor desejada
+        inputRange: [0, 50],
+        outputRange: ['transparent', '#0f4652'],
         extrapolate: 'clamp',
     });
 
@@ -43,6 +44,7 @@ export default function HomeTabs() {
             [{nativeEvent: {contentOffset: {y: scrollY}}}],
             {useNativeDriver: false} // useNativeDriver deve ser false para animar propriedades não numéricas como backgroundColor
         )} scrollEventThrottle={16} bounces={false}>
+
             <Box flex={1} justifyContent="center">
                 <Box>
                     <InfoCongressCarousel/>
@@ -113,10 +115,6 @@ export default function HomeTabs() {
 
             <Box py={4} bgColor={colors.secundary2} borderTopWidth={4} borderColor={colors.darkRed}>
                 <AvatarGroup/>
-            </Box>
-
-            <Box>
-                <GlobalAudioPlayer/>
             </Box>
         </Animated.ScrollView>
     );
