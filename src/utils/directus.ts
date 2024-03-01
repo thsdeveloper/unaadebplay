@@ -1,6 +1,6 @@
 import moment from 'moment';
 import 'moment/locale/pt-br';
-import {ERROR_MESSAGES} from "../constants/errorMessages";
+import {ERROR_MESSAGES} from "@/constants/errorMessages";
 moment.locale('pt-br');
 
 export function formatTime(dateTimeString: moment.MomentInput, format = 'DD/MM/YYYY HH:mm:ss') {

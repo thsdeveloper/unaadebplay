@@ -1,4 +1,4 @@
-import { GenericItem } from '../services/items';
+import { GenericItem } from '@/services/items';
 
 export interface FilesTypes extends GenericItem {
     storage: string,

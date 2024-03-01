@@ -1,22 +1,22 @@
 import directusClient from "./api";
-import {createItem, deleteItem, readItem, readItems, readSingleton, updateItem} from "@directus/sdk";
+import {createItem, deleteItem, readItem, readItems, readSingleton, updateItem, readFieldsByCollection} from "@directus/sdk";
 import {GlobalQueryParams} from "@/types/GlobalQueryParamsTypes";
 
 export interface GenericItem {
     id: string;
 }
 
-export async function getItems(collectionName: string,  params?: GlobalQueryParams): Promise<any> {
+export async function getItems<T>(collectionName: string,  params?: GlobalQueryParams): Promise<T> {
     try {
-        return await directusClient.request(readItems(collectionName, params));
+        return await directusClient.request<T>(readItems(collectionName, params));
     } catch (error) {
         throw error;
     }
 }
 
-export async function getItem(collectionName: string, id: number, params?: GlobalQueryParams): Promise<any> {
+export async function getItem<T>(collectionName: string, id: string | number, params?: GlobalQueryParams): Promise<T> {
     try {
-        return await directusClient.request(readItem(collectionName, id, params));
+        return await directusClient.request<T>(readItem(collectionName, id, params));
     } catch (error) {
         throw error;
     }

@@ -1,4 +1,4 @@
-import {GenericItem} from '../services/items';
+import {GenericItem} from '@/services/items';
 import {FilesTypes} from "./FilesTypes";
 
 export interface EventsTypes extends GenericItem {

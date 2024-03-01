@@ -1,7 +1,7 @@
 import { Avatar as NativeBaseAvatar, IAvatarProps, Box, Skeleton } from 'native-base';
 import { useContext, useEffect, useState } from "react";
 import { Image } from "react-native";
-import ConfigContext from "../contexts/ConfigContext";
+import ConfigContext from "@/contexts/ConfigContext";
 
 type Props = IAvatarProps & {
     userAvatarID?: string;
