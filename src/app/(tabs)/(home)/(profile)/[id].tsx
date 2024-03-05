@@ -3,10 +3,12 @@ import {Box, VStack, Text, HStack, Center} from 'native-base';
 import {getUser} from "@/services/user";
 import {UserTypes} from "@/types/UserTypes";
 import {Avatar} from "@/components/Avatar";
-import colors from "@/constants/colors";
 import {TouchableOpacity} from "react-native";
 import {LoadingLottier} from "@/components/LoadingLottier";
 import {Link, useGlobalSearchParams} from "expo-router";
+import LikedIcon from "@/components/LikedIcon";
+import colors from "@/constants/colors";
+
 
 export default function UserProfile({route}: any) {
     const [user, setUser] = useState<UserTypes | null>(null);
@@ -57,6 +59,9 @@ export default function UserProfile({route}: any) {
                             <Text colorScheme="info" alignSelf="center" variant={"outline"}>
                                 {user.role?.name} - {user?.title}
                             </Text>
+                            <HStack>
+                                <LikedIcon color={colors.dark}/>
+                            </HStack>
                         </Box>
 
                         <HStack space={2} mt={4} px={4}>
