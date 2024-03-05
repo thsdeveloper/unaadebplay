@@ -20,9 +20,9 @@ export default function HomeLayout() {
                     headerTintColor: colors.white,
                     title: `Olá ${user?.first_name}`,
                     headerRight: () => (
-                        <Link href={'/(tabs)/(settings)'} asChild>
+                        <Link href={'/users'} asChild>
                             <TouchableOpacity activeOpacity={0.7} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-                                <Feather name="settings" size={24} color={colors.white}/>
+                                <Feather name="users" size={24} color={colors.white}/>
                             </TouchableOpacity>
                         </Link>
                     ),
@@ -33,8 +33,10 @@ export default function HomeLayout() {
                     )
                 }}/>
                 <Stack.Screen name={'contribua'} options={{headerShown: false, presentation: 'modal'}}/>
-                <Stack.Screen name={'(congresso)/[id]'} options={{title: 'Home page de Tabs', headerTransparent: true}}/>
-                <Stack.Screen name={'(congresso)/convidado/[id]'} options={{title: 'Convidado', presentation: 'modal'}}/>
+                <Stack.Screen name={'(congresso)/[id]'}
+                              options={{title: 'Home page de Tabs', headerTransparent: true}}/>
+                <Stack.Screen name={'(congresso)/convidado/[id]'}
+                              options={{title: 'Convidado', presentation: 'modal'}}/>
                 <Stack.Screen name={'(congresso)/hospedagem/index'} options={{
                     title: 'Hospedagem',
                     headerStyle: {
@@ -45,8 +47,22 @@ export default function HomeLayout() {
                 }
                 }/>
                 <Stack.Screen name={'[itemId]'} options={{title: 'Details itemID'}}/>
-                <Stack.Screen name={'users'} options={{title: 'Usuários'}}/>
-                <Stack.Screen name={'(profile)/[id]'} options={{title: 'Perfil'}}/>
+                <Stack.Screen name={'users'} options={{
+                    title: 'Usuários',
+                    headerBackTitle: 'Voltar',
+                    headerTintColor: colors.light,
+                    headerStyle: {
+                        backgroundColor: colors.primary,
+                    }
+                }}/>
+                <Stack.Screen name={'(profile)/[id]'} options={{
+                    title: 'Perfil',
+                    headerBackTitle: 'Voltar',
+                    headerTintColor: colors.white,
+                    headerStyle: {
+                        backgroundColor: colors.primary,
+                    }
+                }}/>
                 <Stack.Screen name={'modal'} options={{title: 'Perfil', presentation: 'modal'}}/>
                 <Stack.Screen name={'youtube'} options={{title: 'Youtube', presentation: 'modal'}}/>
                 <Stack.Screen name={'repertories'} options={{title: 'Repertórios', presentation: 'modal'}}/>

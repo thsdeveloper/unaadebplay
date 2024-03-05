@@ -2,10 +2,13 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-na
 import {Icon, Pressable, Text, VStack} from "native-base";
 import {Entypo} from "@expo/vector-icons";
 import {useState} from "react";
-import colors from "@/constants/colors";
+
+interface PropsLikedIcon{
+    color: string
+}
 
 
-export default function LikedIcon(){
+export default function LikedIcon({color}: PropsLikedIcon){
     // Valor compartilhado para a escala da animação
     const scale = useSharedValue(1);
     const [liked, setLiked] = useState(false);
@@ -29,10 +32,10 @@ export default function LikedIcon(){
            <VStack>
                <Pressable onPress={handlePress}>
                    <Animated.View style={animatedStyle}>
-                       <Icon as={Entypo} name={liked ? "heart" : "heart-outlined"} size="2xl" color={colors.light} />
+                       <Icon as={Entypo} name={liked ? "heart" : "heart-outlined"} size="2xl" color={color} />
                    </Animated.View>
                </Pressable>
-               <Text color={colors.light}>Curtir</Text>
+               <Text color={color}>Curtir</Text>
            </VStack>
         </>
     );

@@ -131,7 +131,7 @@ export default function CongressoPage() {
                             <HStack>
                                 <HStack flex={1} space={2} justifyContent={'center'} alignItems={"center"}
                                         alignContent={"center"}>
-                                    <LikedIcon />
+                                    <LikedIcon color={colors.light} />
                                 </HStack>
                                 <HStack flex={1} space={2} justifyContent={'center'} alignItems={"center"}
                                         justifyItems={"center"}>
