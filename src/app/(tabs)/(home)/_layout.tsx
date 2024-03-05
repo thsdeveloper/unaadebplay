@@ -35,7 +35,15 @@ export default function HomeLayout() {
                 <Stack.Screen name={'contribua'} options={{headerShown: false, presentation: 'modal'}}/>
                 <Stack.Screen name={'(congresso)/[id]'} options={{title: 'Home page de Tabs', headerTransparent: true}}/>
                 <Stack.Screen name={'(congresso)/convidado/[id]'} options={{title: 'Convidado', presentation: 'modal'}}/>
-                <Stack.Screen name={'(congresso)/hospedagem/index'} options={{title: 'Hospedagem', presentation: 'modal'}}/>
+                <Stack.Screen name={'(congresso)/hospedagem/index'} options={{
+                    title: 'Hospedagem',
+                    headerStyle: {
+                        backgroundColor: colors.primary, // Substitua '#corDesejada' pelo código hexadecimal da cor que você deseja.
+                    },
+                    headerBackTitle: 'Voltar',
+                    headerTintColor: colors.white,
+                }
+                }/>
                 <Stack.Screen name={'[itemId]'} options={{title: 'Details itemID'}}/>
                 <Stack.Screen name={'users'} options={{title: 'Usuários'}}/>
                 <Stack.Screen name={'(profile)/[id]'} options={{title: 'Perfil'}}/>
