@@ -86,7 +86,7 @@ const FormSigUpUser = () => {
     const contentWidth = window.width;
     const {login} = useAuth();
 
-    const {id_role_default, project_logo} = useContext(ConfigContext);
+    const {id_role_default} = useContext(ConfigContext);
     const {t} = useContext(TranslationContext);
 
     const [loading, setLoading] = useState(false);

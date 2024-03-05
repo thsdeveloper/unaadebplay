@@ -1,8 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {Dimensions} from 'react-native';
-import CustomCarousel from './CustomCarousel';
 import {GlobalQueryParams} from "@/types/GlobalQueryParamsTypes";
-import {Box, Text} from "native-base";
+import {Box, FlatList, Text} from "native-base";
 import colors from "@/constants/colors";
 import {Avatar} from "@/components/Avatar";
 import {UserTypes} from "@/types/UserTypes";
@@ -16,10 +15,10 @@ interface PropsCarrousseu {
 }
 
 const CarouselItem = ({id, avatar, first_name}: UserTypes) => (
-    <Box py={2}>
+    <Box py={2} px={2}>
         <Link href={`/(tabs)/(home)/(congresso)/convidado/${id}`}>
             <Box alignItems={"center"}>
-                <Avatar userAvatarID={avatar} width={"40"} height={"40"} rounded={'full'}/>
+                <Avatar userAvatarID={avatar} width={"40"} height={"40"} rounded={'full'} borderWidth={2} borderColor={colors.light} />
                 <Text pt={1} color={colors.light}>{first_name}</Text>
             </Box>
         </Link>
@@ -70,17 +69,15 @@ export default function CarouselItemUsers({convidados}: PropsCarrousseu) {
 
     return (
         <Box>
-            <CustomCarousel
+            <FlatList
+                horizontal
                 data={users}
                 renderItem={({item}: any) => <CarouselItem {...item} />}
-                sliderWidth={windowWidth}
-                loop={true}
-                autoplay={false}
-                itemWidth={160} // Tamanho uniforme dos itens
-                inactiveSlideScale={0.8}
-                inactiveSlideOpacity={0.5}
-                snapToAlignment={'start'}
-                snapToInterval={150}
+                snapToInterval={windowWidth * 0.8}
+                decelerationRate="fast"
+                keyExtractor={(user: UserTypes) => user.id}
+                showsHorizontalScrollIndicator={false}
+                scrollEventThrottle={16}
             />
             {/*<Box backgroundColor={"blue.900"}>*/}
             {/*    <Text color={colors.light}>*/}

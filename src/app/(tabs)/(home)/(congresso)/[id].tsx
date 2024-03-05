@@ -1,12 +1,11 @@
-import React, {useEffect, useLayoutEffect, useState} from "react";
-import {Animated, SafeAreaView, TouchableOpacity} from "react-native";
+import React, {useContext, useEffect, useLayoutEffect, useState} from "react";
 import MercadoPago from "@/components/MercadoPago";
-import {Box, Button, Heading, HStack, Pressable, ScrollView, Text} from "native-base";
+import {Box, Button, Heading, HStack, Icon, IconButton, Pressable, ScrollView, Text} from "native-base";
 import {Link, useGlobalSearchParams, useNavigation} from "expo-router";
 import {getItem, getItems} from "@/services/items";
 import {BlurView} from "expo-blur";
 import colors from "@/constants/colors";
-import {Feather} from "@expo/vector-icons";
+import {Entypo, Feather} from "@expo/vector-icons";
 import CongressItemSkeletons from "@/components/Skeletons/CongressItemSkeletons";
 import {CongressType} from "@/types/CongressType";
 import {formatTime} from "@/utils/directus";
@@ -15,6 +14,10 @@ import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 import CarouselItemRepertories from "@/components/CustomCarousel/CarouselItemRepertories";
 import {GlobalQueryParams} from "@/types/GlobalQueryParamsTypes";
 import CarouselItemUsers from "@/components/CustomCarousel/CarouselItemUsers";
+import CarouselItemCongress from "@/components/CustomCarousel/CarouselItemCongress";
+import AlertContext from "@/contexts/AlertContext";
+import {Animated, SafeAreaView} from "react-native";
+import LikedIcon from "@/components/LikedIcon";
 
 export default function CongressoPage() {
     const [congress, setCongress] = useState<CongressType | null>(null);
@@ -22,13 +25,15 @@ export default function CongressoPage() {
     const [loading, setLoading] = useState<boolean>(true);
     const {id} = useGlobalSearchParams();
     const navigation = useNavigation()
+    const alert = useContext(AlertContext);
     const [scrollY, setScrollY] = useState(new Animated.Value(0));
+
 
     useEffect(() => {
         const fetchCongresso = async () => {
             setLoading(true);
             try {
-                const response = await getItem<CongressType>('congresso', id,{
+                const response = await getItem<CongressType>('congresso', id, {
                     fields: ['*', 'convidados.*'],
                 });
                 setConvidados(response.convidados)
@@ -41,7 +46,6 @@ export default function CongressoPage() {
         };
         fetchCongresso();
     }, []);
-
 
     const headerBackgroundColor = scrollY.interpolate({
         inputRange: [0, 50], // Ajuste conforme necessário
@@ -65,34 +69,30 @@ export default function CongressoPage() {
             ),
             headerRight: () => (
                 <Link href={'/users'} asChild>
-                    <TouchableOpacity activeOpacity={0.7} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                    <Pressable opacity={0.7} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
                         <Feather name="share-2" size={24} color={colors.white}/>
-                    </TouchableOpacity>
+                    </Pressable>
                 </Link>
             ),
         });
     }, [headerBackgroundColor]);
 
     if (loading) {
-        return <CongressItemSkeletons/>;
+        return (
+            <SafeAreaView>
+                <CongressItemSkeletons/>
+            </SafeAreaView>
+        );
     }
 
     if (!congress) {
         return <Text>Não foi possível carregar os dados do congresso.</Text>;
     }
 
-
     return (
-        <Animated.ScrollView onScroll={Animated.event(
-            [{nativeEvent: {contentOffset: {y: scrollY}}}],
-            {useNativeDriver: false} // useNativeDriver deve ser false para animar propriedades não numéricas como backgroundColor
-        )} scrollEventThrottle={16} bounces={false}>
-            <LinearGradient
-                colors={[`${congress?.primary_color}`, `${congress?.second_color}`]} // Usa as cores do evento ativo
-                style={{flex: 1}}
-            >
-                <SafeAreaView>
-                    <Box>
+            <LinearGradient colors={[`${congress?.primary_color}`, `${congress?.second_color}`]} style={{flex: 1}}>
+                <SafeAreaView style={{flex: 1}}>
+                    <ScrollView>
                         <Box px={4} py={4}>
                             <Heading textAlign={"center"} color={colors.text}>{congress.theme}</Heading>
                             <Text textAlign={"center"}
@@ -103,21 +103,35 @@ export default function CongressoPage() {
                             </Box>
 
                             <Box>
-                                <Button rounded={'full'} backgroundColor={'red.800'} fontWeight={'bold'} width={'full'}
-                                        onPress={() => console.log('hospedagem')}>Inscreva-se para a hospedagem</Button>
+                                {!congress.status_hospedagem ? (
+                                       <>
+                                           <Button size={'lg'} colorScheme={'coolGray'} leftIcon={
+                                               <Feather name={'lock'} size={20} color={colors.light}/>
+                                           } color={colors.light} rounded={'full'} shadow={2}
+                                                   onPress={() => alert.error('As inscrições para este período de congresso foi finalizada, por favor selecione o congresso atual')}>
+                                               Inscrições Encerradas
+                                           </Button>
+                                       </>
+
+                                ): (
+                                   <>
+                                       <Link href={'/(tabs)/(home)/(congresso)/hospedagem'} asChild>
+                                           <Button size={'lg'} colorScheme={'danger'} leftIcon={
+                                               <Feather name={'plus-circle'} size={20} color={colors.light}/>
+                                           } color={colors.light} rounded={'full'} shadow={2} disabled={!congress.status_hospedagem}>
+                                               {!congress.status_hospedagem ? 'Inscrições Encerradas' : 'Inscreva-se para a hospedagem'}
+                                           </Button>
+                                       </Link>
+                                   </>
+                                )}
                             </Box>
                         </Box>
-
-
 
                         <Box px={4} mt={4}>
                             <HStack>
                                 <HStack flex={1} space={2} justifyContent={'center'} alignItems={"center"}
                                         alignContent={"center"}>
-                                    <Pressable onPress={() => console.log('Curtir')} alignItems={"center"}>
-                                        <Feather name="heart" size={30} color={colors.light}/>
-                                        <Text color={colors.light}>Curtir</Text>
-                                    </Pressable>
+                                    <LikedIcon />
                                 </HStack>
                                 <HStack flex={1} space={2} justifyContent={'center'} alignItems={"center"}
                                         justifyItems={"center"}>
@@ -135,51 +149,46 @@ export default function CongressoPage() {
                             </HStack>
                         </Box>
 
-                       <Box>
-                           <Box px={2} py={2} mt={4}>
-                               <HStack alignItems={"center"} space={2}>
-                                   <Feather name="headphones" size={20} color={colors.light}/>
-                                   <Heading size={"md"} color={colors.light}>Ouça o repertório {congress.name}</Heading>
-                               </HStack>
-                           </Box>
-                           <CarouselItemRepertories id={id}/>
-                       </Box>
-
-                       <Box>
-                           <Box px={2} py={2} mt={4}>
-                               <HStack alignItems={"center"} space={2}>
-                                   <Feather name="users" size={20} color={colors.light}/>
-                                   <Heading size={"md"} color={colors.light}>Cantores e preletores</Heading>
-                               </HStack>
-                           </Box>
-                           <CarouselItemUsers convidados={convidados} />
-                       </Box>
-
-
-                        <Box mt={4}>
-                            <HStack alignItems={"center"} space={2}>
-                                <Feather name="package" size={20} color={colors.light}/>
-                                <Heading size={"md"} color={colors.light}>Mais {congress.theme}</Heading>
-                            </HStack>
+                        <Box>
+                            <Box px={2} py={2} mt={2}>
+                                <HStack alignItems={"center"} space={2}>
+                                    <Feather name="headphones" size={20} color={colors.light}/>
+                                    <Heading size={"md"} color={colors.light}>Ouça o
+                                        repertório {congress.name}</Heading>
+                                </HStack>
+                            </Box>
+                            <CarouselItemRepertories id={id}/>
                         </Box>
 
-                        <Link href={'/repertories'} asChild>
-                            <Button>
-                                Repertório
-                            </Button>
-                        </Link>
-                        <Text textAlign={"center"} color={colors.text}>{congress.description}</Text>
+                        <Box>
+                            <Box px={2} py={2}>
+                                <HStack alignItems={"center"} space={2}>
+                                    <Feather name="package" size={20} color={colors.light}/>
+                                    <Heading size={"md"} color={colors.light}>Mais {congress.theme}</Heading>
+                                </HStack>
+                                <CarouselItemCongress/>
+                            </Box>
+                        </Box>
 
-                        <MercadoPago/>
-                       {/*<Box backgroundColor={"blue.900"}>*/}
-                       {/*    <Text color={colors.light}>*/}
-                       {/*        {JSON.stringify(congress, null, 2)}*/}
-                       {/*    </Text>*/}
-                       {/*</Box>*/}
-                       {/* <GlobalAudioPlayer/>*/}
-                    </Box>
+                        <Box mb={8}>
+                            <Box px={2}>
+                                <HStack alignItems={"center"} space={2}>
+                                    <Feather name="users" size={20} color={colors.light}/>
+                                    <Heading size={"md"} color={colors.light}>Cantores e preletores</Heading>
+                                </HStack>
+                            </Box>
+                            <CarouselItemUsers convidados={convidados}/>
+                        </Box>
+
+
+                        {/*<Box backgroundColor={"blue.900"}>*/}
+                        {/*    <Text color={colors.light}>*/}
+                        {/*        {JSON.stringify(congress, null, 2)}*/}
+                        {/*    </Text>*/}
+                        {/*</Box>*/}
+                         {/*<GlobalAudioPlayer/>*/}
+                    </ScrollView>
                 </SafeAreaView>
             </LinearGradient>
-        </Animated.ScrollView>
     );
 };
