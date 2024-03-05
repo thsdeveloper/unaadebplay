@@ -69,7 +69,7 @@ export default function Index() {
             <ScrollView>
                     <VStack space={4} p={4} alignItems={"center"}>
                         <Box>
-                            {/*<AvatarUpdated userAvatarID={user?.avatar}/>*/}
+                            <AvatarUpdated userAvatarID={user?.avatar}/>
                         </Box>
                     </VStack>
                     <Box p={4}>

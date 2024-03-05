@@ -13,4 +13,5 @@ export interface CongressType extends GenericItem {
     date_start: Date;
     date_end: Date;
     convidados: UserTypes[];
+    status_hospedagem: boolean;
 }

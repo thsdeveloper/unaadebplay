@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {View, Image, Dimensions, TouchableOpacity, SafeAreaView, Animated, ActivityIndicator} from 'react-native';
+import {View, Image, Dimensions, TouchableOpacity, SafeAreaView, Animated} from 'react-native';
 import {Text, Box, Heading} from 'native-base';
 import {Link} from "expo-router";
 import colors from "@/constants/colors";
@@ -7,21 +7,25 @@ import {LinearGradient} from 'expo-linear-gradient';
 import {Feather} from "@expo/vector-icons";
 import {Accelerometer} from 'expo-sensors';
 import {getItems} from "@/services/items";
-import {EventsTypes} from "@/types/EventsTypes";
 import Carousel from "react-native-snap-carousel";
+import {CongressType} from "@/types/CongressType";
+import CongressItemSkeletons from "@/components/Skeletons/CongressItemSkeletons";
+import defaultImage from '../assets/default.png';
 
 const windowWidth = Dimensions.get('window').width;
 
 export default function InfoCongressCarousel() {
-    const [congress, setCongress] = useState<EventsTypes[]>([]);
+    const [congress, setCongress] = useState<CongressType[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [activeIndex, setActiveIndex] = useState(0);
+    const [loaded, setLoaded] = useState(false);
+
     const tiltX = new Animated.Value(0);
     const tiltY = new Animated.Value(0);
 
     useEffect(() => {
         const loadCongress = async () => {
-            const response = await getItems<EventsTypes>('congresso');
+            const response = await getItems<CongressType[]>('congresso');
             setIsLoading(false);
             setCongress(response);
         };
@@ -41,8 +45,8 @@ export default function InfoCongressCarousel() {
 
     const onItemChange = (index: number) => setActiveIndex(index);
 
-    const renderItem = ({item, index}: { item: EventsTypes; index: number }) => {
-        // Aplica a animação apenas ao item ativo
+    const renderItem = ({item, index}: { item: CongressType; index: number }) => {
+        const urlImage =  `https://back-unaadeb.onrender.com/assets/${item.poster}?quality=50&timestamp=${new Date().getTime()}`
         const animatedStyle = activeIndex === index ? {
             transform: [
                 {
@@ -69,8 +73,10 @@ export default function InfoCongressCarousel() {
                         <Box shadow={6} p={4}>
                             <Animated.View style={[{shadow: 6, padding: 4}, animatedStyle]}>
                                 <Image
+                                    onLoad={() => setLoaded(true)}
+                                    onError={() => setLoaded(false)}
                                     borderRadius={10}
-                                    source={{uri: `https://back-unaadeb.onrender.com/assets/${item.poster}`}}
+                                    source={loaded ? { uri: urlImage } : defaultImage}
                                     style={{width: windowWidth * 0.8, height: windowWidth * 1.1}}
                                     resizeMode="cover"
                                 />
@@ -96,8 +102,7 @@ export default function InfoCongressCarousel() {
                 {isLoading ? (
                     // Placeholder ou indicador de carregamento
                     <Box alignItems={"center"} justifyContent={"center"} flex={1} py={4}>
-                        <ActivityIndicator size="large" color={colors.light}/>
-                        {/* Adicione aqui um componente de skeleton screen se desejar */}
+                       <CongressItemSkeletons />
                     </Box>
                 ) : (
                     <>

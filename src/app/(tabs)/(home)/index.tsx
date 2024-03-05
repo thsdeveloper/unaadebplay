@@ -23,7 +23,6 @@ export default function HomeTabs() {
     const headerBackgroundColor = scrollY.interpolate({
         inputRange: [0, 50],
         outputRange: ['transparent', '#0f4652'],
-        extrapolate: 'clamp',
     });
 
     useEffect(() => {
@@ -42,7 +41,7 @@ export default function HomeTabs() {
     return (
         <Animated.ScrollView onScroll={Animated.event(
             [{nativeEvent: {contentOffset: {y: scrollY}}}],
-            {useNativeDriver: false} // useNativeDriver deve ser false para animar propriedades não numéricas como backgroundColor
+            {useNativeDriver: false} //
         )} scrollEventThrottle={16} bounces={false}>
 
             <Box flex={1} justifyContent="center">

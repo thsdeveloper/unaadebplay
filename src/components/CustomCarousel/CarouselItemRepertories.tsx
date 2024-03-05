@@ -1,11 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import {Dimensions, TouchableOpacity} from 'react-native';
-import CustomCarousel from './CustomCarousel';
 import {getItems} from "@/services/items";
 import {RepertoriesTypes} from "@/types/RepertoriesTypes";
 import {Image} from "@/components/Image";
 import {GlobalQueryParams} from "@/types/GlobalQueryParamsTypes";
-import {Box, Text} from "native-base";
+import {Box, FlatList, Text} from "native-base";
 import colors from "@/constants/colors";
 import {useAudioPlayer} from "@/contexts/AudioPlayerContext";
 
@@ -31,21 +30,23 @@ export default function CarouselItemRepertories({id}: PropsCarrousseu) {
         setAlbumID(item.mp3);
     }
 
-    const CarouselItem = ({item}) => (
-        <TouchableOpacity onPress={() => onItemChange(item)}>
-            <Image assetId={item.image_cover.id} width={'150'} height={'150'}/>
-        </TouchableOpacity>
+    const CarouselItem = ({repertorie}) => (
+       <Box px={2}>
+           <TouchableOpacity onPress={() => onItemChange(repertorie)}>
+               <Image assetId={repertorie.image_cover.id} width={'150'} height={'150'}/>
+           </TouchableOpacity>
+       </Box>
     );
 
 
     useEffect(() => {
         const loadRepertories = async () => {
-            const responseRepertories = await getItems<RepertoriesTypes>('repertorios', params);
+            const responseRepertories = await getItems<RepertoriesTypes[]>('repertorios', params);
             setRepertoires(responseRepertories);
         };
 
         loadRepertories();
-    }, []);
+    }, [id]);
 
     if (repertoires.length === 0) {
         return (
@@ -58,20 +59,15 @@ export default function CarouselItemRepertories({id}: PropsCarrousseu) {
     }
 
     return (
-        <CustomCarousel
+        <FlatList
+            horizontal
             data={repertoires}
-            renderItem={({item}) => <CarouselItem item={item}/>}
-            sliderWidth={windowWidth}
-            itemWidth={150} // Tamanho uniforme dos itens
-            inactiveSlideScale={1}
-            inactiveSlideOpacity={0.5}
-            snapToAlignment={'start'}
-            snapToInterval={150 + 10} // Inclui o espaçamento entre os itens
-            contentContainerCustomStyle={{
-                paddingLeft: 10, // Alinha o primeiro item à esquerda
-                paddingRight: windowWidth - 150 // Garante o efeito de borda infinita
-            }}
-            slideStyle={{marginRight: 10}} // Espaçamento entre os itens
+            renderItem={({item}: RepertoriesTypes) => <CarouselItem repertorie={item} />}
+            snapToInterval={windowWidth * 0.8}
+            decelerationRate="fast"
+            keyExtractor={(repertorie: RepertoriesTypes) => repertorie.id}
+            showsHorizontalScrollIndicator={false}
+            scrollEventThrottle={16}
         />
     );
 };

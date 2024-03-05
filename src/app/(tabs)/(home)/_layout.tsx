@@ -4,6 +4,7 @@ import {Feather} from "@expo/vector-icons";
 import {Avatar} from "@/components/Avatar";
 import {useAuth} from "@/contexts/AuthContext";
 import colors from "@/constants/colors";
+import {TouchableOpacity} from "react-native";
 
 export default function HomeLayout() {
     const {user} = useAuth()
@@ -19,8 +20,10 @@ export default function HomeLayout() {
                     headerTintColor: colors.white,
                     title: `Olá ${user?.first_name}`,
                     headerRight: () => (
-                        <Link href={'/users'}>
-                            <Feather name="settings" size={20} color={colors.white}/>
+                        <Link href={'/(tabs)/(settings)'} asChild>
+                            <TouchableOpacity activeOpacity={0.7} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                                <Feather name="settings" size={24} color={colors.white}/>
+                            </TouchableOpacity>
                         </Link>
                     ),
                     headerLeft: () => (
@@ -29,9 +32,10 @@ export default function HomeLayout() {
                         </Link>
                     )
                 }}/>
-                <Stack.Screen name={'contribua'} options={{title: 'Contribua com a UNAADEB'}}/>
+                <Stack.Screen name={'contribua'} options={{headerShown: false, presentation: 'modal'}}/>
                 <Stack.Screen name={'(congresso)/[id]'} options={{title: 'Home page de Tabs', headerTransparent: true}}/>
                 <Stack.Screen name={'(congresso)/convidado/[id]'} options={{title: 'Convidado', presentation: 'modal'}}/>
+                <Stack.Screen name={'(congresso)/hospedagem/index'} options={{title: 'Hospedagem', presentation: 'modal'}}/>
                 <Stack.Screen name={'[itemId]'} options={{title: 'Details itemID'}}/>
                 <Stack.Screen name={'users'} options={{title: 'Usuários'}}/>
                 <Stack.Screen name={'(profile)/[id]'} options={{title: 'Perfil'}}/>
