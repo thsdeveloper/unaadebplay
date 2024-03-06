@@ -1,7 +1,7 @@
 import {Radio, IRadioProps, FormControl, HStack, Text, VStack} from 'native-base';
 
 type RadioOption = {
-    value: string;
+    value: string | boolean;
     label: string;
 };
 
@@ -22,7 +22,7 @@ export function RadioInput({ errorMessage = null, isInvalid, options, message, v
         <FormControl isInvalid={invalid}>
             <Text>{message}</Text>
             <Radio.Group value={value} onChange={onChange} name="example">
-                <StackComponent space={2}>
+                <StackComponent space={1}>
                     {options.map((option, index) => (
                         <Radio key={index} my={1} isInvalid={invalid} value={option.value} {...rest}>
                             {option.label}

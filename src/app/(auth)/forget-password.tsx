@@ -4,7 +4,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
 import { VStack, Box, Text, KeyboardAvoidingView } from "native-base";
 import { Button } from "@/components/Button";
-import { Input } from "@/components/input";
+import { Input } from "@/components/Forms/Input";
 import { Platform, ScrollView } from 'react-native';
 import TranslationContext from "../../contexts/TranslationContext";
 import AuthContext from "@/contexts/AuthContext";
