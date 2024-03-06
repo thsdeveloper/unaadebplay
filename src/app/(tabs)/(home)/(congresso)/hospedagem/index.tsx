@@ -58,6 +58,7 @@ const RegistrationForm = () => {
     } = useForm<FormDataProps>({
         resolver: yupResolver(schema),
         defaultValues: {
+            iam: 'adolescente',
             accommodation: false,
             take_medication: false,
             child_companion: false,

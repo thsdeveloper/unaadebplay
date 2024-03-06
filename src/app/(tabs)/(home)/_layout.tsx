@@ -34,7 +34,10 @@ export default function HomeLayout() {
                 }}/>
                 <Stack.Screen name={'contribua'} options={{headerShown: false, presentation: 'modal'}}/>
                 <Stack.Screen name={'(congresso)/[id]'}
-                              options={{title: 'Home page de Tabs', headerTransparent: true}}/>
+                              options={{
+                                  title: 'Home page de Tabs',
+                                  headerTransparent: false
+                }}/>
                 <Stack.Screen name={'(congresso)/convidado/[id]'}
                               options={{title: 'Convidado', presentation: 'modal'}}/>
                 <Stack.Screen name={'(congresso)/hospedagem/index'} options={{
