@@ -4,7 +4,7 @@ import {Badge, Box, KeyboardAvoidingView, ScrollView, VStack} from "native-base"
 import * as Yup from "yup";
 import {Controller, useForm} from "react-hook-form";
 import {yupResolver} from "@hookform/resolvers/yup/dist/yup";
-import {Input} from "@/components/input";
+import {Input} from "@/components/Forms/Input";
 import {Button} from "@/components/Button";
 import {updateUserMe} from "@/services/user";
 import TranslationContext from "@/contexts/TranslationContext";
@@ -12,7 +12,7 @@ import AlertContext from "@/contexts/AlertContext";
 import authContext from "@/contexts/AuthContext";
 import AvatarUpdated from "@/components/AvatarUpdated";
 import {handleErrors} from "@/utils/directus";
-import {RadioInput} from "@/components/Radio";
+import {RadioInput} from "@/components/Forms/Radio";
 import {HeaderDrawer} from "@/components/HeaderDrawer";
 
 const signUpSchema = Yup.object({

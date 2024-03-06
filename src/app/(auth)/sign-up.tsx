@@ -16,22 +16,22 @@ import {Controller, useForm} from "react-hook-form";
 import {yupResolver} from "@hookform/resolvers/yup/dist/yup";
 import {useContext, useEffect, useState} from "react";
 import {Button} from '@/components/Button'
-import {CustomSelect} from '@/components/Select'
-import {Input} from '@/components/input'
+import {CustomSelect} from '@/components/Forms/Select'
+import {Input} from '@/components/Forms/Input'
 import {Platform} from "react-native";
 import {emailExists, setUser} from "@/services/user";
 import {getItems} from "@/services/items";
 import {LegalDocumentsTypes} from "@/types/LegalDocumentsTypes";
 import ConfigContext from "@/contexts/ConfigContext";
 import TranslationContext from "@/contexts/TranslationContext";
-import CheckboxCustom from "@/components/Checkbox";
+import CheckboxCustom from "@/components/Forms/Checkbox";
 import {useAuth} from "@/contexts/AuthContext";
 import colors from "@/constants/colors";
 import AlertContext from "@/contexts/AlertContext";
 import {Sector} from "@/types/Sector";
 import {GlobalQueryParams} from "@/types/GlobalQueryParamsTypes";
 import {formatPhoneNumber} from "@/utils/directus";
-import {RadioInput} from "@/components/Radio";
+import {RadioInput} from "@/components/Forms/Radio";
 import {sendVerificationSMS, verifyCode} from "@/services/twilio";
 import CountdownTimer from "@/components/CountdownTimer";
 import { FontAwesome6 } from '@expo/vector-icons';
