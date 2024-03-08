@@ -1,15 +1,16 @@
-import {IImageProps, Skeleton, Box} from 'native-base';
+import {Skeleton, Box} from 'native-base';
 import React, {useContext, useEffect, useState} from 'react';
-import {Image as ImageRN} from "react-native";
+import {Image as ImageRN, ImageProps} from "react-native";
 import ConfigContext from "../contexts/ConfigContext";
 
-type Props = IImageProps & {
+type Props = Omit<ImageProps, 'source'> & {
     assetId: string | undefined;
-    width?: string | undefined;
-    height?: string | undefined;
+    width?: string | number;
+    height?: string | number;
+    borderRadius?: number;
 };
 
-export function Image({assetId, width, height}: Props) {
+export function Image({assetId, width, height, borderRadius, ...props}: Props) {
     // Renomeando `defaultImage` para `avatarPadrao`
     const {url_api, avatar_default} = useContext(ConfigContext);
     const [loading, setLoading] = useState(true);
@@ -36,6 +37,7 @@ export function Image({assetId, width, height}: Props) {
                 width={width}
                 height={height}
                 speed={2}
+                rounded={borderRadius}
             />
         </Box>
     );
@@ -45,10 +47,12 @@ export function Image({assetId, width, height}: Props) {
             {loading && loadingSkeleton}
             <Box width={width} height={height} borderRadius={"md"}>
                 <ImageRN
+                    borderRadius={borderRadius}
                     source={{uri: imageSrc}}
                     style={{width: "100%", height: "100%"}}
                     resizeMode="cover"
                     onLoadEnd={handleImageLoaded}
+                    {...props}
                 />
             </Box>
         </Box>

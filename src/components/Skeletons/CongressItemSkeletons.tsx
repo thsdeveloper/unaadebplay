@@ -1,15 +1,24 @@
 import React from 'react';
 import {Skeleton, VStack, HStack, Box} from 'native-base';
 
-const UserSkeleton = () => {
+interface PropsUserSkeleton{
+    windowWidth: number
+}
+
+const UserSkeleton = ({windowWidth}: PropsUserSkeleton) => {
     return (
-        <VStack mt={2} space={4} width="100%" px={2}>
+        <VStack mt={2} space={4} width={'100%'} px={2}>
             {Array.from({length: 1}).map((_, index) => (
-                <VStack space={2} alignItems="center" key={index}>
-                    <Skeleton startColor="text.400" endColor={'text.300'} height={"80"} borderRadius={10} width={'64'} mb={4}/>
-                    <Skeleton.Text lines={1} width="80%" startColor="text.400" endColor={'text.300'}/>
-                    <Skeleton.Text lines={1} width="60%" startColor="text.400" endColor={'text.300'}/>
-                    <Skeleton.Text lines={1} width="30%" startColor="text.400" endColor={'text.300'}/>
+                <VStack space={2} alignItems="center" key={index} pb={4}>
+                    <Skeleton startColor="text.400" endColor={'text.300'}
+                              height={windowWidth * 1.1}
+                              borderRadius={10}
+                              width={windowWidth * 0.8}
+                             />
+                    <Skeleton.Text lines={1} width="20%" startColor="text.400" endColor={'text.300'}/>
+                    <Skeleton.Text lines={1} width="4%" startColor="text.400" endColor={'text.300'}/>
+                    <Skeleton.Text lines={1} width="70%" startColor="text.400" endColor={'text.300'}/>
+                    <Skeleton.Text lines={1} width="50%" startColor="text.400" endColor={'text.300'}/>
                 </VStack>
             ))}
         </VStack>

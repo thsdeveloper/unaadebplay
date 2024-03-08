@@ -9,21 +9,31 @@ import TranslationContext from "@/contexts/TranslationContext";
 import {PostsTypes} from "@/types/PostsTypes";
 import {getItems} from "@/services/items";
 import SkeletonItem from "@/components/SkeletonItem";
+import {handleErrors} from "@/utils/directus";
+import AlertContext from "@/contexts/AlertContext";
 
 export default function PostsTabs() {
     const [posts, setPosts] = useState<PostsTypes[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [refreshing, setRefreshing] = useState<boolean>(false);
+    const alert = useContext(AlertContext)
 
     const {t} = useContext(TranslationContext);
 
     const loadPosts = async () => {
         setRefreshing(true);
-        const responsePosts = await getItems<PostsTypes>('posts').finally(() => {
-            setIsLoading(false);
+        try {
+            const responsePosts = await getItems<PostsTypes>('posts').finally(() => {
+                setIsLoading(false);
+                setRefreshing(false);
+            });
+            setPosts(responsePosts)
+        }catch (e) {
+            const message = handleErrors(e.errors);
+            alert.error(`Error: ${message}`)
+        }finally {
             setRefreshing(false);
-        });
-        setPosts(responsePosts)
+        }
     };
 
     useEffect(() => {

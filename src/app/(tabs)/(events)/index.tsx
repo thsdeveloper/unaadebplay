@@ -9,6 +9,8 @@ import colors from "@/constants/colors";
 import SkeletonItem from "@/components/SkeletonItem";
 import {EventsTypes} from "@/types/EventsTypes";
 import {Link} from "expo-router";
+import AlertContext from "@/contexts/AlertContext";
+import {handleErrors} from "@/utils/directus";
 
 const EventPage = () => {
     const [events, setEvents] = useState<Array<{ title: string, data: EventsTypes[] }>>([]);
@@ -16,30 +18,33 @@ const EventPage = () => {
     const [isLoadingList, setIsLoadingList] = useState(false);
     const [refreshing, setRefreshing] = useState<boolean>(false);
     const {t} = useContext(TranslationContext);
+    const alert = useContext(AlertContext)
 
     const loadEvents = async () => {
         setIsLoadingList(true);
-        let response = await getItems<EventsTypes>('events');
-
-        // Ordena os eventos por start_date_time
-        response.sort((a, b) => new Date(a.start_date_time).getTime() - new Date(b.start_date_time).getTime());
-
-        // Agrupe os eventos por start_date_time
-        const eventsByDate = response.reduce((groups, event) => {
-            const eventDate = new Date(event.start_date_time).toLocaleDateString(); // Formatando data para exibição
-            (groups[eventDate] = groups[eventDate] || []).push(event);
-            return groups;
-        }, {});
-
-        // Converta o objeto groups em um array de seções
-        const sections = Object.keys(eventsByDate).map(date => ({
-            title: date,
-            data: eventsByDate[date],
-            eventType: eventsByDate[date][0].event_type // adicione o tipo de evento
-        }));
-
-        setEvents(sections);
-        setIsLoadingList(false);
+        try {
+            let response = await getItems<EventsTypes>('events');
+            // Ordena os eventos por start_date_time
+            response.sort((a, b) => new Date(a.start_date_time).getTime() - new Date(b.start_date_time).getTime());
+            // Agrupe os eventos por start_date_time
+            const eventsByDate = response.reduce((groups, event) => {
+                const eventDate = new Date(event.start_date_time).toLocaleDateString(); // Formatando data para exibição
+                (groups[eventDate] = groups[eventDate] || []).push(event);
+                return groups;
+            }, {});
+            // Converta o objeto groups em um array de seções
+            const sections = Object.keys(eventsByDate).map(date => ({
+                title: date,
+                data: eventsByDate[date],
+                eventType: eventsByDate[date][0].event_type // adicione o tipo de evento
+            }));
+            setEvents(sections);
+        }catch (e) {
+            const message = handleErrors(e.errors);
+            alert.error(`Error: ${message}`)
+        }finally {
+            setIsLoadingList(false);
+        }
     };
 
     useEffect(() => {

@@ -25,7 +25,8 @@
         {
           "username": "thsdeveloper"
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "assetBundlePatterns": [
       "**/*"

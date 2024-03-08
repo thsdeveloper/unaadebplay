@@ -1,7 +1,7 @@
-import React, {useEffect, useState} from 'react';
-import {View, Image, Dimensions, TouchableOpacity, SafeAreaView, Animated} from 'react-native';
+import React, {useContext, useEffect, useRef, useState} from 'react';
+import {Dimensions, TouchableOpacity, SafeAreaView} from 'react-native';
 import {Text, Box, Heading} from 'native-base';
-import {Link} from "expo-router";
+import {Link, useNavigation} from "expo-router";
 import colors from "@/constants/colors";
 import {LinearGradient} from 'expo-linear-gradient';
 import {Feather} from "@expo/vector-icons";
@@ -10,82 +10,101 @@ import {getItems} from "@/services/items";
 import Carousel from "react-native-snap-carousel";
 import {CongressType} from "@/types/CongressType";
 import CongressItemSkeletons from "@/components/Skeletons/CongressItemSkeletons";
-import defaultImage from '../assets/default.png';
+import Animated, {useAnimatedStyle, useSharedValue, withSpring} from 'react-native-reanimated';
+import AlertContext from "@/contexts/AlertContext";
+import {Image} from '@/components/Image'
+import {handleErrors} from "@/utils/directus";
 
 const windowWidth = Dimensions.get('window').width;
 
 export default function InfoCongressCarousel() {
     const [congress, setCongress] = useState<CongressType[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [activeIndex, setActiveIndex] = useState(0);
-    const [loaded, setLoaded] = useState(false);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const alert = useContext(AlertContext)
+    const carouselRef = useRef<any>(null);
+    const navigate = useNavigation()
 
-    const tiltX = new Animated.Value(0);
-    const tiltY = new Animated.Value(0);
+    const [activeIndex, setActiveIndex] = useState<number>();
+
+    const tiltX = useSharedValue(0);
+    const tiltY = useSharedValue(0);
+
+    useEffect(() => {
+        if (carouselRef.current && congress.length > 0) {
+            if (activeIndex != null) {
+                carouselRef.current.snapToItem(activeIndex, false, false);
+            }
+        }
+    }, [activeIndex, congress.length]);
 
     useEffect(() => {
         const loadCongress = async () => {
-            const response = await getItems<CongressType[]>('congresso');
-            setIsLoading(false);
-            setCongress(response);
+            setIsLoading(true);
+            try {
+                const response = await getItems<CongressType[]>('congresso', {
+                    sort: ['date_start']
+                });
+                setCongress(response);
+                setActiveIndex(response.length - 1);
+            } catch (e) {
+                const message = handleErrors(e.errors);
+                alert.error(`Error: ${message}`)
+            } finally {
+                setIsLoading(false);
+            }
         };
-
         loadCongress();
     }, []);
 
     useEffect(() => {
         Accelerometer.setUpdateInterval(100);
         const subscription = Accelerometer.addListener(({x, y}) => {
-            Animated.spring(tiltX, {toValue: x, useNativeDriver: true, tension: 30, friction: 5}).start();
-            Animated.spring(tiltY, {toValue: y, useNativeDriver: true, tension: 30, friction: 5}).start();
+            tiltX.value = withSpring(x * 5);
+            tiltY.value = withSpring(y * 2);
         });
-
         return () => subscription.remove();
     }, []);
 
+
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            transform: [
+                {rotateZ: `${tiltX.value}deg`},
+                {rotateX: `${tiltY.value}deg`},
+            ],
+        };
+    });
+
     const onItemChange = (index: number) => setActiveIndex(index);
 
-    const renderItem = ({item, index}: { item: CongressType; index: number }) => {
-        const urlImage =  `https://back-unaadeb.onrender.com/assets/${item.poster}?quality=50&timestamp=${new Date().getTime()}`
-        const animatedStyle = activeIndex === index ? {
-            transform: [
-                {
-                    rotateZ: tiltX.interpolate({
-                        inputRange: [-1, 1],
-                        outputRange: ['-30deg', '30deg'],
-                        extrapolate: 'clamp'
-                    })
-                },
-                {
-                    rotateX: tiltY.interpolate({
-                        inputRange: [-1, 1],
-                        outputRange: ['10deg', '-10deg'],
-                        extrapolate: 'clamp'
-                    })
-                }
-            ]
-        } : {};
-
+    const itemComponentCongress = ({ item, index }: { item: CongressType; index: number; }) => {
         return (
             <Link href={`/(tabs)/(home)/(congresso)/${item.id}`} asChild>
                 <TouchableOpacity activeOpacity={0.9}>
-                    <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+                    <Box flex={1} justifyContent={"center"} alignItems={"center"}>
                         <Box shadow={6} p={4}>
-                            <Animated.View style={[{shadow: 6, padding: 4}, animatedStyle]}>
+                            <Animated.View style={animatedStyle}>
                                 <Image
-                                    onLoad={() => setLoaded(true)}
-                                    onError={() => setLoaded(false)}
                                     borderRadius={10}
-                                    source={loaded ? { uri: urlImage } : defaultImage}
-                                    style={{width: windowWidth * 0.8, height: windowWidth * 1.1}}
+                                    width={windowWidth * 0.8}
+                                    height={windowWidth * 1.1}
                                     resizeMode="cover"
+                                    assetId={item.poster}
                                 />
                             </Animated.View>
                         </Box>
                         <Text color={colors.text}>{item.name}</Text>
-                    </View>
+                    </Box>
                     <Box alignItems={"center"} p={0}>
                         <Feather name="chevron-down" size={30} color={colors.light}/>
+                    </Box>
+                    <Box alignItems={"center"} pb={4}>
+                        <Box alignItems={"center"} pb={4}>
+                            <Heading color={colors.light}
+                                     fontWeight={"extrabold"}>{item?.theme}</Heading>
+                            <Heading color={colors.light}
+                                     fontSize={14}>{item?.description}</Heading>
+                        </Box>
                     </Box>
                 </TouchableOpacity>
             </Link>
@@ -93,48 +112,33 @@ export default function InfoCongressCarousel() {
     };
 
     return (
-
         <LinearGradient
-            colors={isLoading ? ['#0b2a86', '#0d0f17'] : [`${congress[activeIndex]?.primary_color}`, `${congress[activeIndex]?.second_color}`]} // Usa as cores do evento ativo
-            style={{flex: 1}}
-        >
+            colors={!isLoading && congress.length > 0 && activeIndex !== undefined ? [`${congress[activeIndex]?.primary_color}`, `${congress[activeIndex]?.second_color}`] : [colors.primary, colors.darkRed]}
+            style={{flex: 1}}>
             <SafeAreaView>
                 {isLoading ? (
-                    // Placeholder ou indicador de carregamento
-                    <Box alignItems={"center"} justifyContent={"center"} flex={1} py={4}>
-                       <CongressItemSkeletons />
+                    <Box alignItems={"center"} justifyContent={"center"} flex={1} shadow={6} pt={2}>
+                        <CongressItemSkeletons windowWidth={windowWidth} />
                     </Box>
                 ) : (
                     <>
-                        <Carousel
+                        <Carousel<CongressType>
+                            vertical={false}
+                            ref={carouselRef}
                             data={congress}
-                            renderItem={renderItem}
+                            renderItem={itemComponentCongress}
                             onSnapToItem={onItemChange}
                             sliderWidth={windowWidth}
+                            firstItem={activeIndex}
                             itemWidth={windowWidth * 0.8}
-                            loop={true} // Ativa o efeito de borda infinita
-                            autoplay={false} // Opcional: move o carrossel automaticamente
                             autoplayDelay={500}
                             autoplayInterval={3000}
                             inactiveSlideOpacity={0.4}
                             inactiveSlideScale={0.9}
-                            snapToAlignment={'start'}
-                            snapToInterval={windowWidth * 0.8 + 10} // ssLargura do item + espaçamento
                         />
-                        <Box alignItems={"center"}>
-                            <Box alignItems={"center"} pb={4}>
-                                <Heading color={colors.light}
-                                         fontWeight={"extrabold"}>{congress[activeIndex]?.theme}</Heading>
-                                <Heading color={colors.light}
-                                         fontSize={14}>{congress[activeIndex]?.description}</Heading>
-                            </Box>
-                        </Box>
                     </>
                 )}
-
-
             </SafeAreaView>
-
         </LinearGradient>
     );
 };
