@@ -1,5 +1,5 @@
 import directusClient from "./api";
-import {createItem, deleteItem, readItem, readItems, readSingleton, updateItem, readFieldsByCollection} from "@directus/sdk";
+import {createItem, deleteItem, readItem, readItems, readSingleton, updateItem} from "@directus/sdk";
 import {GlobalQueryParams} from "@/types/GlobalQueryParamsTypes";
 
 export interface GenericItem {

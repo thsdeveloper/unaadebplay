@@ -82,7 +82,7 @@ export default function CongressoPage() {
     if (loading) {
         return (
             <Center alignItems={"center"} flex={1}>
-                <CongressItemSkeletons/>
+                <CongressItemSkeletons windowWidth={40}/>
             </Center>
         );
     }

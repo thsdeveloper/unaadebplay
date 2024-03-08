@@ -8,7 +8,7 @@ class LocalStorage {
         const item = await AsyncStorage.getItem("directus-data");
         return JSON.parse(<string>item);
     }
-    async set(data) {
+    async set(data: any) {
        await AsyncStorage.setItem("directus-data", JSON.stringify(data));
     }
 }

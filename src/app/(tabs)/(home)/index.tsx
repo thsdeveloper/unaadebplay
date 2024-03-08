@@ -12,6 +12,7 @@ import InfoCongressCarousel from "@/components/InfoCongressCarousel";
 import {Link} from "expo-router";
 import {useNavigation} from "expo-router";
 import {BlurView} from 'expo-blur';
+import SectionInfo from "@/components/SectionInfo";
 
 export default function HomeTabs() {
     const [refreshing, setRefreshing] = useState(false);
@@ -60,7 +61,7 @@ export default function HomeTabs() {
                     <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing}/>
                 </Box>
             </Box>
-            <Box>
+            <Box pb={4}>
                 <Stack space={"sm"} m={2} direction={"row"} alignItems={"center"}>
                     <Text fontWeight={'bold'} fontSize={'lg'} color={colors.dark}>
                         {t('text_section_banner')}
@@ -68,47 +69,22 @@ export default function HomeTabs() {
                 </Stack>
                 <BannerCarousel refreshing={refreshing} setRefreshing={setRefreshing}/>
             </Box>
-
-            <Box>
-                <Link href={'/contribua'} asChild>
-                    <TouchableOpacity activeOpacity={0.9}>
-                        <Box backgroundColor={colors.secundary3} width={'100%'} height={'24'}
-                             justifyContent={"center"} alignItems={"center"}>
-                            <HStack space={4} alignItems={"center"} justifyContent={"center"} px={4}>
-                                <Box>
-                                    <Feather name="dollar-sign" size={40} color={colors.light}/>
-                                </Box>
-                                <VStack>
-                                    <Text fontSize={20} fontWeight={"bold"} color={colors.text}>
-                                        Seja um parceiro da UNAADEB
-                                    </Text>
-                                    <Text color={colors.yellow}>Clique e contribua com o Congresso 2023</Text>
-                                </VStack>
-                            </HStack>
-                        </Box>
-                    </TouchableOpacity>
-                </Link>
+            <Box px={2} pb={2}>
+                <SectionInfo to={'/contribua'}
+                             title={'Contribua para a UNAADEB'}
+                             description={'Faça sua doação em PIX para o congresso'}
+                             icon={'award'}
+                             bgColor={colors.secundary2}
+                />
             </Box>
 
-            <Box>
-                <Link href={'/youtube'} asChild>
-                    <TouchableOpacity activeOpacity={0.9}>
-                        <HStack background={'muted.900'} width={'full'} flex={1} alignItems={"center"} p={4}
-                                space={4}>
-                            <Box>
-                                <Feather name="youtube" size={40} color={colors.light}/>
-                            </Box>
-                            <Box>
-                                <Text fontWeight={'bold'} fontSize={'2xl'} color={'muted.50'}>
-                                    Acesse nosso canal
-                                </Text>
-                                <Text color={'muted.50'}>
-                                    Todos os vídeos do congresso
-                                </Text>
-                            </Box>
-                        </HStack>
-                    </TouchableOpacity>
-                </Link>
+            <Box px={2} pb={2}>
+                <SectionInfo to={'/youtube'}
+                             title={'Acesse nosso canal no Youtube'}
+                             description={'Todos os vídeos do congresso'}
+                             icon={'youtube'}
+                             bgColor={colors.accent}
+                />
             </Box>
 
 
