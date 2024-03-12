@@ -4,10 +4,12 @@ import {Feather} from "@expo/vector-icons";
 import {Avatar} from "@/components/Avatar";
 import {useAuth} from "@/contexts/AuthContext";
 import colors from "@/constants/colors";
-import {TouchableOpacity} from "react-native";
+import {Platform, TouchableOpacity} from "react-native";
+import {Box} from "native-base";
 
 export default function HomeLayout() {
     const {user} = useAuth()
+    const padding = Platform.OS === 'android' ? 4 : 0
 
     return (
         <>
@@ -27,9 +29,11 @@ export default function HomeLayout() {
                         </Link>
                     ),
                     headerLeft: () => (
-                        <Link href={'/modal'}>
-                            <Avatar userAvatarID={user?.avatar} height={28} width={28}/>
-                        </Link>
+                        <Box pr={padding}>
+                            <Link href={'/modal'}>
+                                <Avatar userAvatarID={user?.avatar} height={28} width={28}/>
+                            </Link>
+                        </Box>
                     )
                 }}/>
                 <Stack.Screen name={'contribua'} options={{headerShown: false, presentation: 'modal'}}/>
@@ -43,7 +47,16 @@ export default function HomeLayout() {
                 <Stack.Screen name={'(congresso)/hospedagem/index'} options={{
                     title: 'Hospedagem',
                     headerStyle: {
-                        backgroundColor: colors.primary, // Substitua '#corDesejada' pelo código hexadecimal da cor que você deseja.
+                        backgroundColor: colors.primary,
+                    },
+                    headerBackTitle: 'Voltar',
+                    headerTintColor: colors.white,
+                }
+                }/>
+                <Stack.Screen name={'(congresso)/pagamento-hospedagem'} options={{
+                    title: 'Pagamento Hospedagem',
+                    headerStyle: {
+                        backgroundColor: colors.primary,
                     },
                     headerBackTitle: 'Voltar',
                     headerTintColor: colors.white,
@@ -66,7 +79,14 @@ export default function HomeLayout() {
                         backgroundColor: colors.primary,
                     }
                 }}/>
-                <Stack.Screen name={'modal'} options={{title: 'Perfil', presentation: 'modal'}}/>
+                <Stack.Screen name={'modal'} options={{
+                    title: 'Minhas informações',
+                    headerTintColor: colors.light,
+                    presentation: 'modal',
+                    headerStyle: {
+                        backgroundColor: colors.primary,
+                    }
+                }}/>
                 <Stack.Screen name={'youtube'} options={{title: 'Youtube', presentation: 'modal'}}/>
                 <Stack.Screen name={'repertories'} options={{title: 'Repertórios', presentation: 'modal'}}/>
             </Stack>

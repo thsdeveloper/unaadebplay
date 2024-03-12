@@ -1,5 +1,4 @@
 import React, {useContext, useEffect, useLayoutEffect, useState} from "react";
-import MercadoPago from "@/components/MercadoPago";
 import {Box, Button, Center, Heading, HStack, Icon, IconButton, Pressable, ScrollView, Text} from "native-base";
 import {Link, useGlobalSearchParams, useNavigation} from "expo-router";
 import {getItem, getItems} from "@/services/items";
@@ -126,6 +125,15 @@ export default function CongressoPage() {
                                     } color={colors.light} rounded={'full'} shadow={2}
                                             disabled={!congress.status_hospedagem}>
                                         {!congress.status_hospedagem ? 'Inscrições Encerradas' : 'Inscreva-se para a hospedagem'}
+                                    </Button>
+                                </Link>
+
+                                <Link href={'/(tabs)/(home)/(congresso)/pagamento-hospedagem'} asChild>
+                                    <Button size={'lg'} colorScheme={'danger'} leftIcon={
+                                        <Feather name={'plus-circle'} size={20} color={colors.light}/>
+                                    } color={colors.light} rounded={'full'} shadow={2}
+                                            disabled={!congress.status_hospedagem}>
+                                        {!congress.status_hospedagem ? 'Inscrições Encerradas' : 'Pagamento Hospedagem'}
                                     </Button>
                                 </Link>
                             </>
