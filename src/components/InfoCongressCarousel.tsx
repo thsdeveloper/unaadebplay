@@ -1,5 +1,5 @@
 import React, {useContext, useEffect, useRef, useState} from 'react';
-import {Dimensions, TouchableOpacity, SafeAreaView} from 'react-native';
+import {Dimensions, TouchableOpacity, SafeAreaView, Platform} from 'react-native';
 import {Text, Box, Heading} from 'native-base';
 import {Link, useNavigation} from "expo-router";
 import colors from "@/constants/colors";
@@ -23,6 +23,7 @@ export default function InfoCongressCarousel() {
     const alert = useContext(AlertContext)
     const carouselRef = useRef<any>(null);
     const navigate = useNavigation()
+    const paddingTop = Platform.OS === 'android' ? 24 : 4
 
     const [activeIndex, setActiveIndex] = useState<number>();
 
@@ -82,7 +83,7 @@ export default function InfoCongressCarousel() {
             <Link href={`/(tabs)/(home)/(congresso)/${item.id}`} asChild>
                 <TouchableOpacity activeOpacity={0.9}>
                     <Box flex={1} justifyContent={"center"} alignItems={"center"}>
-                        <Box shadow={6} p={4}>
+                        <Box shadow={6} pt={paddingTop} pb={4}>
                             <Animated.View style={animatedStyle}>
                                 <Image
                                     borderRadius={10}
@@ -115,7 +116,7 @@ export default function InfoCongressCarousel() {
         <LinearGradient
             colors={!isLoading && congress.length > 0 && activeIndex !== undefined ? [`${congress[activeIndex]?.primary_color}`, `${congress[activeIndex]?.second_color}`] : [colors.primary, colors.darkRed]}
             style={{flex: 1}}>
-            <SafeAreaView>
+            <SafeAreaView accessibilityViewIsModal={false}>
                 {isLoading ? (
                     <Box alignItems={"center"} justifyContent={"center"} flex={1} shadow={6} pt={2}>
                         <CongressItemSkeletons windowWidth={windowWidth} />

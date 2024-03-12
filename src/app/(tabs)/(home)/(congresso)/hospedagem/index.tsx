@@ -6,7 +6,7 @@ import {
     Heading,
     KeyboardAvoidingView,
     ScrollView,
-    Divider, Button, useSafeArea, Center
+    Divider, Button, Center
 } from 'native-base';
 import * as Yup from 'yup';
 import {yupResolver} from '@hookform/resolvers/yup';
@@ -16,10 +16,11 @@ import {RadioInput} from "@/components/Forms/Radio";
 import {Sector} from "@/types/Sector";
 import {GlobalQueryParams} from "@/types/GlobalQueryParamsTypes";
 import {getItems} from "@/services/items";
-import {Alert, Keyboard, Platform, TouchableWithoutFeedback} from "react-native";
+import {Platform} from "react-native";
 import {Switch} from "@/components/Forms/Switch";
 import colors from "@/constants/colors";
 import {Input} from "@/components/Forms/Input";
+import PaymentMercadoPago from "@/components/PaymentMercadoPago";
 
 const schema = Yup.object({
     iam: Yup.string().required('(Eu sou) é obrigatório'),
@@ -35,9 +36,8 @@ const schema = Yup.object({
     emergency_contact: Yup.string().required('O campo contato de emergência é obrigatório'),
 });
 
-const RegistrationForm = () => {
+const RegistrationFormHospedagem = () => {
     const {user} = useAuth();
-    const safeArea = useSafeArea(1);
     const [sectors, setSectors] = useState<Sector[]>([]);
     const [dataForms, setDataForms] = useState<FormDataProps>();
     const alert = useContext(AlertContext)
@@ -124,6 +124,10 @@ const RegistrationForm = () => {
         {value: 'negativo', label: 'Negativo'},
         {value: 'nao_sabe', label: 'Não sei meu fator Rh'},
     ];
+
+    const handleCad = (data) => {
+        alert.success(`${data.valid} - ${data.values.number}`)
+    }
 
     return (
         <KeyboardAvoidingView
@@ -587,4 +591,4 @@ const RegistrationForm = () => {
     );
 };
 
-export default RegistrationForm;
+export default RegistrationFormHospedagem;

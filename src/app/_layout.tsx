@@ -47,7 +47,7 @@ export default function RootLayout() {
 
     return (
         <NativeBaseProvider>
-            <StatusBar backgroundColor="#0E1647" barStyle="light-content"/>
+            <StatusBar barStyle="light-content" translucent={true}/>
             <AlertProvider>
                 <AuthProvider>
                     <ConfigProvider value={config}>

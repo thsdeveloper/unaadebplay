@@ -1,20 +1,8 @@
-import React, {useEffect, useLayoutEffect, useState} from "react";
-import {Animated, SafeAreaView, TouchableOpacity} from "react-native";
-import MercadoPago from "@/components/MercadoPago";
-import {Box, Button, Heading, HStack, Pressable, ScrollView, Text} from "native-base";
-import {Link, useGlobalSearchParams, useNavigation} from "expo-router";
-import {getItem, getItems} from "@/services/items";
-import {BlurView} from "expo-blur";
-import colors from "@/constants/colors";
-import {Feather} from "@expo/vector-icons";
-import CongressItemSkeletons from "@/components/Skeletons/CongressItemSkeletons";
+import React, {useState} from "react";
+import {Animated} from "react-native";
+import {Box} from "native-base";
+import {useGlobalSearchParams, useNavigation} from "expo-router";
 import {CongressType} from "@/types/CongressType";
-import {formatTime} from "@/utils/directus";
-import {LinearGradient} from "expo-linear-gradient";
-import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
-import CarouselItemRepertories from "@/components/CustomCarousel/CarouselItemRepertories";
-import {GlobalQueryParams} from "@/types/GlobalQueryParamsTypes";
-import CarouselItemUsers from "@/components/CustomCarousel/CarouselItemUsers";
 
 export default function ConvidadoPage() {
     const [congress, setCongress] = useState<CongressType | null>(null);
