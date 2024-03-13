@@ -9,7 +9,7 @@ import {AudioPlayerProvider} from "@/contexts/AudioPlayerContext";
 import * as SplashScreen from 'expo-splash-screen';
 import {getSettings} from "@/services/settings";
 import FlashMessage from "react-native-flash-message";
-import {Stack, Slot} from 'expo-router'
+import {Slot} from 'expo-router'
 import AppUpdateManager from "@/components/AppUpdateManager";
 
 export default function RootLayout() {

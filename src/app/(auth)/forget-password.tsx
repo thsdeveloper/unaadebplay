@@ -2,7 +2,7 @@ import React, { useContext, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
-import { VStack, Box, Text, KeyboardAvoidingView } from "native-base";
+import {VStack, Box, Text, KeyboardAvoidingView, StatusBar} from "native-base";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Forms/Input";
 import { Platform, ScrollView } from 'react-native';
@@ -51,6 +51,7 @@ export default function ForgetPassword() {
 
     return (
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+            <StatusBar barStyle="dark-content"/>
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 <VStack p={10} space={4} flex={1} alignItems={"center"}>
                     <Feather name="unlock" size={40} color="black" />

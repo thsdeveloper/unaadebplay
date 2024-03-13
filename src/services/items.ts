@@ -22,9 +22,9 @@ export async function getItem<T>(collectionName: string, id: string | number, pa
     }
 }
 
-export async function getItemSingleton(collectionName: string, params?: GlobalQueryParams): Promise<any> {
+export async function getItemSingleton<T>(collectionName: string, params?: GlobalQueryParams): Promise<T> {
     try {
-        return await directusClient.request(readSingleton(collectionName, params));
+        return await directusClient.request<T>(readSingleton(collectionName, params));
     } catch (error) {
         throw error;
     }
