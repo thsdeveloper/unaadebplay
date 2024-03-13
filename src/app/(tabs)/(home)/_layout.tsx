@@ -12,7 +12,6 @@ export default function HomeLayout() {
     const padding = Platform.OS === 'android' ? 4 : 0
 
     return (
-        <>
             <Stack screenOptions={{
                 headerTransparent: false,
                 headerTintColor: colors.dark,
@@ -90,6 +89,5 @@ export default function HomeLayout() {
                 <Stack.Screen name={'youtube'} options={{title: 'Youtube', presentation: 'modal'}}/>
                 <Stack.Screen name={'repertories'} options={{title: 'Repertórios', presentation: 'modal'}}/>
             </Stack>
-        </>
     );
 }

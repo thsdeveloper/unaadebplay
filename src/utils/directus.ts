@@ -29,3 +29,36 @@ export function formatPhoneNumber(phoneNumber) {
 
     return formattedPhoneNumber;
 }
+
+export function formatDateToISO(birthdate: string){
+    const parts = birthdate.split('/');
+    const formattedDate = new Date(parts[2], parts[1] - 1, parts[0]); // Note que os meses são indexados a partir de 0
+    return formattedDate.toISOString(); // Converte para o formato ISO string
+}
+
+export function calculateAge(birthdate: string){
+    // Converte a data de DD/MM/AAAA para AAAA-MM-DD
+    const parts = birthdate.split('/');
+    const formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+
+    const birthDate = new Date(formattedDate);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return age;
+}
+
+export function formatCurrency(value) {
+    // Configura o formatador de número para o estilo de moeda brasileiro
+    const formatter = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        // Especifica a exibição mínima de casas decimais
+        minimumFractionDigits: 2,
+    });
+
+    return formatter.format(value);
+}

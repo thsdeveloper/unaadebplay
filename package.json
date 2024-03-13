@@ -46,7 +46,6 @@
     "react-hook-form": "^7.43.2",
     "react-native": "0.73.2",
     "react-native-base64": "^0.2.1",
-    "react-native-credit-card-input": "^0.4.1",
     "react-native-flash-message": "^0.4.0",
     "react-native-gesture-handler": "~2.14.0",
     "react-native-masked-text": "^1.13.0",

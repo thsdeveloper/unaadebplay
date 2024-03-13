@@ -1,4 +1,4 @@
-import {Redirect, Stack, useRouter} from 'expo-router';
+import {Stack, useRouter} from 'expo-router';
 import React, {useEffect} from "react";
 import {useAuth} from "@/contexts/AuthContext";
 export default function AuthLayout() {
@@ -16,7 +16,6 @@ export default function AuthLayout() {
     }
 
     return (
-       <>
            <Stack>
                <Stack.Screen name="sign-in" options={{headerShown: false}}/>
                <Stack.Screen name="sign-up"
@@ -31,7 +30,6 @@ export default function AuthLayout() {
                    title: 'Recuperar senha'
                }}/>
            </Stack>
-       </>
     );
 }
 

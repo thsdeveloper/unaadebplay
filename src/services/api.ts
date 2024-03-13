@@ -12,9 +12,9 @@ class LocalStorage {
        await AsyncStorage.setItem("directus-data", JSON.stringify(data));
     }
 }
+
 const storage = new LocalStorage();
 
 const directusClient = createDirectus(url).with(authentication('json', {storage})).with(rest());
-
 
 export default directusClient;

@@ -8,7 +8,7 @@ import {
     Checkbox,
     Pressable,
     Modal,
-    Flex, Box, Button as NBButton
+    Flex, Box, Button as NBButton, StatusBar, ScrollView
 } from "native-base";
 import RenderHtml from 'react-native-render-html';
 import * as Yup from "yup";
@@ -19,7 +19,7 @@ import {Button} from '@/components/Button'
 import {CustomSelect} from '@/components/Forms/Select'
 import {Input} from '@/components/Forms/Input'
 import {Platform} from "react-native";
-import {emailExists, setUser} from "@/services/user";
+import {setUser} from "@/services/user";
 import {getItems} from "@/services/items";
 import {LegalDocumentsTypes} from "@/types/LegalDocumentsTypes";
 import ConfigContext from "@/contexts/ConfigContext";
@@ -30,56 +30,13 @@ import colors from "@/constants/colors";
 import AlertContext from "@/contexts/AlertContext";
 import {Sector} from "@/types/Sector";
 import {GlobalQueryParams} from "@/types/GlobalQueryParamsTypes";
-import {formatPhoneNumber} from "@/utils/directus";
+import {calculateAge, formatDateToISO, formatPhoneNumber} from "@/utils/directus";
 import {RadioInput} from "@/components/Forms/Radio";
 import {sendVerificationSMS, verifyCode} from "@/services/twilio";
 import CountdownTimer from "@/components/CountdownTimer";
-import { FontAwesome6 } from '@expo/vector-icons';
+import {FontAwesome6} from '@expo/vector-icons';
+import {validateSchemaSignUp} from '@/schema-validations/sign-up-validation'
 
-
-const signUpSchema = Yup.object({
-    first_name: Yup.string().trim().min(2, 'O primeiro nome deve ter pelo menos 2 caracteres').required('O primeiro nome é obrigatório'),
-    last_name: Yup.string().trim().min(2, 'O sobrenome deve ter pelo menos 2 caracteres').required('O sobrenome é obrigatório'),
-    email: Yup.string()
-        .email('Digite um email válido')
-        .required('Email é obrigatório')
-        .test(
-            'check-email-exists',
-            'Este e-mail já está cadastrado',
-            async (value) => {
-                const exists = await emailExists(value);
-                return !exists; // retornar true se o e-mail NÃO existir
-            }
-        ),
-    password: Yup.string().min(4, 'Senha deve ter no mínimo 4 caracteres').required('Senha é obrigatória'),
-    sector: Yup.string().required('Escolha seu setor'),
-    gender: Yup.string().required('O campo sexo deve ser preenchido'),
-    phone: Yup.string().required('O campo telefone deve ser preenchido').matches(
-        /^(\([0-9]{2}\)\s)?([0-9]{4,5}-[0-9]{4})$/,
-        'Número de telefone inválido'
-    ),
-    birthdate: Yup.string().required('O campo Data de Nascimento deve ser preenchido')
-        .test('is-valid-date', 'Data de Nascimento inválida', (value) => {
-            if (!value) return false; // verifica se o valor é nulo
-            const parts = value.split('/');
-            if (parts.length !== 3) return false; // verifica se a data está no formato DD/MM/AAAA
-
-            const day = parseInt(parts[0], 10);
-            const month = parseInt(parts[1], 10) - 1; // mês é indexado a partir de 0
-            const year = parseInt(parts[2], 10);
-
-            const date = new Date(year, month, day);
-            const currentDate = new Date();
-            currentDate.setHours(0, 0, 0, 0); // zera as horas para comparar apenas a data
-
-            // Verifica se a data é válida e se não é uma data futura
-            return date && date.getMonth() === month && date.getDate() === day && date.getFullYear() === year && date <= currentDate;
-        }),
-    password_confirmed: Yup.string().oneOf([Yup.ref('password'), null], 'As senhas não coincidem.'),
-    acceptTerms: Yup.boolean().oneOf([true], 'Você deve aceitar os Termos de Uso e a Política de Privacidade para se cadastrar'),
-})
-
-type FormDataProps = Yup.InferType<typeof signUpSchema>;
 
 const FormSigUpUser = () => {
     const window = useWindowDimensions();
@@ -98,12 +55,16 @@ const FormSigUpUser = () => {
     const [activeDocument, setActiveDocument] = useState<"terms" | "privacy" | null>(null);
     const [userObject, setUserObject] = useState<any>(null);
     const [isTermsModalVisible, setIsTermsModalVisible] = useState(false);
+    const [isMinor, setIsMinor] = useState<boolean>(false);
     const alert = useContext(AlertContext)
+
+    const validationSchema = validateSchemaSignUp(isMinor);
+    type FormDataProps = Yup.InferType<typeof validationSchema>;
 
     useEffect(() => {
         async function fetchData() {
             const params: GlobalQueryParams = {
-                filter: { status: { _eq: 'published' } },
+                filter: {status: {_eq: 'published'}},
                 sort: 'name'
             }
             const infosLegalDocuments = await getItems('legal_documents');
@@ -119,8 +80,8 @@ const FormSigUpUser = () => {
         setIsTermsModalVisible(!isTermsModalVisible);
     };
 
-    const {control, handleSubmit, trigger, formState: {errors, isValid}} = useForm<FormDataProps>({
-        resolver: yupResolver(signUpSchema),
+    const {control, handleSubmit, trigger, formState: {errors, isValid, isLoading}} = useForm<FormDataProps>({
+        resolver: yupResolver(validationSchema),
         mode: 'all'
     });
 
@@ -135,12 +96,6 @@ const FormSigUpUser = () => {
                 handleSubmit(handleSignUp)();
             }
         });
-    };
-
-    const formatDateToISO = (birthdate) => {
-        const parts = birthdate.split('/');
-        const formattedDate = new Date(parts[2], parts[1] - 1, parts[0]); // Note que os meses são indexados a partir de 0
-        return formattedDate.toISOString(); // Converte para o formato ISO string
     };
 
     async function handleSignUp(dataUserForm: FormDataProps) {
@@ -164,9 +119,7 @@ const FormSigUpUser = () => {
             setUserObject(newUserObject);
             setStep(2);
         } catch (error) {
-            console.error(error)
-            // const message = handleErrors(error.errors);
-            alert.error('Não consigos enviar o código de rastreio')
+            alert.error(`Não foi possível enviar o código de ativação: ${error}`)
         } finally {
             setLoading(false)
         }
@@ -180,49 +133,39 @@ const FormSigUpUser = () => {
 
             if (verificationCheckType.status === 'approved') {
                 const user = await setUser(userObject);
-                if(user){
+                if (user) {
                     await login(userObject.email, userObject.password);
                     alert.success(`Usuário ${user.first_name} cadastrado com sucesso`)
                 }
             } else {
                 alert.error(`Código de verificação inválido com status: ${verificationCheckType.status}`);
             }
-        }catch (e) {
+        } catch (e) {
             console.error(e)
             alert.error('Erro no processo de verificação do código.');
         }
     };
 
     const radioOptions = [
-        { value: 'masculino', label: 'Masculino' },
-        { value: 'feminino', label: 'Feminino' },
+        {value: 'masculino', label: 'Masculino'},
+        {value: 'feminino', label: 'Feminino'},
     ];
 
     const keyExtractor = (_: any, index: number) => index.toString();
 
-    const calculateAge = (birthdate) => {
-        // Converte a data de DD/MM/AAAA para AAAA-MM-DD
-        const parts = birthdate.split('/');
-        const formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
-
-        const birthDate = new Date(formattedDate);
-        const today = new Date();
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
+    const handleBirthdateChange = (birthdate: string) => {
+        const age = calculateAge(birthdate)
+        if(age < 18){
+            setIsMinor(age < 18);
+            alert.warning('Usuários menores de idade devem preencher informações do responsável legal.', 10000)
         }
-        return age;
-    };
 
-    const isMinor = (birthdate) => {
-        const age = calculateAge(birthdate);
-        return age < 18; // Retorna true se o usuário for menor de idade, false caso contrário
     };
 
 
     const renderItem = () => (
         <VStack>
+            <StatusBar barStyle="dark-content"/>
             <Box p={4}>
                 <Heading mt="2" textAlign={"center"} color="light.600" fontWeight="medium" size="sm" px={2}>
                     {t('description_sign_up')}
@@ -265,12 +208,7 @@ const FormSigUpUser = () => {
                             onChangeText={onChange}
                             errorMessage={errors.birthdate?.message}
                             keyboardType={'numeric'}
-                            onBlur={() => {
-                                if (isMinor(value)) {
-                                    // Coloque aqui sua lógica para lidar com menores de idade
-                                    alert.error("Usuários menores de idade não são permitidos.");
-                                }
-                            }}
+                            onBlur={() => handleBirthdateChange(value)}
                             mask={{
                                 type: 'custom',
                                 options: {
@@ -281,11 +219,63 @@ const FormSigUpUser = () => {
                         />
                     )}
                 />
+
+                {isMinor && (
+                    <VStack space={2} borderLeftWidth={4} borderLeftColor={'coolGray.400'} pl={2}>
+                        <Heading size={'md' +
+                            ''}>Dados do responsável</Heading>
+                        <Controller
+                            control={control}
+                            name={'email_responsavel'}
+                            render={({field: {onChange}}) => (
+                                <Input
+                                    placeholder={'E-mail do Responsável'}
+                                    onChangeText={onChange}
+                                    keyboardType={'email-address'}
+                                    errorMessage={errors.email_responsavel?.message}
+                                />
+                            )}
+                        />
+                        <Controller
+                            control={control}
+                            name={'nome_responsavel'}
+                            render={({field: {onChange}}) => (
+                                <Input
+                                    placeholder={'Nome do Responsável'}
+                                    onChangeText={onChange}
+                                    errorMessage={errors.nome_responsavel?.message}
+                                />
+                            )}
+                        />
+                        <Controller
+                            control={control}
+                            name={'telefone_responsavel'}
+                            render={({field: {onChange, value}}) => (
+                                <Input
+                                    placeholder={'Telefone do Responsável'}
+                                    onChangeText={onChange}
+                                    value={value}
+                                    errorMessage={errors.telefone_responsavel?.message}
+                                    mask={{
+                                        type: 'cel-phone',
+                                        options: {
+                                            maskType: 'BRL',
+                                            withDDD: true,
+                                            dddMask: '(99) ',
+                                        }
+                                    }}
+                                />
+                            )}
+                        />
+                    </VStack>
+                )}
+
                 <Controller
                     control={control}
                     name={'sector'}
                     render={({field: {onChange}}) => (
                         <CustomSelect
+                            maxLength={50}
                             options={sectors}
                             labelKey="name"
                             valueKey="id"
@@ -420,7 +410,7 @@ const FormSigUpUser = () => {
                         height={12}
                         mt="2"
                         onPress={onCheckFormAndSubmit}
-                        isLoading={loading}
+                        isLoading={isLoading}
                         isLoadingText="Cadastrando..."/>
             </VStack>
         </VStack>
@@ -465,31 +455,33 @@ const FormSigUpUser = () => {
                 )}
 
                 {step === 2 && (
-                    <Box p={10} width={'100%'}>
-                        <Box alignContent={'center'} alignItems={'center'} p={10}>
-                            <FontAwesome6 name="comment-sms" size={150} color={colors.secundary3} />
+                    <ScrollView contentContainerStyle={{flexGrow: 1}}>
+                        <Box p={10} width={'100%'}>
+                            <Box alignContent={'center'} alignItems={'center'} p={10}>
+                                <FontAwesome6 name="comment-sms" size={150} color={colors.secundary3}/>
+                            </Box>
+                            <Box pb={4}>
+                                <Text textAlign={'center'}>Insira o código de 6 dígitos que enviamos para o seu número
+                                    de telefone. Este código ajuda a verificar sua identidade e proteger sua
+                                    conta.</Text>
+                            </Box>
+                            <Box p={4} textAlign={"center"} width={'100%'}>
+                                <CountdownTimer/>
+                            </Box>
+                            <Input
+                                size={'2xl'}
+                                mb={4}
+                                placeholder="Código de verificação"
+                                value={verificationCode}
+                                onChangeText={setVerificationCode}
+                                keyboardType="numeric"
+                            />
+                            <Button shadow={'6'} size={'lg'} title="Verificar Código" onPress={handleVerifyCode}/>
+                            <NBButton shadow={'6'} size={'lg'} variant={'link'} onPress={handleVerifyCode}>Enviar código
+                                novamente</NBButton>
                         </Box>
-                        <Box pb={4}>
-                            <Text textAlign={'center'}>Insira o código de 6 dígitos que enviamos para o seu número de telefone. Este código ajuda a verificar sua identidade e proteger sua conta.</Text>
-                        </Box>
-                        <Box p={4} textAlign={"center"} width={'100%'}>
-                            <CountdownTimer />
-                        </Box>
-                        <Input
-                            size={'2xl'}
-                            mb={4}
-                            placeholder="Código de verificação"
-                            value={verificationCode}
-                            onChangeText={setVerificationCode}
-                            keyboardType="numeric"
-                        />
-                        <Button shadow={'6'} size={'lg'} title="Verificar Código" onPress={handleVerifyCode} />
-                        <NBButton shadow={'6'} size={'lg'} variant={'link'} onPress={handleVerifyCode}>Enviar código novamente</NBButton>
-                    </Box>
+                    </ScrollView>
                 )}
-
-
-
 
             </KeyboardAvoidingView>
         </>
