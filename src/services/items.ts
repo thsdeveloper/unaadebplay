@@ -30,17 +30,17 @@ export async function getItemSingleton<T>(collectionName: string, params?: Globa
     }
 }
 
-export async function setCreateItem<T extends GenericItem>(collectionName: string, item: any): Promise<any> {
+export async function setCreateItem<T>(collectionName: string, item: any): Promise<T> {
     try {
-        return await directusClient.request(createItem(collectionName, item));
+        return await directusClient.request<T>(createItem(collectionName, item));
     } catch (error) {
         throw error;
     }
 }
 
-export async function setUpdateItem<T extends GenericItem>(collectionName: string, id: number, item: Partial<T>): Promise<any> {
+export async function setUpdateItem<T>(collectionName: string, id: number, item: Partial<T>): Promise<T> {
     try {
-        return await directusClient.request(updateItem(collectionName, id, item))
+        return await directusClient.request<T>(updateItem(collectionName, id, item))
     } catch (error) {
         throw error;
     }
