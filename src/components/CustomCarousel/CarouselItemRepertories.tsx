@@ -15,7 +15,7 @@ interface PropsCarrousseu {
 }
 
 
-export default function CarouselItemRepertories({id}: PropsCarrousseu) {
+export default function CarouselItemRepertories() {
     const params: GlobalQueryParams = {
         // filter: {congresso: {_eq: id}},
         fields: ['*.*', 'mp3.*'],
@@ -46,7 +46,7 @@ export default function CarouselItemRepertories({id}: PropsCarrousseu) {
         };
 
         loadRepertories();
-    }, [id]);
+    }, []);
 
     if (repertoires.length === 0) {
         return (

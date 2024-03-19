@@ -52,7 +52,7 @@ export default function CongressoPage() {
             }
         };
         fetchCongresso();
-    }, [id]);
+    }, [ ]);
 
 
     useLayoutEffect(() => {
@@ -127,15 +127,6 @@ export default function CongressoPage() {
                                         {!congress.status_hospedagem ? 'Inscrições Encerradas' : 'Inscreva-se para a hospedagem'}
                                     </Button>
                                 </Link>
-
-                                <Link href={'/(tabs)/(home)/(congresso)/pagamento-hospedagem'} asChild>
-                                    <Button size={'lg'} colorScheme={'danger'} leftIcon={
-                                        <Feather name={'plus-circle'} size={20} color={colors.light}/>
-                                    } color={colors.light} rounded={'full'} shadow={2}
-                                            disabled={!congress.status_hospedagem}>
-                                        {!congress.status_hospedagem ? 'Inscrições Encerradas' : 'Pagamento Hospedagem'}
-                                    </Button>
-                                </Link>
                             </>
                         )}
                     </Box>
@@ -171,7 +162,7 @@ export default function CongressoPage() {
                                 repertório {congress.name}</Heading>
                         </HStack>
                     </Box>
-                    <CarouselItemRepertories id={id}/>
+                    <CarouselItemRepertories />
                 </Box>
 
                 <Box>
@@ -193,14 +184,6 @@ export default function CongressoPage() {
                     </Box>
                     <CarouselItemUsers convidados={convidados}/>
                 </Box>
-
-
-                {/*<Box backgroundColor={"blue.900"}>*/}
-                {/*    <Text color={colors.light}>*/}
-                {/*        {JSON.stringify(congress, null, 2)}*/}
-                {/*    </Text>*/}
-                {/*</Box>*/}
-                {/*<GlobalAudioPlayer/>*/}
             </ScrollView>
         </LinearGradient>
     );

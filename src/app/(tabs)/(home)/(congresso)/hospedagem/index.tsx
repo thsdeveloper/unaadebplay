@@ -6,14 +6,14 @@ import {
     Heading,
     KeyboardAvoidingView,
     ScrollView,
-    Divider, Button, Center, HStack
+    Divider, Button, Center, HStack, Image
 } from 'native-base';
 import * as Yup from 'yup';
 import {yupResolver} from '@hookform/resolvers/yup';
 import {useAuth} from "@/contexts/AuthContext";
 import AlertContext from "@/contexts/AlertContext";
 import {RadioInput} from "@/components/Forms/Radio";
-import {getItemSingleton} from "@/services/items";
+import {getItems, getItemSingleton, setCreateItem, setUpdateItem} from "@/services/items";
 import {Platform} from "react-native";
 import {Switch} from "@/components/Forms/Switch";
 import colors from "@/constants/colors";
@@ -22,6 +22,9 @@ import {HospedagemTypes} from "@/types/HospedagemTypes";
 import {HospedagemSkeleton} from "@/components/Skeletons/HospedagemSkeletons";
 import {formatCurrency} from "@/utils/directus";
 import {MaterialIcons} from "@expo/vector-icons";
+import axios from "axios";
+import {SubscribedHosTypes} from "@/types/SubscribedHosTypes";
+import * as Clipboard from 'expo-clipboard';
 
 const schema = Yup.object({
     accommodation: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
@@ -33,6 +36,17 @@ const schema = Yup.object({
     allergies: Yup.boolean().required('O campo alergia é obrigatório'),
     allergies_description: Yup.string().required('O campo descrição da alergia é obrigatório'),
     emergency_contact: Yup.string().required('O campo contato de emergência é obrigatório'),
+
+    normas_um: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+    normas_dois: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+    normas_tres: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+    normas_quatro: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+    normas_cinco: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+    normas_seis: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+    normas_sete: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+    normas_oito: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+    normas_nove: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+    normas_dez: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
 });
 
 const RegistrationFormHospedagem = () => {
@@ -40,6 +54,7 @@ const RegistrationFormHospedagem = () => {
     const [hos, setHos] = useState<HospedagemTypes>();
     const [dataForms, setDataForms] = useState<FormDataProps>();
     const [loading, setLoading] = useState<boolean>(true);
+    const [paymentData, setPaymentData] = useState(null);
     const alert = useContext(AlertContext)
 
     useEffect(() => {
@@ -87,7 +102,44 @@ const RegistrationFormHospedagem = () => {
     const takeMedicationValue = watch('take_medication');
     const allergiesValue = watch('allergies');
 
-    const onCheckFormAndSubmit = (data: FormDataProps) => {
+    const onCheckFormAndSubmit = async (data: FormDataProps) => {
+
+        //TODO: formar isso
+        data.member = user?.id;
+
+        const pagamentoObject = {
+            transaction_amount: 35.99,
+            description: "Minha descrição",
+            payment_method_id: "pix",
+            email: user?.email
+        }
+
+        try {
+            const response = await setCreateItem<SubscribedHosTypes>('subscribed_hos', data)
+            alert.success(`Hospedagem criada. ${response.id}`)
+
+            const payment = await axios.post('https://back-unaadeb.onrender.com/mercado-pago/pagamento', pagamentoObject);
+            alert.success(`Pagamento iniciado. ${payment.data.id}`)
+
+            // Armazene os dados de pagamento no estado
+            setPaymentData(payment.data);
+
+            const updatedObject = {
+                payment: payment.data
+            }
+
+            const responseUpdated = await setUpdateItem('subscribed_hos', response.id, updatedObject)
+
+            if(responseUpdated){
+                alert.success(`Pagamento atualizado. ${payment.data.status}`)
+            }
+
+        }catch (e) {
+            alert.error('tivemos um erro')
+
+        }
+
+
         setDataForms(data)
 
         trigger().then((isFormValid: any) => {
@@ -100,6 +152,7 @@ const RegistrationFormHospedagem = () => {
             }
         });
     };
+
     const optionsChildrens = [
         {value: 'sem_acompanhantes', label: 'Não estarei acompanhado.'},
         {value: 'com_acompanhantes', label: 'Sim, estarei com meu filho menor de 10 anos'},
@@ -127,6 +180,23 @@ const RegistrationFormHospedagem = () => {
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={{flex: 1}}
         >
+            {paymentData && (
+                <Box p={4} mb={4}>
+                    <Text bold>Pagamento via PIX</Text>
+                    <Text>Chave PIX: {paymentData.transaction_details.external_resource_url}</Text>
+                    <Text>Valor: R$ {paymentData.transaction_amount.toFixed(2)}</Text>
+                    <Text>Data de Expiração: {new Date(paymentData.date_of_expiration).toLocaleString()}</Text>
+
+                    <Text bold>QR Code:</Text>
+                    {/* Certifique-se de que seu componente de imagem pode lidar com base64 */}
+                    <Image source={{uri: `data:image/png;base64,${paymentData.point_of_interaction.transaction_data.qr_code_base64}`}} style={{width: 200, height: 200}} />
+
+                    <Button onPress={() => Clipboard.setStringAsync(paymentData.transaction_details.external_resource_url)}>
+                        Copiar chave PIX
+                    </Button>
+                </Box>
+            )}
+
             {!loading ? (
                 <>
                     <ScrollView>
@@ -306,7 +376,7 @@ const RegistrationFormHospedagem = () => {
                             <Divider my={4}/>
                             <Controller
                                 control={control}
-                                name="accommodation"
+                                name="normas_um"
                                 render={({field: {onChange, value}}) => (
                                     <>
                                         <Heading pb={2}>Orientações, regras e normas gerais:</Heading>
@@ -321,7 +391,7 @@ const RegistrationFormHospedagem = () => {
                                             textFalse={'Discordo'}
                                             value={value}
                                             onChange={onChange}
-                                            errorMessage={errors.accommodation?.message}
+                                            errorMessage={errors.normas_um?.message}
                                         />
                                     </>
                                 )}
@@ -329,7 +399,7 @@ const RegistrationFormHospedagem = () => {
                             <Divider my={4}/>
                             <Controller
                                 control={control}
-                                name="accommodation"
+                                name="normas_dois"
                                 render={({field: {onChange, value}}) => (
                                     <>
                                         <Text pb={2}>
@@ -342,7 +412,7 @@ const RegistrationFormHospedagem = () => {
                                             textFalse={'Discordo'}
                                             value={value}
                                             onChange={onChange}
-                                            errorMessage={errors.accommodation?.message}
+                                            errorMessage={errors.normas_dois?.message}
                                         />
                                     </>
                                 )}
@@ -350,7 +420,7 @@ const RegistrationFormHospedagem = () => {
                             <Divider my={4}/>
                             <Controller
                                 control={control}
-                                name="accommodation"
+                                name="normas_tres"
                                 render={({field: {onChange, value}}) => (
                                     <>
                                         <Text pb={2}>
@@ -364,7 +434,7 @@ const RegistrationFormHospedagem = () => {
                                             textFalse={'Discordo'}
                                             value={value}
                                             onChange={onChange}
-                                            errorMessage={errors.accommodation?.message}
+                                            errorMessage={errors.normas_tres?.message}
                                         />
                                     </>
                                 )}
@@ -372,7 +442,7 @@ const RegistrationFormHospedagem = () => {
                             <Divider my={4}/>
                             <Controller
                                 control={control}
-                                name="accommodation"
+                                name="normas_quatro"
                                 render={({field: {onChange, value}}) => (
                                     <>
                                         <Text pb={2}>
@@ -388,7 +458,7 @@ const RegistrationFormHospedagem = () => {
                                             textFalse={'Discordo'}
                                             value={value}
                                             onChange={onChange}
-                                            errorMessage={errors.accommodation?.message}
+                                            errorMessage={errors.normas_quatro?.message}
                                         />
                                     </>
                                 )}
@@ -396,7 +466,7 @@ const RegistrationFormHospedagem = () => {
                             <Divider my={4}/>
                             <Controller
                                 control={control}
-                                name="accommodation"
+                                name="normas_cinco"
                                 render={({field: {onChange, value}}) => (
                                     <>
                                         <Text pb={2}>
@@ -408,7 +478,7 @@ const RegistrationFormHospedagem = () => {
                                             textFalse={'Discordo'}
                                             value={value}
                                             onChange={onChange}
-                                            errorMessage={errors.accommodation?.message}
+                                            errorMessage={errors.normas_cinco?.message}
                                         />
                                     </>
                                 )}
@@ -416,7 +486,7 @@ const RegistrationFormHospedagem = () => {
                             <Divider my={4}/>
                             <Controller
                                 control={control}
-                                name="accommodation"
+                                name="normas_seis"
                                 render={({field: {onChange, value}}) => (
                                     <>
                                         <Text pb={2}>
@@ -428,7 +498,7 @@ const RegistrationFormHospedagem = () => {
                                             textFalse={'Discordo'}
                                             value={value}
                                             onChange={onChange}
-                                            errorMessage={errors.accommodation?.message}
+                                            errorMessage={errors.normas_seis?.message}
                                         />
                                     </>
                                 )}
@@ -436,7 +506,7 @@ const RegistrationFormHospedagem = () => {
                             <Divider my={4}/>
                             <Controller
                                 control={control}
-                                name="accommodation"
+                                name="normas_sete"
                                 render={({field: {onChange, value}}) => (
                                     <>
                                         <Text pb={2}>
@@ -449,7 +519,7 @@ const RegistrationFormHospedagem = () => {
                                             textFalse={'Discordo'}
                                             value={value}
                                             onChange={onChange}
-                                            errorMessage={errors.accommodation?.message}
+                                            errorMessage={errors.normas_sete?.message}
                                         />
                                     </>
                                 )}
@@ -457,7 +527,7 @@ const RegistrationFormHospedagem = () => {
                             <Divider my={4}/>
                             <Controller
                                 control={control}
-                                name="accommodation"
+                                name="normas_oito"
                                 render={({field: {onChange, value}}) => (
                                     <>
                                         <Text pb={2}>
@@ -469,7 +539,7 @@ const RegistrationFormHospedagem = () => {
                                             textFalse={'Discordo'}
                                             value={value}
                                             onChange={onChange}
-                                            errorMessage={errors.accommodation?.message}
+                                            errorMessage={errors.normas_oito?.message}
                                         />
                                     </>
                                 )}
@@ -477,7 +547,7 @@ const RegistrationFormHospedagem = () => {
                             <Divider my={4}/>
                             <Controller
                                 control={control}
-                                name="accommodation"
+                                name="normas_nove"
                                 render={({field: {onChange, value}}) => (
                                     <>
                                         <Text pb={2}>
@@ -490,7 +560,7 @@ const RegistrationFormHospedagem = () => {
                                             textFalse={'Discordo'}
                                             value={value}
                                             onChange={onChange}
-                                            errorMessage={errors.accommodation?.message}
+                                            errorMessage={errors.normas_nove?.message}
                                         />
                                     </>
                                 )}
@@ -498,7 +568,7 @@ const RegistrationFormHospedagem = () => {
                             <Divider my={4}/>
                             <Controller
                                 control={control}
-                                name="accommodation"
+                                name="normas_dez"
                                 render={({field: {onChange, value}}) => (
                                     <>
                                         <Text pb={2}>
@@ -513,21 +583,11 @@ const RegistrationFormHospedagem = () => {
                                             textFalse={'Discordo'}
                                             value={value}
                                             onChange={onChange}
-                                            errorMessage={errors.accommodation?.message}
+                                            errorMessage={errors.normas_dez?.message}
                                         />
                                     </>
                                 )}
                             />
-
-                            {/*<Button*/}
-                            {/*    size={'lg'}*/}
-                            {/*    rounded={'full'}*/}
-                            {/*    mt="2"*/}
-                            {/*    onPress={handleSubmit(onCheckFormAndSubmit)}*/}
-                            {/*    isLoading={isSubmitting}*/}
-                            {/*    isLoadingText="Cadastrando...">*/}
-                            {/*    Cadastrar*/}
-                            {/*</Button>*/}
 
                             <Box backgroundColor={"blue.900"}>
                                 <Text color={colors.light}>
@@ -537,7 +597,6 @@ const RegistrationFormHospedagem = () => {
                         </Box>
                     </ScrollView>
                     <Center position="absolute" bottom={0} p={2} width="100%" backgroundColor={colors.white} shadow={4}>
-                        {/* O uso de safeArea.bottom garante que o botão não sobreponha a área de segurança em dispositivos com entalhe ou bordas arredondadas */}
                         <Button
                             size={'lg'}
                             colorScheme={'danger'}
@@ -545,7 +604,7 @@ const RegistrationFormHospedagem = () => {
                             onPress={handleSubmit(onCheckFormAndSubmit)}
                             isLoading={isSubmitting}
                             isLoadingText="Cadastrando..."
-                            width="100%" // Ajuste a largura conforme necessário
+                            width="100%"
                         >
                             Inscreva-se agora!
                         </Button>
