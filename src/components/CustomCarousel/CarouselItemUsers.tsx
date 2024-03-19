@@ -79,11 +79,6 @@ export default function CarouselItemUsers({convidados}: PropsCarrousseu) {
                 showsHorizontalScrollIndicator={false}
                 scrollEventThrottle={16}
             />
-            {/*<Box backgroundColor={"blue.900"}>*/}
-            {/*    <Text color={colors.light}>*/}
-            {/*        {JSON.stringify(users, null, 2)}*/}
-            {/*    </Text>*/}
-            {/*</Box>*/}
         </Box>
     );
 };
