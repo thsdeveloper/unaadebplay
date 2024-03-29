@@ -1,12 +1,12 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { FlatList, TouchableOpacity, Text, View } from 'react-native';
-import { Box, Input, HStack } from 'native-base';
-import { Feather } from '@expo/vector-icons';
-import { getUsers } from "@/services/user";
+import React, {useState, useCallback, useEffect, useRef} from 'react';
+import {FlatList, TouchableOpacity, Text, View, ActivityIndicator} from 'react-native';
+import {Box, Input, HStack} from 'native-base';
+import {Feather} from '@expo/vector-icons';
+import {getUsers} from "@/services/user";
 import UserItem from "@/components/UserItem";
 import UserSkeleton from '@/components/Skeletons/UserListSkeletons'
-import { UserTypes } from "@/types/UserTypes";
-import { useNavigation, useRouter } from 'expo-router'
+import {UserTypes} from "@/types/UserTypes";
+import {useNavigation, useRouter} from 'expo-router'
 import colors from "@/constants/colors";
 
 const PAGE_SIZE = 20;
@@ -20,6 +20,9 @@ const UserListPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const inputRef = useRef(null);
     const navigation = useNavigation();
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
+    const [isSearching, setIsSearching] = useState(false);
+    const [isMoreLoading, setIsMoreLoading] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -47,15 +50,18 @@ const UserListPage = () => {
     };
 
     const handleLoadMore = () => {
+        if (isMoreLoading) return; // Evita chamadas adicionais se já estiver carregando mais usuários
+        setIsMoreLoading(true); // Define que está carregando mais usuários
         setPage(prevPage => prevPage + 1);
     };
 
-    const handleSearch = () => {
-        if (inputText.length >= 3 || search) {
+    useEffect(() => {
+        if (inputText.length >= 3) {
             setSearch(inputText);
             setPage(1);
+            setIsSearching(true); // Inicia o loading da busca
         }
-    };
+    }, [inputText]);
 
     useEffect(() => {
         const loadUsers = async () => {
@@ -75,16 +81,38 @@ const UserListPage = () => {
                 offset: (page - 1) * PAGE_SIZE,
             });
 
+            setIsLoading(true);
             setUsers(page === 1 ? responseUsers : [...users, ...responseUsers]);
             setIsLoading(false);
+            setIsSearching(false); // Finaliza o loading da busca
+            if (page === 1) {
+                setIsInitialLoading(false);
+            }
+            setIsMoreLoading(false); // Indica que o carregamento de mais usuários foi concluído
         };
 
         loadUsers();
     }, [search, page]);
 
-    const renderItem = ({ item, index }: any) => (
+    const clearSearch = () => {
+        setInputText('');
+        setSearch(''); // Redefine o estado de busca
+        setPage(1); // Opcional: Redefine a página para 1
+        setShowSearchInput(false);
+        setIsSearching(false); // Opcional: Indica que a busca foi encerrada
+    };
+
+    const renderItem = ({item, index}: any) => (
         <UserItem key={`${item.id}-${index}`} item={item} handleUserPress={handleUserPress}/>
     );
+
+    const inputIconRigth = () => {
+        return  inputText.length > 0 ? (
+            <TouchableOpacity onPress={clearSearch}>
+                <Feather name="x" size={24} color={colors.text} />
+            </TouchableOpacity>
+        ) : null
+    }
 
     return (
         <Box flex={1} bg="white">
@@ -93,18 +121,24 @@ const UserListPage = () => {
                     <Input
                         ref={inputRef}
                         flex={1}
-                        size={'lg'}
+                        size={'2xl'}
+                        variant={'underlined'}
+                        color={colors.light}
                         placeholderTextColor={colors.text}
                         placeholder="Digite o nome do usuário"
                         onChangeText={setInputText}
                         value={inputText}
-                        onSubmitEditing={handleSearch}
                         returnKeyType="search"
+                        InputRightElement={inputIconRigth()}
                     />
                 </HStack>
             )}
 
-            {isLoading ? (
+            {isSearching ? (
+                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                </View>
+            ) : isInitialLoading ? (
                 <UserSkeleton />
             ) : users.length === 0 ? (
                 <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -116,7 +150,7 @@ const UserListPage = () => {
                     renderItem={renderItem}
                     keyExtractor={(item) => item.id.toString()}
                     onEndReached={handleLoadMore}
-                    onEndReachedThreshold={0.5}
+                    onEndReachedThreshold={0.2}
                 />
             )}
         </Box>
