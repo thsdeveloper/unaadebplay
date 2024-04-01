@@ -1,7 +1,7 @@
 import React, {useContext, useEffect, useLayoutEffect, useState} from "react";
 import {Box, Button, Center, Heading, HStack, Icon, IconButton, Pressable, ScrollView, Text} from "native-base";
-import {Link, useGlobalSearchParams, useNavigation} from "expo-router";
-import {getItem, getItems} from "@/services/items";
+import {Link, router, useGlobalSearchParams, useNavigation} from "expo-router";
+import {getItem, getItems, setCreateItem} from "@/services/items";
 import {BlurView} from "expo-blur";
 import colors from "@/constants/colors";
 import {Entypo, Feather} from "@expo/vector-icons";
@@ -18,15 +18,29 @@ import AlertContext from "@/contexts/AlertContext";
 import {Animated} from "react-native";
 import LikedIcon from "@/components/LikedIcon";
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {SubscribedHosTypes} from "@/types/SubscribedHosTypes";
+import {useAuth} from "@/contexts/AuthContext";
+import {getUser} from "@/services/user";
+import {UserTypes} from "@/types/UserTypes";
 
 export default function CongressoPage() {
     const [congress, setCongress] = useState<CongressType | null>(null);
     const [convidados, setConvidados] = useState<any[] | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const {id} = useGlobalSearchParams();
+    const {user} = useAuth();
     const navigation = useNavigation()
     const alert = useContext(AlertContext);
     const [headerBackgroundColor, setHeaderBackgroundColor] = useState(colors.primary);
+    const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
+
+    useEffect(() => {
+        const checkSubscription = async () => {
+            const subscribed = await isSubscribeHospedagem();
+            setIsSubscribed(subscribed);
+        };
+        checkSubscription();
+    }, [user?.id]); // Dependências relevantes aqui
 
     useEffect(() => {
         if (congress && congress.primary_color) {
@@ -52,7 +66,7 @@ export default function CongressoPage() {
             }
         };
         fetchCongresso();
-    }, [ ]);
+    }, []);
 
 
     useLayoutEffect(() => {
@@ -78,6 +92,22 @@ export default function CongressoPage() {
         });
     }, [headerBackgroundColor, navigation]);
 
+    const isSubscribeHospedagem = async (): Promise<boolean> => {
+        try {
+            const filter = {
+                filter: {
+                    member: {
+                        _eq: user?.id, // Utiliza o operador _eq para buscar registros com user_id igual ao userId
+                    },
+                },
+            };
+            const existingRecords = await getItems<SubscribedHosTypes[]>('subscribed_hos', filter);
+            return existingRecords?.length > 0;
+        } catch (e) {
+            alert.error(`Erro ao buscar itens: ${e}`)
+            return false;
+        }
+    };
     if (loading) {
         return (
             <Center alignItems={"center"} flex={1}>
@@ -85,7 +115,6 @@ export default function CongressoPage() {
             </Center>
         );
     }
-
     if (!congress) {
         return (
             <Center alignItems={"center"} flex={1}>
@@ -93,7 +122,6 @@ export default function CongressoPage() {
             </Center>
         );
     }
-
     return (
         <LinearGradient colors={[`${congress?.primary_color}`, `${congress?.second_color}`]} style={{flex: 1}}>
             <ScrollView>
@@ -116,15 +144,16 @@ export default function CongressoPage() {
                                     Inscrições Encerradas
                                 </Button>
                             </>
-
                         ) : (
                             <>
-                                <Link href={'/(tabs)/(home)/(congresso)/hospedagem'} asChild>
-                                    <Button size={'lg'} colorScheme={'danger'} leftIcon={
-                                        <Feather name={'plus-circle'} size={20} color={colors.light}/>
-                                    } color={colors.light} rounded={'full'} shadow={2}
-                                            disabled={!congress.status_hospedagem}>
-                                        {!congress.status_hospedagem ? 'Inscrições Encerradas' : 'Inscreva-se para a hospedagem'}
+                                <Link
+                                    href={`/(tabs)/(home)/(congresso)/${!isSubscribed ? 'hospedagem' : 'cartao-acesso'}`}
+                                    asChild>
+                                    <Button size={'lg'} colorScheme={!isSubscribed ? "danger" : "success"} leftIcon={
+                                        <Feather name={!isSubscribed ? "check-circle" : "check-circle"} size={20}
+                                                 color={colors.light}/>
+                                    } color={colors.light} rounded={'full'} shadow={2}>
+                                        {!isSubscribed ? 'Inscreva-se na Hospedagem' : 'Meu Cartão de acesso'}
                                     </Button>
                                 </Link>
                             </>
@@ -162,7 +191,7 @@ export default function CongressoPage() {
                                 repertório {congress.name}</Heading>
                         </HStack>
                     </Box>
-                    <CarouselItemRepertories />
+                    <CarouselItemRepertories/>
                 </Box>
 
                 <Box>

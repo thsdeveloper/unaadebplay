@@ -22,9 +22,8 @@ import {HospedagemTypes} from "@/types/HospedagemTypes";
 import {HospedagemSkeleton} from "@/components/Skeletons/HospedagemSkeletons";
 import {formatCurrency} from "@/utils/directus";
 import {MaterialIcons} from "@expo/vector-icons";
-import axios from "axios";
 import {SubscribedHosTypes} from "@/types/SubscribedHosTypes";
-import * as Clipboard from 'expo-clipboard';
+import {router} from 'expo-router';
 
 const schema = Yup.object({
     accommodation: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
@@ -47,6 +46,8 @@ const schema = Yup.object({
     normas_oito: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
     normas_nove: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
     normas_dez: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+
+    member: Yup.string().required()
 });
 
 const RegistrationFormHospedagem = () => {
@@ -58,7 +59,7 @@ const RegistrationFormHospedagem = () => {
     const alert = useContext(AlertContext)
 
     useEffect(() => {
-        const loadData = async () => {
+        const loadHospedagem = async () => {
             try {
                 const [hospedagens] = await Promise.all([
                     getItemSingleton<HospedagemTypes>('hospedagem'),
@@ -66,12 +67,11 @@ const RegistrationFormHospedagem = () => {
                 setHos(hospedagens);
             } catch (error) {
                 alert.error("Houve um erro ao carregar os dados. Por favor, tente novamente mais tarde.", 10000);
-            }finally {
+            } finally {
                 setLoading(false)
             }
         };
-
-        loadData();
+        loadHospedagem();
     }, []);
 
 
@@ -91,6 +91,7 @@ const RegistrationFormHospedagem = () => {
     } = useForm<FormDataProps>({
         resolver: yupResolver(schema),
         defaultValues: {
+            member: user?.id,
             accommodation: false,
             take_medication: false,
             child_companion: false,
@@ -103,42 +104,28 @@ const RegistrationFormHospedagem = () => {
     const allergiesValue = watch('allergies');
 
     const onCheckFormAndSubmit = async (data: FormDataProps) => {
-
-        //TODO: formar isso
-        data.member = user?.id;
-
-        const pagamentoObject = {
-            transaction_amount: 35.99,
-            description: "Minha descrição",
-            payment_method_id: "pix",
-            email: user?.email
-        }
-
         try {
-            const response = await setCreateItem<SubscribedHosTypes>('subscribed_hos', data)
-            alert.success(`Hospedagem criada. ${response.id}`)
-
-            const payment = await axios.post('https://back-unaadeb.onrender.com/mercado-pago/pagamento', pagamentoObject);
-            alert.success(`Pagamento iniciado. ${payment.data.id}`)
-
-            // Armazene os dados de pagamento no estado
-            setPaymentData(payment.data);
-
-            const updatedObject = {
-                payment: payment.data
+            const filter = {
+                filter: {
+                    member: {
+                        _eq: user?.id, // Utiliza o operador _eq para buscar registros com user_id igual ao userId
+                    },
+                },
+            };
+            const existingRecords = await getItems<SubscribedHosTypes[]>('subscribed_hos', filter);
+            if (existingRecords && existingRecords.length > 0) {
+                alert.warning('Já existe um registro de hospedagem para esse usuário. Consulte na página do congresso para mais informações', 10000)
+            } else {
+                const response = await setCreateItem<SubscribedHosTypes>('subscribed_hos', data);
+                if (response) {
+                    router.replace('/(tabs)/(home)/(congresso)/cartao-acesso');
+                    alert.success('Inscrição realizada com sucesso')
+                }
             }
 
-            const responseUpdated = await setUpdateItem('subscribed_hos', response.id, updatedObject)
-
-            if(responseUpdated){
-                alert.success(`Pagamento atualizado. ${payment.data.status}`)
-            }
-
-        }catch (e) {
-            alert.error('tivemos um erro')
-
+        } catch (e) {
+            alert.error('Erro no processo de inscrição da hospedagem')
         }
-
 
         setDataForms(data)
 
@@ -152,16 +139,6 @@ const RegistrationFormHospedagem = () => {
             }
         });
     };
-
-    const optionsChildrens = [
-        {value: 'sem_acompanhantes', label: 'Não estarei acompanhado.'},
-        {value: 'com_acompanhantes', label: 'Sim, estarei com meu filho menor de 10 anos'},
-        {value: 'com_acompanhantes', label: 'Sim, estarei com meu filha menor de 10 anos'},
-    ];
-    const optionsTrueFalse = [
-        {value: true, label: 'Sim'},
-        {value: false, label: 'Não'},
-    ];
     const optionsBloodYype = [
         {value: 'a', label: 'A'},
         {value: 'b', label: 'B'},
@@ -180,23 +157,6 @@ const RegistrationFormHospedagem = () => {
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={{flex: 1}}
         >
-            {paymentData && (
-                <Box p={4} mb={4}>
-                    <Text bold>Pagamento via PIX</Text>
-                    <Text>Chave PIX: {paymentData.transaction_details.external_resource_url}</Text>
-                    <Text>Valor: R$ {paymentData.transaction_amount.toFixed(2)}</Text>
-                    <Text>Data de Expiração: {new Date(paymentData.date_of_expiration).toLocaleString()}</Text>
-
-                    <Text bold>QR Code:</Text>
-                    {/* Certifique-se de que seu componente de imagem pode lidar com base64 */}
-                    <Image source={{uri: `data:image/png;base64,${paymentData.point_of_interaction.transaction_data.qr_code_base64}`}} style={{width: 200, height: 200}} />
-
-                    <Button onPress={() => Clipboard.setStringAsync(paymentData.transaction_details.external_resource_url)}>
-                        Copiar chave PIX
-                    </Button>
-                </Box>
-            )}
-
             {!loading ? (
                 <>
                     <ScrollView>
@@ -207,8 +167,9 @@ const RegistrationFormHospedagem = () => {
                             </Box>
 
                             <HStack backgroundColor={'orange.200'} p={2} my={4} alignItems={'center'} space={2}>
-                                <MaterialIcons name="pix" size={40} color={colors.dark} />
-                                <Text pr={20}>No momento o nosso método de pagamento será o PIX identificado. Estamos trabalhando para fornecer outros meio de pagamento.</Text>
+                                <MaterialIcons name="pix" size={40} color={colors.dark}/>
+                                <Text pr={20}>No momento o nosso método de pagamento será o PIX identificado. Estamos
+                                    trabalhando para fornecer outros meio de pagamento.</Text>
                             </HStack>
                             <Text>{hos?.regras}</Text>
                             <Divider my={4}/>
@@ -219,9 +180,12 @@ const RegistrationFormHospedagem = () => {
                                     <>
                                         <Heading pb={2}>Alojamento:</Heading>
                                         <Text pb={2}>
-                                            A Secretaria de Hospedagem estará disponibilizando espaços no Arena Hall, local de
-                                            realização do Congresso, para os inscritos para a hospedagem 2023. Será fornecido
-                                            somente o colchonete, cada inscrito deverá levar sua roupa de cama, travesseiro e
+                                            A Secretaria de Hospedagem estará disponibilizando espaços no Arena Hall,
+                                            local de
+                                            realização do Congresso, para os inscritos para a hospedagem 2023. Será
+                                            fornecido
+                                            somente o colchonete, cada inscrito deverá levar sua roupa de cama,
+                                            travesseiro e
                                             itens de higiene pessoal.
                                         </Text>
                                         <Switch
@@ -260,7 +224,8 @@ const RegistrationFormHospedagem = () => {
                                 name={'take_medication'}
                                 render={({field: {onChange, value}}) => (
                                     <>
-                                        <Heading pb={2}>Faz uso de medicamentos e/ou está sob cuidados médicos?</Heading>
+                                        <Heading pb={2}>Faz uso de medicamentos e/ou está sob cuidados
+                                            médicos?</Heading>
                                         <Switch
                                             textTrue={'Sim'}
                                             textFalse={'Não'}
@@ -382,8 +347,10 @@ const RegistrationFormHospedagem = () => {
                                         <Heading pb={2}>Orientações, regras e normas gerais:</Heading>
                                         <Text pb={2}>
                                             Direitos do inscrito: Colchonete para a hospedagem; A alimentação será
-                                            café-da-manhã, almoço e jantar no dia 10/06; A Pulseira de identificação que servirá
-                                            como um passaporte para as refeições e alojamentos. Obs: como a hospedagem será no
+                                            café-da-manhã, almoço e jantar no dia 10/06; A Pulseira de identificação que
+                                            servirá
+                                            como um passaporte para as refeições e alojamentos. Obs: como a hospedagem
+                                            será no
                                             próprio Arena Hall, não teremos transporte incluso na hospedagem.
                                         </Text>
                                         <Switch
@@ -404,7 +371,8 @@ const RegistrationFormHospedagem = () => {
                                     <>
                                         <Text pb={2}>
                                             O primeiro objetivo da hospedagem é Apoiar a Diretoria Geral da UNAADEB na
-                                            realização da hospedagem para o Congresso Geral, oferecendo um local acessível aos
+                                            realização da hospedagem para o Congresso Geral, oferecendo um local
+                                            acessível aos
                                             congressistas que optarem por se hospedar no evento.
                                         </Text>
                                         <Switch
@@ -424,9 +392,12 @@ const RegistrationFormHospedagem = () => {
                                 render={({field: {onChange, value}}) => (
                                     <>
                                         <Text pb={2}>
-                                            Como o Congresso é um local de reunião e adoração à Deus, esperamos de cada um,
-                                            atitude digna de cristão, observando os critérios disciplinares, evitando conversas
-                                            apimentadas, gritarias, algazarras e todo comportamento que possa prejudicar o
+                                            Como o Congresso é um local de reunião e adoração à Deus, esperamos de cada
+                                            um,
+                                            atitude digna de cristão, observando os critérios disciplinares, evitando
+                                            conversas
+                                            apimentadas, gritarias, algazarras e todo comportamento que possa prejudicar
+                                            o
                                             ambiente harmonioso.
                                         </Text>
                                         <Switch
@@ -446,11 +417,15 @@ const RegistrationFormHospedagem = () => {
                                 render={({field: {onChange, value}}) => (
                                     <>
                                         <Text pb={2}>
-                                            A distribuição dos inscritos nos respectivos alojamentos será por Setores da ADEB,
-                                            desde que a inscrição seja realizada até 02/06 (Sexta-feira), a partir desta data
+                                            A distribuição dos inscritos nos respectivos alojamentos será por Setores da
+                                            ADEB,
+                                            desde que a inscrição seja realizada até 02/06 (Sexta-feira), a partir desta
+                                            data
                                             não serão aceitas novas inscrições por meio deste formulário. No início do
-                                            Congresso, se ainda estiverem vagas, a Secretaria de Hospedagem irá disponibilizar
-                                            vagas para novos inscritos, não sendo garantido que o inscrito fique junto com seu
+                                            Congresso, se ainda estiverem vagas, a Secretaria de Hospedagem irá
+                                            disponibilizar
+                                            vagas para novos inscritos, não sendo garantido que o inscrito fique junto
+                                            com seu
                                             Setor.
                                         </Text>
                                         <Switch
@@ -470,7 +445,8 @@ const RegistrationFormHospedagem = () => {
                                 render={({field: {onChange, value}}) => (
                                     <>
                                         <Text pb={2}>
-                                            A troca de alojamentos não será autorizada, a não ser por motivo justificado à
+                                            A troca de alojamentos não será autorizada, a não ser por motivo justificado
+                                            à
                                             Secretaria de Hospedagem.
                                         </Text>
                                         <Switch
@@ -490,7 +466,8 @@ const RegistrationFormHospedagem = () => {
                                 render={({field: {onChange, value}}) => (
                                     <>
                                         <Text pb={2}>
-                                            Os hóspedes devem zelar pela conservação dos alojamentos, mantendo sempre arrumados
+                                            Os hóspedes devem zelar pela conservação dos alojamentos, mantendo sempre
+                                            arrumados
                                             e limpos os quartos e banheiros dos locais de hospedagem.
                                         </Text>
                                         <Switch
@@ -510,8 +487,10 @@ const RegistrationFormHospedagem = () => {
                                 render={({field: {onChange, value}}) => (
                                     <>
                                         <Text pb={2}>
-                                            Só será permitida a presença nos alojamentos de pessoas devidamente inscritas pela
-                                            Secretaria de Hospedagem. Não será permitido o ingresso de meninos no alojamento das
+                                            Só será permitida a presença nos alojamentos de pessoas devidamente
+                                            inscritas pela
+                                            Secretaria de Hospedagem. Não será permitido o ingresso de meninos no
+                                            alojamento das
                                             meninas e vice-versa.
                                         </Text>
                                         <Switch
@@ -532,7 +511,8 @@ const RegistrationFormHospedagem = () => {
                                     <>
                                         <Text pb={2}>
                                             O inscrito menor, só poderá se ausentar dos locais programados com prévia
-                                            autorização do responsável e informado à Secretaria de Hospedagem para controle.
+                                            autorização do responsável e informado à Secretaria de Hospedagem para
+                                            controle.
                                         </Text>
                                         <Switch
                                             textTrue={'Concordo'}
@@ -551,8 +531,10 @@ const RegistrationFormHospedagem = () => {
                                 render={({field: {onChange, value}}) => (
                                     <>
                                         <Text pb={2}>
-                                            Os inscritos deverão zelar pelos seus objetos de valor e/ou aparelhos eletrônicos,
-                                            sendo os mesmos de responsabilidade única e exclusiva do seu dono, eximindo de
+                                            Os inscritos deverão zelar pelos seus objetos de valor e/ou aparelhos
+                                            eletrônicos,
+                                            sendo os mesmos de responsabilidade única e exclusiva do seu dono, eximindo
+                                            de
                                             qualquer responsabilidade a Secretaria de Hospedagem.
                                         </Text>
                                         <Switch
@@ -572,10 +554,14 @@ const RegistrationFormHospedagem = () => {
                                 render={({field: {onChange, value}}) => (
                                     <>
                                         <Text pb={2}>
-                                            Concordo com as Regra e Normas Gerais. Estou ciente que se desrespeitar as Regras e
-                                            Normas acima, poderei ter a minha permanência suspensa a qualquer momento e meus
-                                            pais e/ou responsáveis poderão ter sua presença solicitada pela Secretaria de
-                                            Hospedagem e o valor pago por mim não será restituído. Todos os assuntos omissos
+                                            Concordo com as Regra e Normas Gerais. Estou ciente que se desrespeitar as
+                                            Regras e
+                                            Normas acima, poderei ter a minha permanência suspensa a qualquer momento e
+                                            meus
+                                            pais e/ou responsáveis poderão ter sua presença solicitada pela Secretaria
+                                            de
+                                            Hospedagem e o valor pago por mim não será restituído. Todos os assuntos
+                                            omissos
                                             neste regulamento serão tratados pela Secretaria de Hospedagem.
                                         </Text>
                                         <Switch
@@ -588,12 +574,6 @@ const RegistrationFormHospedagem = () => {
                                     </>
                                 )}
                             />
-
-                            <Box backgroundColor={"blue.900"}>
-                                <Text color={colors.light}>
-                                    {JSON.stringify(dataForms, null, 2)}
-                                </Text>
-                            </Box>
                         </Box>
                     </ScrollView>
                     <Center position="absolute" bottom={0} p={2} width="100%" backgroundColor={colors.white} shadow={4}>
@@ -610,11 +590,11 @@ const RegistrationFormHospedagem = () => {
                         </Button>
                     </Center>
                 </>
-            ): (
+            ) : (
                 <>
-                <Box>
-                    <HospedagemSkeleton />
-                </Box>
+                    <Box>
+                        <HospedagemSkeleton/>
+                    </Box>
                 </>
             )}
         </KeyboardAvoidingView>

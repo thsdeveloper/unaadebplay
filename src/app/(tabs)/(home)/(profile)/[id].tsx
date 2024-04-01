@@ -8,6 +8,7 @@ import {LoadingLottier} from "@/components/LoadingLottier";
 import {Link, useGlobalSearchParams} from "expo-router";
 import LikedIcon from "@/components/LikedIcon";
 import colors from "@/constants/colors";
+import SectionInfo from "@/components/SectionInfo";
 
 
 export default function UserProfile({route}: any) {
@@ -25,13 +26,6 @@ export default function UserProfile({route}: any) {
 
         fetchUser();
     }, [id]);
-
-    // const handleUserPress = (id) => {
-    //     if (user?.id !== id) {
-    //         setUser(null)
-    //         navigation.navigate('(profile)', { screen: 'user', params: { id: id } });
-    //     }
-    // };
 
     return (
         <Box flex={1}>
@@ -59,8 +53,10 @@ export default function UserProfile({route}: any) {
                             <Text colorScheme="info" alignSelf="center" variant={"outline"}>
                                 {user.role?.name} - {user?.title}
                             </Text>
-                            <HStack>
-                                <LikedIcon color={colors.dark}/>
+                            <HStack space={2} alignItems={"center"} justifyContent={"center"}>
+                                <Box>
+                                    <LikedIcon color={colors.dark}/>
+                                </Box>
                             </HStack>
                         </Box>
 
@@ -95,7 +91,7 @@ export default function UserProfile({route}: any) {
                                 <Text textAlign={"center"} fontWeight={"bold"} pb={2} color={'dark.200'}>Líder
                                     Setorial
                                     UNAADEB</Text>
-                                <Link href={`/${user.sector.lider_coordenador.id}`} asChild>
+                                <Link href={`(profile)/${user.sector.lider_coordenador.id}`} asChild>
                                     <TouchableOpacity>
                                         <Box p={2} borderRadius={'md'} bgColor={"dark.700"}
                                              borderColor={colors.darkOverlayColor}>
@@ -116,14 +112,26 @@ export default function UserProfile({route}: any) {
                             </Box>
                         </HStack>
 
-
                         <Box px={4} py={4}>
-                            <Text fontSize="md" color="gray.500">
-                                Localização: {user.location}
-                            </Text>
                             <Text fontSize="md" color="gray.500">
                                 E-mail: {user.email}
                             </Text>
+                           <Box mt={2}>
+                               <SectionInfo to={'/contribua'}
+                                            title={'Contribua para a UNAADEB'}
+                                            description={'Faça sua doação em PIX para o congresso'}
+                                            icon={'award'}
+                                            bgColor={colors.secundary2}
+                               />
+                           </Box>
+                            <Box mt={2}>
+                                <SectionInfo to={'/youtube'}
+                                             title={'Acesse nosso canal no Youtube'}
+                                             description={'Todos os vídeos do congresso'}
+                                             icon={'youtube'}
+                                             bgColor={colors.accent}
+                                />
+                            </Box>
                         </Box>
 
                     </Box>
