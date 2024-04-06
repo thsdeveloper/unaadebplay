@@ -29,11 +29,11 @@ const schema = Yup.object({
     accommodation: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
     child_companion: Yup.boolean().required('O campo acompanhante é obrigatório'),
     take_medication: Yup.boolean().required('O campo medicamentos é obrigatório'),
-    take_medication_description: Yup.string().defined('Descrição dos medicamentos é obrigatória'),
+    take_medication_description: Yup.string().optional(),
     blood_type: Yup.string().required('O campo Tipo sanguíneo é obrigatório'),
     blood_type_rh: Yup.string().required('O campo Fator RH é obrigatório'),
     allergies: Yup.boolean().required('O campo alergia é obrigatório'),
-    allergies_description: Yup.string().required('O campo descrição da alergia é obrigatório'),
+    allergies_description: Yup.string().optional(),
     emergency_contact: Yup.string().required('O campo contato de emergência é obrigatório'),
 
     normas_um: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
@@ -131,7 +131,6 @@ const RegistrationFormHospedagem = () => {
 
         trigger().then((isFormValid: any) => {
             if (!isFormValid) {
-                // Se o formulário não estiver válido, mostra um alerta de erro
                 alert.error("Existem campos que faltam ser preenchidos");
             } else {
                 // Se o formulário estiver válido, prepara os dados para submissão
