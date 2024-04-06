@@ -9,19 +9,13 @@ import CongressItemSkeletons from "@/components/Skeletons/CongressItemSkeletons"
 import {CongressType} from "@/types/CongressType";
 import {formatTime} from "@/utils/directus";
 import {LinearGradient} from "expo-linear-gradient";
-import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 import CarouselItemRepertories from "@/components/CustomCarousel/CarouselItemRepertories";
-import {GlobalQueryParams} from "@/types/GlobalQueryParamsTypes";
 import CarouselItemUsers from "@/components/CustomCarousel/CarouselItemUsers";
 import CarouselItemCongress from "@/components/CustomCarousel/CarouselItemCongress";
 import AlertContext from "@/contexts/AlertContext";
-import {Animated} from "react-native";
 import LikedIcon from "@/components/LikedIcon";
-import {SafeAreaView} from 'react-native-safe-area-context';
 import {SubscribedHosTypes} from "@/types/SubscribedHosTypes";
 import {useAuth} from "@/contexts/AuthContext";
-import {getUser} from "@/services/user";
-import {UserTypes} from "@/types/UserTypes";
 
 export default function CongressoPage() {
     const [congress, setCongress] = useState<CongressType | null>(null);

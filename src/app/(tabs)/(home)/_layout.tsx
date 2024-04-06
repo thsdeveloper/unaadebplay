@@ -69,7 +69,6 @@ export default function HomeLayout() {
                     headerStyle: {
                         backgroundColor: colors.primary,
                     },
-                    presentation: 'modal',
                     headerBackTitle: 'Voltar',
                     headerTintColor: colors.white,
                 }
