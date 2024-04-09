@@ -1,6 +1,6 @@
 import directusClient from "./api";
 import {DirectusFile, readFile, uploadFiles, updateFile, deleteFile} from "@directus/sdk";
-import {GlobalQueryParams} from "../types/GlobalQueryParamsTypes";
+import {GlobalQueryParams} from "@/types/GlobalQueryParamsTypes";
 
 
 export async function getAssetURI(fileId: string, params?: GlobalQueryParams): Promise<any> {

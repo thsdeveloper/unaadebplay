@@ -6,47 +6,38 @@ import {Image} from "@/components/Image";
 import {GlobalQueryParams} from "@/types/GlobalQueryParamsTypes";
 import {Box, FlatList, Text} from "native-base";
 import colors from "@/constants/colors";
-import {useAudioPlayer} from "@/contexts/AudioPlayerContext";
+import {useRepertorieContext} from "@/contexts/AudioPlayerContext";
 
 const windowWidth = Dimensions.get('window').width;
 
-interface PropsCarrousseu {
-    id: string | string[]
+interface CarouselItemProps {
+    repertorie: RepertoriesTypes;
 }
 
-
 export default function CarouselItemRepertories() {
-    const params: GlobalQueryParams = {
-        // filter: {congresso: {_eq: id}},
-        fields: ['*.*', 'mp3.*'],
-    }
+    const [repertoires, setRepertoires] = useState<RepertoriesTypes[]>([]);
+    const {setRepertorieID} = useRepertorieContext();
 
+    //Busca os repertórios cadastrados
+    useEffect(() => {
+        const loadRepertories = async () => {
+            const params: GlobalQueryParams = {
+                fields: ['*.*', 'mp3.*'],
+            }
+            const responseRepertories = await getItems<RepertoriesTypes[]>('repertorios', params);
+            setRepertoires(responseRepertories);
+        };
+        loadRepertories();
+    }, []);
 
-    const [repertoires, setRepertoires] = useState<RepertoriesTypes[] | []>([]);
-    const {setAlbumID} = useAudioPlayer();
-
-    const onItemChange = (item) => {
-        alert(item.mp3.id)
-        setAlbumID(item.mp3);
-    }
-
-    const CarouselItem = ({repertorie}) => (
+    const CarouselItem: React.FC<CarouselItemProps> = ({ repertorie }) => (
        <Box px={2}>
-           <TouchableOpacity onPress={() => onItemChange(repertorie)}>
-               <Image assetId={repertorie.image_cover.id} width={'150'} height={'150'}/>
+           <TouchableOpacity onPress={() => setRepertorieID(repertorie.id)}>
+               <Image assetId={repertorie.image_cover.id} width={40} height={40}/>
            </TouchableOpacity>
        </Box>
     );
 
-
-    useEffect(() => {
-        const loadRepertories = async () => {
-            const responseRepertories = await getItems<RepertoriesTypes[]>('repertorios', params);
-            setRepertoires(responseRepertories);
-        };
-
-        loadRepertories();
-    }, []);
 
     if (repertoires.length === 0) {
         return (
@@ -62,7 +53,7 @@ export default function CarouselItemRepertories() {
         <FlatList
             horizontal
             data={repertoires}
-            renderItem={({item}: RepertoriesTypes) => <CarouselItem repertorie={item} />}
+            renderItem={({ item }) => <CarouselItem repertorie={item} />}
             snapToInterval={windowWidth * 0.8}
             decelerationRate="fast"
             keyExtractor={(repertorie: RepertoriesTypes) => repertorie.id}

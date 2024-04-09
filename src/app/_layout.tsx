@@ -61,6 +61,7 @@ export default function RootLayout() {
                     </ConfigProvider>
                 </AuthProvider>
             </AlertProvider>
+
         </NativeBaseProvider>
     )
 }

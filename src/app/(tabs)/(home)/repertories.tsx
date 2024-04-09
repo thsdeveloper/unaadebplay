@@ -7,16 +7,15 @@ import {Image} from "@/components/Image";
 import TranslationContext from "@/contexts/TranslationContext";
 import { FontAwesome } from '@expo/vector-icons';
 import colors from "@/constants/colors";
-import {useAudioPlayer} from "@/contexts/AudioPlayerContext";
+import {useRepertorieContext} from "@/contexts/AudioPlayerContext";
 import SkeletonItem from "@/components/SkeletonItem";
-import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 
 const Repertories = () => {
     const [repertoires, setRepertoires] = useState<RepertoriesTypes[]>();
     const [isLoadingItemList, setIsLoadingItemList] = useState(false);
     const [isLoadingList, setIsLoadingList] = useState(false);
     const {t} = useContext(TranslationContext);
-    const { setAlbumID } = useAudioPlayer();
+    const { setRepertorieID } = useRepertorieContext();
 
     useEffect(() => {
         const loadRepertories = async () => {
@@ -36,7 +35,7 @@ const Repertories = () => {
 
     const handleAudioPress = async (album: RepertoriesTypes) => {
         setIsLoadingItemList(true);
-        setAlbumID(album.id);
+        setRepertorieID(album.id);
         setIsLoadingItemList(false);
     };
 
