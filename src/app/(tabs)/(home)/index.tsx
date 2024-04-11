@@ -54,11 +54,21 @@ export default function HomeTabs() {
             <Box>
                 <Stack m={2} space={"sm"} direction={"row"} alignItems={"center"}>
                     <Text fontWeight={'bold'} fontSize={'lg'} color={colors.dark}>
+                        {t('title_coordenation_geral')}
+                    </Text>
+                </Stack>
+                <Box>
+                    <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing} idRole={'a4c63b39-f3e8-471a-9ef8-7550b09c950b'}/>
+                </Box>
+            </Box>
+            <Box>
+                <Stack m={2} space={"sm"} direction={"row"} alignItems={"center"}>
+                    <Text fontWeight={'bold'} fontSize={'lg'} color={colors.dark}>
                         {t('text_section_diretoria')}
                     </Text>
                 </Stack>
                 <Box>
-                    <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing}/>
+                    <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing} idRole={'fb948a78-4c3e-408e-b712-327eec70ad54'}/>
                 </Box>
             </Box>
             <Box pb={4}>
