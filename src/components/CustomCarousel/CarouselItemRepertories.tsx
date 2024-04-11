@@ -14,7 +14,11 @@ interface CarouselItemProps {
     repertorie: RepertoriesTypes;
 }
 
-export default function CarouselItemRepertories() {
+interface CarouselItemRepertoriesProps{
+    idCongresso: string
+}
+
+export default function CarouselItemRepertories({idCongresso}: CarouselItemRepertoriesProps) {
     const [repertoires, setRepertoires] = useState<RepertoriesTypes[]>([]);
     const {setRepertorieID} = useRepertorieContext();
 
@@ -26,6 +30,9 @@ export default function CarouselItemRepertories() {
                 filter: {
                     status: {
                         _eq: 'published',
+                    },
+                    congresso: {
+                        _eq: idCongresso, // Substitua 'valorDoCongressoX' pelo ID correto do congresso X
                     },
                 },
             }
