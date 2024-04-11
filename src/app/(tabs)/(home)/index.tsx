@@ -42,7 +42,7 @@ export default function HomeTabs() {
     return (
         <Animated.ScrollView onScroll={Animated.event(
             [{nativeEvent: {contentOffset: {y: scrollY}}}],
-            {useNativeDriver: false} //
+            {useNativeDriver: false}
         )} scrollEventThrottle={16} bounces={false}>
 
             <Box flex={1} justifyContent="center">
@@ -50,7 +50,14 @@ export default function HomeTabs() {
                     <InfoCongressCarousel/>
                 </Box>
             </Box>
-
+            <Box pb={4}>
+                <Stack space={"sm"} m={2} direction={"row"} alignItems={"center"}>
+                    <Text fontWeight={'bold'} fontSize={'lg'} color={colors.dark}>
+                        {t('text_section_banner')}
+                    </Text>
+                </Stack>
+                <BannerCarousel refreshing={refreshing} setRefreshing={setRefreshing}/>
+            </Box>
             <Box>
                 <Stack m={2} space={"sm"} direction={"row"} alignItems={"center"}>
                     <Text fontWeight={'bold'} fontSize={'lg'} color={colors.dark}>
@@ -71,24 +78,18 @@ export default function HomeTabs() {
                     <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing} idRole={'fb948a78-4c3e-408e-b712-327eec70ad54'}/>
                 </Box>
             </Box>
-            <Box pb={4}>
-                <Stack space={"sm"} m={2} direction={"row"} alignItems={"center"}>
+
+            <Box pb={2}>
+                <Stack m={2} space={"sm"} direction={"row"} alignItems={"center"}>
                     <Text fontWeight={'bold'} fontSize={'lg'} color={colors.dark}>
-                        {t('text_section_banner')}
+                        {t('text_section_diretoria')}
                     </Text>
                 </Stack>
-                <BannerCarousel refreshing={refreshing} setRefreshing={setRefreshing}/>
+                <Box>
+                    <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing} idRole={'d70cd26d-07cb-4cff-9524-df3276c4f9cc'}/>
+                </Box>
             </Box>
-            <Box px={2} pb={2}>
-                <SectionInfo to={'/contribua'}
-                             title={'Contribua para a UNAADEB'}
-                             description={'Faça sua doação em PIX para o congresso'}
-                             icon={'award'}
-                             bgColor={colors.secundary2}
-                />
-            </Box>
-
-            <Box px={2} pb={2}>
+            <Box px={2} pb={2} pt={2}>
                 <SectionInfo to={'/youtube'}
                              title={'Acesse nosso canal no Youtube'}
                              description={'Todos os vídeos do congresso'}
@@ -96,8 +97,14 @@ export default function HomeTabs() {
                              bgColor={colors.accent}
                 />
             </Box>
-
-
+            <Box px={2} pb={2} pt={2}>
+                <SectionInfo to={'/contribua'}
+                             title={'Contribua para a UNAADEB'}
+                             description={'Faça sua doação em PIX para o congresso'}
+                             icon={'award'}
+                             bgColor={colors.secundary2}
+                />
+            </Box>
             <Box py={4} bgColor={colors.secundary2} borderTopWidth={4} borderColor={colors.darkRed}>
                 <AvatarGroup/>
             </Box>
