@@ -23,6 +23,11 @@ export default function CarouselItemRepertories() {
         const loadRepertories = async () => {
             const params: GlobalQueryParams = {
                 fields: ['*.*', 'mp3.*'],
+                filter: {
+                    status: {
+                        _eq: 'published',
+                    },
+                },
             }
             const responseRepertories = await getItems<RepertoriesTypes[]>('repertorios', params);
             setRepertoires(responseRepertories);

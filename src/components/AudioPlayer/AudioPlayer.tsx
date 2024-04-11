@@ -51,22 +51,26 @@ const AudioPlayer = () => {
 
     const {isOpen, onOpen, onClose} = useDisclose();
 
+    async function handleClosePlay() {
+        await stopSound()
+        setRepertorieID(null)
+        onClose()
+    }
+
     // Função que será chamada quando o slider mudar
-    const handlePositionChange = async (newPosition) => {
-       await seek(newPosition * 1000); // A função seek espera um valor em milissegundos
+    const handlePositionChange = async (newPosition: number) => {
+        await seek(newPosition * 1000);
     };
 
     return (
         <>
             {repertorieID && (
                 <>
-                    <TouchableOpacity onPress={() => onOpen()} activeOpacity={0.9}>
-                        <CollapsedView album={album} duration={duration} isPlaying={isPlaying}
-                                       onPlayPausePress={playPauseSound}/>
-                    </TouchableOpacity>
+                    <CollapsedView album={album} duration={duration} isPlaying={isPlaying} stopSound={handleClosePlay}
+                                   onPlayPausePress={playPauseSound} onPress={() => onOpen()}/>
 
                     <Actionsheet isOpen={isOpen} onClose={onClose}>
-                        <Actionsheet.Content padding={0}>
+                        <Actionsheet.Content pb={40}>
                             <ExpandedView
                                 album={album}
                                 isPlaying={isPlaying}
@@ -74,11 +78,7 @@ const AudioPlayer = () => {
                                 duration={duration}
                                 onPlayPausePress={playPauseSound}
                                 handlePositionChange={handlePositionChange}
-                                stopSound={async () =>  {
-                                    await stopSound()
-                                    setRepertorieID(null)
-                                    onClose()
-                                }}
+                                stopSound={handleClosePlay}
                             />
                         </Actionsheet.Content>
                     </Actionsheet>

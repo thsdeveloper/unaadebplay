@@ -10,11 +10,12 @@ import {Link} from "expo-router";
 const {width: screenWidth} = Dimensions.get('window');
 
 interface PropsBanners {
-    refreshing: any,
+    refreshing: any
     setRefreshing: any
+    idRole: string
 }
 
-const BannerCarouselUsers = ({refreshing, setRefreshing}: PropsBanners) => {
+const BannerCarouselUsers = ({refreshing, setRefreshing, idRole}: PropsBanners) => {
     const [loading, setLoading] = useState(true);
     const [activeIndex, setActiveIndex] = useState(0);
     const [users, setUsers] = useState<UserTypes[]>([]);
@@ -24,7 +25,7 @@ const BannerCarouselUsers = ({refreshing, setRefreshing}: PropsBanners) => {
             const response = await getUsers<UserTypes>({
                 filter: {
                     role: {
-                        _eq: 'fb948a78-4c3e-408e-b712-327eec70ad54',
+                        _eq: idRole,
                     },
                 },
             }).finally(() => {
