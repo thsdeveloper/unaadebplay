@@ -3,11 +3,7 @@ import { Audio } from 'expo-av';
 import AlertContext from "@/contexts/AlertContext";
 import { Sound } from "expo-av/build/Audio/Sound";
 
-interface UseAudioPlayerProps {
-    audioURI: string | null;
-}
-
-export const useAudioPlayer = (audioURI : UseAudioPlayerProps) => {
+export const useAudioPlayer = (audioURI: string | null) => {
     const [sound, setSound] = useState<Sound | null>(null);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [position, setPosition] = useState<number>(0);

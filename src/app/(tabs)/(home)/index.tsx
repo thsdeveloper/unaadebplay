@@ -82,7 +82,7 @@ export default function HomeTabs() {
             <Box pb={2}>
                 <Stack m={2} space={"sm"} direction={"row"} alignItems={"center"}>
                     <Text fontWeight={'bold'} fontSize={'lg'} color={colors.dark}>
-                        {t('text_section_diretoria')}
+                        {t('text_pr_coodenadores')}
                     </Text>
                 </Stack>
                 <Box>
