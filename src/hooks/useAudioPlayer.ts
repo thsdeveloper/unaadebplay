@@ -14,6 +14,25 @@ export const useAudioPlayer = (audioURI : UseAudioPlayerProps) => {
     const [duration, setDuration] = useState<number>(0);
     const alert = useContext(AlertContext);
 
+    useEffect(() => {
+        const configureAudioSession = async () => {
+            try {
+                // Configura a sessão de áudio para reprodução de mídia
+                // Isso garante que o áudio seja reproduzido mesmo que o switch de silencioso esteja ativado
+                await Audio.setAudioModeAsync({
+                    allowsRecordingIOS: false,
+                    playsInSilentModeIOS: true, // Importante para tocar áudio mesmo no modo silencioso
+                    shouldDuckAndroid: true,
+                    playThroughEarpieceAndroid: false,
+                    staysActiveInBackground: true,
+                });
+            } catch (e) {
+                console.error('Failed to set audio session category: ', e);
+            }
+        };
+        configureAudioSession();
+    }, []);
+
     // Carrega o áudio quando o audioURI muda
     useEffect(() => {
         let isMounted = true;  // Flag para verificar se o componente está montado

@@ -185,7 +185,7 @@ export default function CongressoPage() {
                                 repertório {congress.name}</Heading>
                         </HStack>
                     </Box>
-                    <CarouselItemRepertories/>
+                    <CarouselItemRepertories idCongresso={congress.id}/>
                 </Box>
 
                 <Box>
