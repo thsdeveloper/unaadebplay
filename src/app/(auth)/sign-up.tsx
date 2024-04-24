@@ -8,7 +8,7 @@ import {
     Checkbox,
     Pressable,
     Modal,
-    Flex, Box, Button as NBButton, StatusBar, ScrollView
+    Flex, Box, Button as NBButton, StatusBar, ScrollView, HStack
 } from "native-base";
 import RenderHtml from 'react-native-render-html';
 import * as Yup from "yup";
@@ -112,7 +112,6 @@ const FormSigUpUser = () => {
 
         try {
             const formattedPhoneNumber = formatPhoneNumber(dataUserForm.phone);
-
             const statusVerification = await sendVerificationSMS(formattedPhoneNumber, 'sms');
             alert.success(`SMS enviado com sucesso, confirme o código de acesso para o número ${statusVerification.to}`, 8000)
 
@@ -127,22 +126,25 @@ const FormSigUpUser = () => {
 
     const handleVerifyCode = async () => {
         const formattedPhoneNumber = formatPhoneNumber(userObject.phone);
-
+        const codigoFormatado = verificationCode.replace(/-/g, "");
+        setLoading(true)
         try {
-            const verificationCheckType = await verifyCode(formattedPhoneNumber, verificationCode);
+            const verificationCheckType = await verifyCode(formattedPhoneNumber, codigoFormatado);
 
             if (verificationCheckType.status === 'approved') {
                 const user = await setUser(userObject);
                 if (user) {
                     await login(userObject.email, userObject.password);
-                    alert.success(`Usuário ${user.first_name} cadastrado com sucesso`)
+                    alert.success(`Usuário ${user.first_name} cadastrado com sucesso!`)
                 }
             } else {
                 alert.error(`Código de verificação inválido com status: ${verificationCheckType.status}`);
             }
         } catch (e) {
             console.error(e)
-            alert.error('Erro no processo de verificação do código.');
+            alert.error(`Erro no processo de verificação do código. ${codigoFormatado}`);
+        } finally {
+            setLoading(false)
         }
     };
 
@@ -410,8 +412,8 @@ const FormSigUpUser = () => {
                         height={12}
                         mt="2"
                         onPress={onCheckFormAndSubmit}
-                        isLoading={isLoading}
-                        isLoadingText="Cadastrando..."/>
+                        isLoading={loading}
+                        isLoadingText="Aguarde..."/>
             </VStack>
         </VStack>
     );
@@ -465,20 +467,26 @@ const FormSigUpUser = () => {
                                     de telefone. Este código ajuda a verificar sua identidade e proteger sua
                                     conta.</Text>
                             </Box>
-                            <Box p={4} textAlign={"center"} width={'100%'}>
+                            <HStack p={4} textAlign={"center"} justifyContent={'center'} width={'100%'}>
                                 <CountdownTimer/>
-                            </Box>
+                            </HStack>
                             <Input
                                 size={'2xl'}
                                 mb={4}
+                                textAlign={"center"}
+                                height={20}
                                 placeholder="Código de verificação"
                                 value={verificationCode}
                                 onChangeText={setVerificationCode}
                                 keyboardType="numeric"
+                                mask={{
+                                    type: 'custom',
+                                    options: {
+                                        mask: '9-9-9-9-9-9'
+                                    }
+                                }}
                             />
-                            <Button shadow={'6'} size={'lg'} title="Verificar Código" onPress={handleVerifyCode}/>
-                            <NBButton shadow={'6'} size={'lg'} variant={'link'} onPress={handleVerifyCode}>Enviar código
-                                novamente</NBButton>
+                            <NBButton onPress={handleVerifyCode} rounded={"full"} colorScheme={'danger'} height={16} isLoading={loading} isLoadingText={'Verificando codigo...'}>Verificar código</NBButton>
                         </Box>
                     </ScrollView>
                 )}

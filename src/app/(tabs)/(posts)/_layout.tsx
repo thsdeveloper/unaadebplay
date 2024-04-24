@@ -12,7 +12,7 @@ export default function PostsLayout() {
             }
         }}>
             <Stack.Screen name={'index'} options={{title: 'Notícias'}} />
-            <Stack.Screen name={'post/[id]'} options={{title: 'Notícia detail>'}} />
+            <Stack.Screen name={'post/[id]'} options={{title: 'Notícia detail'}} />
         </Stack>
     );
 }

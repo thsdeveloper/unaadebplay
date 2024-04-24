@@ -34,13 +34,13 @@ export default function CongressoPage() {
             setIsSubscribed(subscribed);
         };
         checkSubscription();
-    }, [user?.id]); // Dependências relevantes aqui
+    }, [user?.id]);
 
     useEffect(() => {
         if (congress && congress.primary_color) {
             setHeaderBackgroundColor(congress.primary_color);
         } else {
-            setHeaderBackgroundColor(colors.primary); // Substitua 'cor_padrão' pela cor de fundo padrão do cabeçalho
+            setHeaderBackgroundColor(colors.primary);
         }
     }, [congress]);
 
@@ -79,7 +79,7 @@ export default function CongressoPage() {
             headerRight: () => (
                 <Link href={'/users'} asChild>
                     <Pressable opacity={0.7} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-                        <Feather name="share-2" size={24} color={colors.white}/>
+                        <Feather name="users" size={24} color={colors.white}/>
                     </Pressable>
                 </Link>
             ),
@@ -135,7 +135,7 @@ export default function CongressoPage() {
                                     <Feather name={'lock'} size={20} color={colors.light}/>
                                 } color={colors.light} rounded={'full'} shadow={2}
                                         onPress={() => alert.error('As inscrições para este período de congresso foi finalizada, por favor selecione o congresso atual')}>
-                                    Inscrições Encerradas
+                                    finalizado
                                 </Button>
                             </>
                         ) : (
@@ -155,27 +155,27 @@ export default function CongressoPage() {
                     </Box>
                 </Box>
 
-                <Box px={4} mt={4}>
-                    <HStack>
-                        <HStack flex={1} space={2} justifyContent={'center'} alignItems={"center"}
-                                alignContent={"center"}>
-                            <LikedIcon color={colors.light} iconName={'heart'} title={'Curtir'}/>
-                        </HStack>
-                        <HStack flex={1} space={2} justifyContent={'center'} alignItems={"center"}
-                                justifyItems={"center"}>
-                            <Pressable onPress={() => console.log('Curtir')} alignItems={"center"}>
-                                <Feather name="share-2" size={30} color={colors.light}/>
-                                <Text color={colors.light}>Compartilhar</Text>
-                            </Pressable>
-                        </HStack>
-                        <HStack flex={1} space={2} justifyContent={'center'}>
-                            <Pressable onPress={() => console.log('Curtir')} alignItems={"center"}>
-                                <Feather name="youtube" size={30} color={colors.light}/>
-                                <Text color={colors.light}>Youtube</Text>
-                            </Pressable>
-                        </HStack>
-                    </HStack>
-                </Box>
+                {/*<Box px={4} mt={4}>*/}
+                {/*    <HStack>*/}
+                {/*        <HStack flex={1} space={2} justifyContent={'center'} alignItems={"center"}*/}
+                {/*                alignContent={"center"}>*/}
+                {/*            <LikedIcon color={colors.light} iconName={'heart'} title={'Curtir'}/>*/}
+                {/*        </HStack>*/}
+                {/*        <HStack flex={1} space={2} justifyContent={'center'} alignItems={"center"}*/}
+                {/*                justifyItems={"center"}>*/}
+                {/*            <Pressable onPress={() => console.log('Curtir')} alignItems={"center"}>*/}
+                {/*                <Feather name="share-2" size={30} color={colors.light}/>*/}
+                {/*                <Text color={colors.light}>Compartilhar</Text>*/}
+                {/*            </Pressable>*/}
+                {/*        </HStack>*/}
+                {/*        <HStack flex={1} space={2} justifyContent={'center'}>*/}
+                {/*            <Pressable onPress={() => console.log('Curtir')} alignItems={"center"}>*/}
+                {/*                <Feather name="youtube" size={30} color={colors.light}/>*/}
+                {/*                <Text color={colors.light}>Youtube</Text>*/}
+                {/*            </Pressable>*/}
+                {/*        </HStack>*/}
+                {/*    </HStack>*/}
+                {/*</Box>*/}
 
                 <Box>
                     <Box px={2} py={2} mt={2}>
