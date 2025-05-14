@@ -1,5 +1,6 @@
 import React from 'react';
-import {Skeleton, VStack, HStack, Box} from 'native-base';
+import {VStack} from "@/components/ui/vstack";
+import {Skeleton} from "@/components/ui/skeleton";
 
 interface PropsUserSkeleton{
     windowWidth: number
@@ -15,10 +16,10 @@ const UserSkeleton = ({windowWidth}: PropsUserSkeleton) => {
                               borderRadius={10}
                               width={windowWidth * 0.8}
                              />
-                    <Skeleton.Text lines={1} width="20%" startColor="text.400" endColor={'text.300'}/>
-                    <Skeleton.Text lines={1} width="4%" startColor="text.400" endColor={'text.300'}/>
-                    <Skeleton.Text lines={1} width="70%" startColor="text.400" endColor={'text.300'}/>
-                    <Skeleton.Text lines={1} width="50%" startColor="text.400" endColor={'text.300'}/>
+                    <Skeleton lines={1} width="20%" startColor="text.400" endColor={'text.300'}/>
+                    <Skeleton lines={1} width="4%" startColor="text.400" endColor={'text.300'}/>
+                    <Skeleton lines={1} width="70%" startColor="text.400" endColor={'text.300'}/>
+                    <Skeleton lines={1} width="50%" startColor="text.400" endColor={'text.300'}/>
                 </VStack>
             ))}
         </VStack>

@@ -1,29 +1,24 @@
 import React, {useContext, useEffect, useState} from 'react';
 import {useForm, Controller} from 'react-hook-form';
-import {
-    Box,
-    Text,
-    Heading,
-    KeyboardAvoidingView,
-    ScrollView,
-    Divider, Button, Center, HStack, Image
-} from 'native-base';
 import * as Yup from 'yup';
 import {yupResolver} from '@hookform/resolvers/yup';
 import {useAuth} from "@/contexts/AuthContext";
 import AlertContext from "@/contexts/AlertContext";
 import {RadioInput} from "@/components/Forms/Radio";
 import {getItems, getItemSingleton, setCreateItem, setUpdateItem} from "@/services/items";
-import {Platform} from "react-native";
+import {KeyboardAvoidingView, Platform, ScrollView} from "react-native";
 import {Switch} from "@/components/Forms/Switch";
 import colors from "@/constants/colors";
-import {Input} from "@/components/Forms/Input";
+import {CustomInput } from "@/components/Forms/Input";
 import {HospedagemTypes} from "@/types/HospedagemTypes";
 import {HospedagemSkeleton} from "@/components/Skeletons/HospedagemSkeletons";
 import {formatCurrency} from "@/utils/directus";
 import {MaterialIcons} from "@expo/vector-icons";
 import {SubscribedHosTypes} from "@/types/SubscribedHosTypes";
 import {router} from 'expo-router';
+import {Box} from "@/components/ui/box";
+import {Heading} from "@/components/ui/heading";
+import {HStack} from "@/components/ui/hstack";
 
 const schema = Yup.object({
     accommodation: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),

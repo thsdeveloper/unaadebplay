@@ -5,7 +5,7 @@ import {Avatar} from "@/components/Avatar";
 import {useAuth} from "@/contexts/AuthContext";
 import colors from "@/constants/colors";
 import {Platform, TouchableOpacity} from "react-native";
-import {Box} from "native-base";
+import {Box} from "@/components/ui/box";
 
 export default function HomeLayout() {
     const {user} = useAuth()

@@ -1,11 +1,16 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Box, VStack, Text, HStack, Divider, Button, ScrollView } from 'native-base';
+import React, { useContext, useRef, useState } from 'react';
 import colors from "@/constants/colors";
 import LottieView from "lottie-react-native";
 import * as Clipboard from 'expo-clipboard';
 import AlertContext from "@/contexts/AlertContext";
 import QRCode from 'react-native-qrcode-svg';
-import { Link, router } from 'expo-router';
+import {ScrollView} from "react-native";
+import {VStack} from "@/components/ui/vstack";
+import {Divider} from "@/components/ui/divider";
+import {HStack} from "@/components/ui/hstack";
+import {Button} from "@/components/ui/button";
+import {Box} from "@/components/ui/box";
+import {Text} from "@/components/ui/text";
 
 export default function Contribua() {
     const animation = useRef(null);

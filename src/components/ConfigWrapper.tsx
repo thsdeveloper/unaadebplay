@@ -1,6 +1,5 @@
 import React, { useContext } from 'react';
 import ConfigContext from "../contexts/ConfigContext";
-import {Text} from "native-base";
 
 interface ConfigWrapperProps {
     children: React.ReactNode;

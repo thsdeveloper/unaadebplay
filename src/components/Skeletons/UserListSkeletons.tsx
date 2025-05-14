@@ -1,5 +1,7 @@
 import React from 'react';
-import {Skeleton, VStack, HStack, Box} from 'native-base';
+import {VStack} from "@/components/ui/vstack";
+import {HStack} from "@/components/ui/hstack";
+import {Skeleton} from "@/components/ui/skeleton";
 
 const UserSkeleton = () => {
     return (

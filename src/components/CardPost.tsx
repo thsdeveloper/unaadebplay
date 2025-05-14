@@ -1,4 +1,3 @@
-import {Box, AspectRatio, Stack, Heading, Text, Pressable} from 'native-base'
 import React, {useEffect, useState} from "react";
 import {formatTime} from "@/utils/directus";
 import {Image} from "@/components/Image";
@@ -6,6 +5,8 @@ import {getUser} from "@/services/user";
 import {PostsTypes} from "@/types/PostsTypes";
 import {UserTypes} from "@/types/UserTypes";
 import {Link} from "expo-router";
+import {Box} from "@/components/ui/box";
+import {Pressable} from "@/components/ui/pressable";
 
 type Props = {
     post: PostsTypes;

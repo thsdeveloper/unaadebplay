@@ -1,8 +1,7 @@
 import React, {useState} from "react";
-import {Animated} from "react-native";
-import {Box} from "native-base";
 import {useGlobalSearchParams, useNavigation} from "expo-router";
 import {CongressType} from "@/types/CongressType";
+import {Box} from "@/components/ui/box";
 
 export default function ConvidadoPage() {
     const [congress, setCongress] = useState<CongressType | null>(null);
@@ -10,7 +9,6 @@ export default function ConvidadoPage() {
     const [loading, setLoading] = useState<boolean>(true);
     const {id} = useGlobalSearchParams();
     const navigation = useNavigation()
-    const [scrollY, setScrollY] = useState(new Animated.Value(0));
 
 
     // useEffect(() => {

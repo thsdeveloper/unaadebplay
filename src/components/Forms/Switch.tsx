@@ -1,15 +1,7 @@
-import {ISwitchProps, FormControl, Text, Switch as SwitchNB, VStack, HStack} from 'native-base';
+import {FormControl} from "@/components/ui/form-control";
+import {HStack} from "@/components/ui/hstack";
 
-type Props = Omit<ISwitchProps, 'value' | 'onChange'> & {
-    textTrue?: string,
-    textFalse?: string,
-    value: boolean
-    message?: string;
-    errorMessage?: string | null;
-    onChange: (value: boolean) => void; // Tipo do parâmetro alterado para boolean
-}
-
-export function Switch({ errorMessage = null, isInvalid, message, onChange, value, textTrue, textFalse, ...rest }: Props) {
+export function Switch({ errorMessage = null, isInvalid, message, onChange, value, textTrue, textFalse, ...rest }) {
     const invalid = !!errorMessage || isInvalid;
 
     const handleChange = (newValue: boolean) => {

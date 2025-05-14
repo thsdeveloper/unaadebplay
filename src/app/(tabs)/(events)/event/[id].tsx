@@ -1,20 +1,38 @@
-import React, {useContext, useEffect, useState} from 'react';
-import {Box, Text, VStack, HStack, Badge, ScrollView} from 'native-base';
-import {EventsTypes} from "@/types/EventsTypes";
-import {Image} from "@/components/Image"
-import {getUser} from "@/services/user";
-import {UserTypes} from "@/types/UserTypes";
-import {formatTime, handleErrors} from "@/utils/directus";
-import {getItem, getItems, setCreateItem} from "@/services/items";
+import React, { useContext, useEffect, useState } from 'react';
+import { EventsTypes } from "@/types/EventsTypes";
+import { Image } from "@/components/Image";
+import { getUser } from "@/services/user";
+import { UserTypes } from "@/types/UserTypes";
+import { formatTime, handleErrors } from "@/utils/directus";
+import { getItem, getItems, setCreateItem } from "@/services/items";
 import SkeletonItem from "@/components/SkeletonItem";
-import {Button} from "@/components/Button";
+import { Button } from "@/components/ui/button";
 import AlertContext from "@/contexts/AlertContext";
 import AuthContext from "@/contexts/AuthContext";
-import {Feather, Ionicons} from '@expo/vector-icons';
-import {useGlobalSearchParams, Stack} from "expo-router"
+import {Text} from "@/components/ui/text";
 
+import { Feather, Ionicons } from '@expo/vector-icons';
+import { useGlobalSearchParams, Stack } from "expo-router";
 
-export default function EventDetailsPage(){
+// Componentes locais
+import {
+    Box
+} from "@/components/ui/box";
+import {
+    VStack
+} from "@/components/ui/vstack";
+import {
+    HStack
+} from "@/components/ui/hstack";
+import {
+    ScrollView
+} from "@/components/ui/scroll-view";
+import {
+    Badge,
+    BadgeText
+} from "@/components/ui/badge";
+
+export default function EventDetailsPage() {
     const { id } = useGlobalSearchParams();
 
     const [organizer, setOrganizer] = useState<UserTypes | null>(null);
@@ -22,14 +40,14 @@ export default function EventDetailsPage(){
     const [loading, setLoading] = useState<boolean>(true);
     const [loadingSubscriptions, setLoadingSubscriptions] = useState<boolean>(false);
     const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
-    const alert = useContext(AlertContext)
-    const {user} = useContext(AuthContext)
+    const alert = useContext(AlertContext);
+    const { user } = useContext(AuthContext);
 
     useEffect(() => {
         const loadOrganizerAndCheckSubscription = async () => {
             try {
                 const eventResponse = await getItem<EventsTypes>('events', id);
-                setEvent(eventResponse)
+                setEvent(eventResponse);
 
                 const userResponse = await getUser(eventResponse.organizer);
                 setOrganizer(userResponse);
@@ -45,12 +63,12 @@ export default function EventDetailsPage(){
                     }
                 };
                 // Verifica a inscrição do usuário
-                const subscriptionResponse = await getItems('event_subscriptions', params)
+                const subscriptionResponse = await getItems('event_subscriptions', params);
                 setIsSubscribed(subscriptionResponse.length > 0);
             } catch (e) {
-
+                // Tratamento de erro
             } finally {
-                setLoading(false)
+                setLoading(false);
             }
         };
 
@@ -58,31 +76,24 @@ export default function EventDetailsPage(){
     }, [id]);
 
     const subscribeToEvent = async () => {
-        setLoadingSubscriptions(true)
+        setLoadingSubscriptions(true);
         try {
             const subscription = {
                 event_id: event?.id,
                 user_id: user?.id,
             };
-            const eventSubscriptions = await setCreateItem('event_subscriptions', subscription)
+            const eventSubscriptions = await setCreateItem('event_subscriptions', subscription);
             if (eventSubscriptions) {
-                alert.success('Inscrição realizada com sucesso!')
+                alert.success('Inscrição realizada com sucesso!');
                 setIsSubscribed(true);
             }
         } catch (error) {
             const message = handleErrors(error.errors);
-            alert.error(`Error ao inscrever o usuário: ${message}`)
+            alert.error(`Error ao inscrever o usuário: ${message}`);
         } finally {
-            setLoadingSubscriptions(false)
+            setLoadingSubscriptions(false);
         }
     };
-
-    function LogoTitle() {
-        return (
-            <Feather name="youtube" size={40} color='blue' />
-        );
-    }
-
 
     return (
         <ScrollView>
@@ -102,12 +113,12 @@ export default function EventDetailsPage(){
                     // headerTitle: props => <LogoTitle {...props} />,
                 }}
             />
-            <Box flex={1} p={4}>
+            <Box className="flex-1 p-4">
                 {loading ? (
-                    <SkeletonItem count={1}/>
+                    <SkeletonItem count={1} />
                 ) : (
-                    <VStack space={4}>
-                        <Text fontSize='2xl' fontWeight='bold' color='blue.900'>
+                    <VStack className="space-y-4">
+                        <Text className="text-2xl font-bold text-blue-900">
                             {event?.title}
                         </Text>
                         <Image
@@ -116,12 +127,10 @@ export default function EventDetailsPage(){
                             borderRadius={10}
                         />
                         {isSubscribed ? (
-                            <>
-                                <HStack>
-                                    <Ionicons name="checkmark-circle-outline" size={24} color="black"/>
-                                    <Text fontSize={"lg"} fontWeight={"bold"}>Já cadastrado no evento!</Text>
-                                </HStack>
-                            </>
+                            <HStack className="items-center">
+                                <Ionicons name="checkmark-circle-outline" size={24} color="black" />
+                                <Text className="text-lg font-bold ml-2">Já cadastrado no evento!</Text>
+                            </HStack>
                         ) : (
                             <Button
                                 title={"Inscreva-se agora!"}
@@ -130,26 +139,29 @@ export default function EventDetailsPage(){
                                 isLoadingText={'Cadastrando usuário'}
                             />
                         )}
-                        <HStack space={2}>
-                            <Badge variant="outline" colorScheme="green">{event?.status}</Badge>
-                            <Badge variant="outline" colorScheme="blue">{event?.event_type}</Badge>
+                        <HStack className="space-x-2">
+                            <Badge variant="outline" className="border-green-500">
+                                <BadgeText className="text-green-500">{event?.status}</BadgeText>
+                            </Badge>
+                            <Badge variant="outline" className="border-blue-500">
+                                <BadgeText className="text-blue-500">{event?.event_type}</BadgeText>
+                            </Badge>
                         </HStack>
-                        <Text color='gray.500'>
+                        <Text className="text-gray-500">
                             Organizado por {organizer ? organizer.first_name : 'Loading...'}
                         </Text>
-                        <Text color='gray.500'>
+                        <Text className="text-gray-500">
                             Local do evento: {event?.location}
                         </Text>
-                        <Text color='gray.500' fontWeight={"bold"}>
+                        <Text className="text-gray-500 font-bold">
                             Início: {formatTime(event?.start_date_time, 'DD/MM/YYYY hh:hh')} até: {formatTime(event?.end_date_time, 'MM/YYYY hh:hh')}
                         </Text>
                         <Text>
                             {event?.description}
                         </Text>
-                        <Text color='gray.500' fontWeight='bold'>
+                        <Text className="text-gray-500 font-bold">
                             Contato do Organizador: {event?.organizer_contact_info}
                         </Text>
-
                     </VStack>
                 )}
             </Box>

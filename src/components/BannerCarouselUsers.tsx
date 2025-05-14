@@ -1,11 +1,14 @@
 import React, {useEffect, useState} from 'react';
-import {Dimensions, StyleSheet} from 'react-native';
-import {Box, FlatList, HStack, Pressable, Skeleton} from 'native-base';
+import {Dimensions, FlatList, StyleSheet} from 'react-native';
 import {UserTypes} from "@/types/UserTypes";
 import {Avatar} from "@/components/Avatar";
 import {getUsers} from "@/services/user";
 import colors from "@/constants/colors";
 import {Link} from "expo-router";
+import {Box} from "@/components/ui/box";
+import {Pressable} from "@/components/ui/pressable";
+import {HStack} from "@/components/ui/hstack";
+import {Skeleton} from "@/components/ui/skeleton";
 
 const {width: screenWidth} = Dimensions.get('window');
 

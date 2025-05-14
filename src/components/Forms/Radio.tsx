@@ -1,38 +1,84 @@
-import {Radio, IRadioProps, FormControl, HStack, Text, VStack} from 'native-base';
+import { HStack } from "@/components/ui/hstack";
+import { VStack } from "@/components/ui/vstack";
+import {
+    Radio,
+    RadioGroup,
+    RadioIndicator,
+    RadioLabel,
+    RadioIcon,
+} from "@/components/ui/radio";
+import { CircleIcon } from "@/components/ui/icon";
+import {
+    FormControl,
+    FormControlLabel,
+    FormControlLabelText,
+    FormControlError,
+    FormControlErrorText,
+} from "@/components/ui/form-control";
+import { Text } from "@/components/ui/text";
 
 type RadioOption = {
     value: string | boolean;
     label: string;
 };
 
-type Props = Omit<IRadioProps, 'value'> & {
+type Props = {
     message: string;
     value: string;
     errorMessage?: string | null;
     options: RadioOption[];
     onChange: (value: string) => void;
     stackType?: 'horizontal' | 'vertical';
-}
+    size?: 'sm' | 'md' | 'lg';
+    isDisabled?: boolean;
+};
 
-export function RadioInput({ errorMessage = null, isInvalid, options, message, value, onChange, stackType = 'horizontal', ...rest }: Props) {
-    const invalid = !!errorMessage || isInvalid;
+export function RadioInput({
+                               errorMessage = null,
+                               options,
+                               message,
+                               value,
+                               onChange,
+                               stackType = 'horizontal',
+                               size = 'md',
+                               isDisabled = false,
+                               ...rest
+                           }: Props) {
+    const invalid = !!errorMessage;
     const StackComponent = stackType === 'horizontal' ? HStack : VStack;
 
     return (
         <FormControl isInvalid={invalid}>
-            <Text>{message}</Text>
-            <Radio.Group value={value} onChange={onChange} name="example">
+            <FormControlLabel>
+                <FormControlLabelText>{message}</FormControlLabelText>
+            </FormControlLabel>
+
+            <RadioGroup value={value} onChange={onChange}>
                 <StackComponent space={1}>
                     {options.map((option, index) => (
-                        <Radio key={index} my={1} isInvalid={invalid} value={option.value} {...rest}>
-                            {option.label}
+                        <Radio
+                            key={index}
+                            my={1}
+                            isInvalid={invalid}
+                            value={String(option.value)}
+                            size={size}
+                            isDisabled={isDisabled}
+                            {...rest}
+                        >
+                            <RadioIndicator>
+                                <RadioIcon as={CircleIcon} />
+                            </RadioIndicator>
+                            <RadioLabel>{option.label}</RadioLabel>
                         </Radio>
                     ))}
                 </StackComponent>
-            </Radio.Group>
-            <FormControl.ErrorMessage>
-                {errorMessage}
-            </FormControl.ErrorMessage>
+            </RadioGroup>
+
+            {invalid && (
+                <FormControlError>
+                    <FormControlErrorText>{errorMessage}</FormControlErrorText>
+                </FormControlError>
+            )}
         </FormControl>
     );
 }

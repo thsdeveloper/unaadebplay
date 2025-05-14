@@ -1,7 +1,8 @@
-import {Skeleton, Box} from 'native-base';
-import React, {useContext, useEffect, useState} from 'react';
-import {Image as ImageRN, ImageProps} from "react-native";
+import React, { useContext, useEffect, useState } from 'react';
+import { Image as ImageRN, ImageProps } from "react-native";
 import ConfigContext from "../contexts/ConfigContext";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Box } from "@/components/ui/box";
 
 type Props = Omit<ImageProps, 'source'> & {
     assetId: string | undefined;
@@ -11,24 +12,30 @@ type Props = Omit<ImageProps, 'source'> & {
 };
 
 export function Image({assetId, width, height, borderRadius, ...props}: Props) {
-    // Renomeando `defaultImage` para `avatarPadrao`
-    const {url_api, avatar_default} = useContext(ConfigContext);
+    const { url_api, avatar_default } = useContext(ConfigContext);
     const [loading, setLoading] = useState(true);
-    const avatarPadrao = `${url_api}/assets/${avatar_default}?fit=cover&timestamp=${new Date().getTime()}`;
-    const [imageSrc, setImageSrc] = useState<string>(avatarPadrao);
 
+    // Use uma variável para armazenar o avatar padrão fora do useEffect
+    const defaultImageUrl = `${url_api}/assets/${avatar_default}?fit=cover&timestamp=${new Date().getTime()}`;
+
+    // Apenas definir o estado inicial
+    const [imageSrc, setImageSrc] = useState(defaultImageUrl);
+
+    // Corrigir o useEffect com dependências adequadas
     useEffect(() => {
-        const userImage = assetId
-            ? `${url_api}/assets/${assetId}?fit=cover&timestamp=${new Date().getTime()}`
-            : avatarPadrao;
-        setImageSrc(userImage);
-    }, [assetId, avatar_default, url_api]);
+        if (assetId) {
+            const userImage = `${url_api}/assets/${assetId}?fit=cover&timestamp=${new Date().getTime()}`;
+            setImageSrc(userImage);
+        } else {
+            setImageSrc(defaultImageUrl);
+        }
+    }, [assetId, url_api, avatar_default]); // Dependências específicas e estáveis
 
     const handleImageLoaded = () => {
         setLoading(false);
     };
 
-    // Extraindo o componente Skeleton como uma variável
+    // Componente de carregamento
     const loadingSkeleton = (
         <Box position={"absolute"} zIndex={9998} width={"100%"} height={height}>
             <Skeleton

@@ -1,11 +1,12 @@
 import React, {useContext, useEffect, useRef} from 'react';
-import {Box, HStack, Text, IconButton} from 'native-base';
 import {MaterialIcons} from '@expo/vector-icons';
 import {ImageBackground, PanResponder, Animated, TouchableOpacity} from 'react-native';
 import ConfigContext from '@/contexts/ConfigContext';
 import {LinearGradient} from 'expo-linear-gradient';
 import {RepertoriesTypes} from '@/types/RepertoriesTypes';
 import {Image} from '@/components/Image';
+import {Box} from "@/components/ui/box";
+import {HStack} from "@/components/ui/hstack";
 
 interface CollapsedViewProps {
     album: RepertoriesTypes | null;

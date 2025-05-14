@@ -1,10 +1,8 @@
 import React, {useContext, useState} from "react";
-import {Platform, SafeAreaView} from "react-native";
-import {Badge, Box, KeyboardAvoidingView, ScrollView, VStack} from "native-base";
+import {KeyboardAvoidingView, Platform, ScrollView} from "react-native";
 import * as Yup from "yup";
 import {Controller, useForm} from "react-hook-form";
 import {yupResolver} from "@hookform/resolvers/yup/dist/yup";
-import {Input} from "@/components/Forms/Input";
 import {Button} from "@/components/Button";
 import {updateUserMe} from "@/services/user";
 import TranslationContext from "@/contexts/TranslationContext";
@@ -13,7 +11,10 @@ import authContext from "@/contexts/AuthContext";
 import AvatarUpdated from "@/components/AvatarUpdated";
 import {handleErrors} from "@/utils/directus";
 import {RadioInput} from "@/components/Forms/Radio";
-import {HeaderDrawer} from "@/components/HeaderDrawer";
+import {VStack} from "@/components/ui/vstack";
+import {Box} from "@/components/ui/box";
+import {Badge} from "@/components/ui/badge";
+import {CustomInput} from "@/components/Forms/Input";
 
 const signUpSchema = Yup.object({
     first_name: Yup.string().trim().min(2, 'O primeiro nome deve ter pelo menos 2 caracteres').required('O campo nome é obrigatório'),
@@ -82,7 +83,7 @@ export default function Index() {
                                 name={'first_name'}
                                 defaultValue={user?.first_name}  // adicionado defaultValue aqui
                                 render={({field: {onChange, value}}) => ( // adicione "value" aqui
-                                    <Input
+                                    <CustomInput
                                         placeholder={'Primeiro nome'}
                                         value={value}  // altere para "value" aqui
                                         placeholderTextColor={'gray.400'}
@@ -97,7 +98,7 @@ export default function Index() {
                                 name={'last_name'}
                                 defaultValue={user?.last_name}  // adicionado defaultValue aqui
                                 render={({field: {onChange, value}}) => ( // adicione "value" aqui
-                                    <Input
+                                    <CustomInput
                                         placeholder={'Segundo nome'}
                                         value={value}
                                         placeholderTextColor={'gray.400'}
@@ -112,7 +113,7 @@ export default function Index() {
                                 name={'email'}
                                 defaultValue={user?.email}
                                 render={({field: {onChange, value}}) => (
-                                    <Input
+                                    <CustomInput
                                         type={'email'}
                                         placeholder={'Seu e-mail'}
                                         value={value}
@@ -122,50 +123,12 @@ export default function Index() {
                                     />
                                 )}
                             />
-                            {/*<Controller*/}
-                            {/*    control={control}*/}
-                            {/*    name={'phone'}*/}
-                            {/*    defaultValue={user?.phone}*/}
-                            {/*    render={({field: {onChange, value}}) => (*/}
-                            {/*        <Input*/}
-                            {/*            placeholder={'Telefone'}*/}
-                            {/*            value={value}*/}
-                            {/*            onChangeText={onChange}*/}
-                            {/*            errorMessage={errors.phone?.message}*/}
-                            {/*            mask={{*/}
-                            {/*                type: 'cel-phone',*/}
-                            {/*                options: {*/}
-                            {/*                    maskType: 'BRL',*/}
-                            {/*                    withDDD: true,*/}
-                            {/*                    dddMask: '(99) ',*/}
-                            {/*                }*/}
-                            {/*            }}*/}
-                            {/*        />*/}
-                            {/*    )}*/}
-                            {/*/>*/}
-                            {/*<Controller*/}
-                            {/*    control={control}*/}
-                            {/*    name={'gender'}*/}
-                            {/*    defaultValue={user?.gender}*/}
-                            {/*    render={({field: {onChange, value}}) => (*/}
-                            {/*        <RadioInput*/}
-                            {/*            message={'Escolha o seu gênero:'}*/}
-                            {/*            errorMessage={errors.gender?.message}*/}
-                            {/*            options={[*/}
-                            {/*                {value: 'masculino', label: 'Masculino'},*/}
-                            {/*                {value: 'feminino', label: 'Feminino'},*/}
-                            {/*            ]}*/}
-                            {/*            value={value}*/}
-                            {/*            onChange={onChange}*/}
-                            {/*        />*/}
-                            {/*    )}*/}
-                            {/*/>*/}
                             <Controller
                                 control={control}
                                 name={'location'}
                                 defaultValue={user?.location}
                                 render={({field: {onChange, value}}) => (
-                                    <Input
+                                    <CustomInput
                                         value={value}
                                         placeholder={'Sua localização, endereço'}
                                         placeholderTextColor={'gray.400'}
@@ -179,7 +142,7 @@ export default function Index() {
                                 name={'description'}
                                 defaultValue={user?.description}
                                 render={({field: {onChange, value}}) => (
-                                    <Input
+                                    <CustomInput
                                         value={value}
                                         placeholder={'Escreva uma descrição sobre você!'}
                                         placeholderTextColor={'gray.400'}

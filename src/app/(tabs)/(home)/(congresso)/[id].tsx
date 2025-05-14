@@ -1,7 +1,6 @@
 import React, {useContext, useEffect, useLayoutEffect, useState} from "react";
-import {Box, Button, Center, Heading, HStack, Icon, IconButton, Pressable, ScrollView, Text} from "native-base";
-import {Link, router, useGlobalSearchParams, useNavigation} from "expo-router";
-import {getItem, getItems, setCreateItem} from "@/services/items";
+import {Link, useGlobalSearchParams, useNavigation} from "expo-router";
+import {getItem, getItems} from "@/services/items";
 import {BlurView} from "expo-blur";
 import colors from "@/constants/colors";
 import {Entypo, Feather} from "@expo/vector-icons";
@@ -13,9 +12,9 @@ import CarouselItemRepertories from "@/components/CustomCarousel/CarouselItemRep
 import CarouselItemUsers from "@/components/CustomCarousel/CarouselItemUsers";
 import CarouselItemCongress from "@/components/CustomCarousel/CarouselItemCongress";
 import AlertContext from "@/contexts/AlertContext";
-import LikedIcon from "@/components/LikedIcon";
 import {SubscribedHosTypes} from "@/types/SubscribedHosTypes";
 import {useAuth} from "@/contexts/AuthContext";
+import {ScrollView} from "react-native";
 
 export default function CongressoPage() {
     const [congress, setCongress] = useState<CongressType | null>(null);

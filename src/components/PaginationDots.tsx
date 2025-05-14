@@ -1,6 +1,7 @@
 import React from 'react';
-import { Box, HStack, Circle } from 'native-base';
 import colors from "../constants/colors";
+import {HStack} from "@/components/ui/hstack";
+import {Circle} from "react-native-svg";
 
 const PaginationDots = ({ data, activeIndex }) => {
     return (

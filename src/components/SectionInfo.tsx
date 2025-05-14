@@ -1,9 +1,12 @@
 import {TouchableOpacity} from "react-native";
-import {Box, HStack, Text, VStack} from "native-base";
 import colors from "@/constants/colors";
 import {Feather} from "@expo/vector-icons";
 import {Link} from "expo-router";
 import React from "react";
+import {HStack} from "@/components/ui/hstack";
+import {Box} from "@/components/ui/box";
+import {VStack} from "@/components/ui/vstack";
+import {Text} from "@/components/ui/text";
 
 interface PropsSectionInfo{
     to: string,

@@ -1,5 +1,7 @@
 import React from 'react';
-import { Checkbox, HStack, Text, FormControl } from 'native-base';
+import {FormControl} from "@/components/ui/form-control";
+import {HStack} from "@/components/ui/hstack";
+import {Checkbox} from "@/components/ui/checkbox";
 
 interface CheckboxCustomProps {
     field: { onChange: (value: boolean) => void; value: string; isChecked: boolean | undefined };

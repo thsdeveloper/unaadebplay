@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {StyleSheet, useWindowDimensions} from 'react-native';
-import {Text,ScrollView, Box, VStack, HStack, Tag, Heading} from 'native-base';
+import {ScrollView, StyleSheet, useWindowDimensions} from 'react-native';
 import {getUser} from "@/services/user";
 import {UserTypes} from "@/types/UserTypes";
 import {PostsTypes} from "@/types/PostsTypes";
@@ -11,6 +10,11 @@ import colors from "@/constants/colors";
 import RenderHtml from "react-native-render-html";
 import SkeletonItem from "@/components/SkeletonItem";
 import {useGlobalSearchParams} from "expo-router";
+import {Box} from "@/components/ui/box";
+import {Heading} from "@/components/ui/heading";
+import {HStack} from "@/components/ui/hstack";
+import {Tag} from "domelementtype";
+import {VStack} from "@/components/ui/vstack";
 
 export default function Post(){
     const {width} = useWindowDimensions();

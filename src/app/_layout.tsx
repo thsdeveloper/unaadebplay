@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from "react";
-import {NativeBaseProvider, StatusBar} from "native-base";
+import "../../global.css";
+import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import {AuthProvider} from '@/contexts/AuthContext';
 import {AlertProvider} from "@/contexts/AlertContext";
 import 'react-native-gesture-handler';
@@ -11,8 +12,13 @@ import {getSettings} from "@/services/settings";
 import FlashMessage from "react-native-flash-message";
 import {Slot} from 'expo-router'
 import AppUpdateManager from "@/components/AppUpdateManager";
+import {StatusBar} from "expo-status-bar";
+import { useApiErrorHandler } from '@/utils/apiErrorHandler';
 
 export default function RootLayout() {
+    // Registrar o tratador de erros de API
+    useApiErrorHandler();
+
     const [appIsReady, setAppIsReady] = useState(false);
     const [config, setConfig] = useState({});
 
@@ -46,22 +52,21 @@ export default function RootLayout() {
     }
 
     return (
-        <NativeBaseProvider>
-            <StatusBar barStyle="light-content" translucent={true}/>
-            <AlertProvider>
-                <AuthProvider>
-                    <ConfigProvider value={config}>
-                        <TranslationProvider>
-                            <AudioPlayerProvider>
-                                <FlashMessage position="top"/>
-                                <AppUpdateManager/>
-                                <Slot/>
-                            </AudioPlayerProvider>
-                        </TranslationProvider>
-                    </ConfigProvider>
-                </AuthProvider>
-            </AlertProvider>
-
-        </NativeBaseProvider>
-    )
+        <GluestackUIProvider mode="light">
+                <StatusBar barStyle="light-content" translucent={true}/>
+                <AlertProvider>
+                    <AuthProvider>
+                        <ConfigProvider value={config}>
+                            <TranslationProvider>
+                                <AudioPlayerProvider>
+                                    <FlashMessage position="top"/>
+                                    <AppUpdateManager/>
+                                    <Slot/>
+                                </AudioPlayerProvider>
+                            </TranslationProvider>
+                        </ConfigProvider>
+                    </AuthProvider>
+                </AlertProvider>
+        </GluestackUIProvider>
+    );
 }

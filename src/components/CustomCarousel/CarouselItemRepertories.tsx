@@ -1,12 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {Dimensions, TouchableOpacity} from 'react-native';
+import {Dimensions, FlatList, TouchableOpacity} from 'react-native';
 import {getItems} from "@/services/items";
 import {RepertoriesTypes} from "@/types/RepertoriesTypes";
 import {Image} from "@/components/Image";
 import {GlobalQueryParams} from "@/types/GlobalQueryParamsTypes";
-import {Box, FlatList, Text} from "native-base";
 import colors from "@/constants/colors";
 import {useRepertorieContext} from "@/contexts/AudioPlayerContext";
+import {Box} from "@/components/ui/box";
 
 const windowWidth = Dimensions.get('window').width;
 

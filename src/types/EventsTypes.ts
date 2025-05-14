@@ -4,10 +4,11 @@ import {FilesTypes} from "./FilesTypes";
 export interface EventsTypes extends GenericItem {
     status: string | null;
     sort: number | null;
-    user_created: string | null;
     date_created: Date | null;
+    user_created: string | null;
     user_updated: string | null;
     date_updated: Date | null;
+
     title: string;
     description: string;
     start_date_time: Date;

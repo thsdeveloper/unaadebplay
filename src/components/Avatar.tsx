@@ -1,42 +1,84 @@
-import { Avatar as NativeBaseAvatar, IAvatarProps, Box, Skeleton } from 'native-base';
 import { useContext, useEffect, useState } from "react";
-import { Image } from "react-native";
 import ConfigContext from "@/contexts/ConfigContext";
+import { Box } from "@/components/ui/box";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+    Avatar as ComponentAvatar,
+    AvatarBadge,
+    AvatarFallbackText,
+    AvatarImage,
+} from "@/components/ui/avatar";
 
-type Props = IAvatarProps & {
+type AvatarProps = {
     userAvatarID?: string;
-    width: number | string;
-    height: number | string;
+    width?: number | string;
+    height?: number | string;
+    name?: string;
+    isOnline?: boolean;
+    [key: string]: any;
 };
 
-export function Avatar({ userAvatarID, width, height, ...rest }: Props) {
+export function Avatar({
+                           userAvatarID,
+                           width = 40,
+                           height = 40,
+                           name = "",
+                           isOnline,
+                           ...rest
+                       }: AvatarProps) {
     const { url_api, avatar_default } = useContext(ConfigContext);
     const [loading, setLoading] = useState(true);
     const defaultImage = `${url_api}/assets/${avatar_default}?fit=cover&timestamp=${new Date().getTime()}`;
     const [imageSrc, setImageSrc] = useState<string>(defaultImage);
 
     useEffect(() => {
-        const userImage = userAvatarID ? `${url_api}/assets/${userAvatarID}?fit=cover&timestamp=${new Date().getTime()}` : defaultImage;
+        const userImage = userAvatarID
+            ? `${url_api}/assets/${userAvatarID}?fit=cover&timestamp=${new Date().getTime()}`
+            : defaultImage;
         setImageSrc(userImage);
     }, [userAvatarID, avatar_default, url_api]);
 
-    const handleImageLoaded = () => {
-        setLoading(false);
+    // Função para gerar iniciais do nome (para o fallback)
+    const getInitials = (name: string) => {
+        return name
+            .split(' ')
+            .map(part => part[0])
+            .join('')
+            .toUpperCase()
+            .substring(0, 2);
     };
 
     return (
-            <NativeBaseAvatar width={width} height={height} {...rest}>
-                {loading && (
-                    <Box zIndex={1000} position={"absolute"}>
-                        <Skeleton borderWidth={2} borderColor="coolGray.400" endColor="text.400" size={width} rounded="full" speed={2} />
-                    </Box>
-                )}
-                <Image
-                    source={{ uri: imageSrc }}
-                    style={{ width: '100%', height: '100%', borderRadius: 100 }}
-                    resizeMode="cover"
-                    onLoadEnd={handleImageLoaded}
-                />
-            </NativeBaseAvatar>
+        <ComponentAvatar
+            size={typeof width === 'number' ? `${width}px` : width}
+            {...rest}
+        >
+            {loading && (
+                <Box className="z-10 absolute">
+                    <Skeleton
+                        className="rounded-full border-2 border-gray-400"
+                        width={width}
+                        height={height}
+                        startColor="gray.200"
+                        endColor="gray.400"
+                    />
+                </Box>
+            )}
+
+            <AvatarImage
+                source={{ uri: imageSrc }}
+                onLoadStart={() => setLoading(true)}
+                onLoad={() => setLoading(false)}
+                alt={name || "User avatar"}
+            />
+
+            {/* Fallback text que aparece se a imagem falhar ao carregar */}
+            <AvatarFallbackText>{getInitials(name)}</AvatarFallbackText>
+
+            {/* Badge para indicar status online (opcional) */}
+            {isOnline !== undefined && (
+                <AvatarBadge className={isOnline ? "bg-green-500" : "bg-gray-400"} />
+            )}
+        </ComponentAvatar>
     );
 }

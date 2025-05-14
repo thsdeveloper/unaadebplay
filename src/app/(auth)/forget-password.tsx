@@ -2,15 +2,35 @@ import React, { useContext, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as Yup from "yup";
-import {VStack, Box, Text, KeyboardAvoidingView, StatusBar} from "native-base";
-import { Button } from "@/components/Button";
-import { Input } from "@/components/Forms/Input";
 import { Platform, ScrollView } from 'react-native';
+import { Feather } from "@expo/vector-icons";
+
+// Importações de componentes locais (conforme estrutura do projeto)
+import {
+    VStack
+} from "@/components/ui/vstack";
+import {
+    Text
+} from "@/components/ui/text";
+import {
+    Center
+} from "@/components/ui/center";
+import {
+    KeyboardAvoidingView
+} from "@/components/ui/keyboard-avoiding-view";
+import {
+    Icon
+} from "@/components/ui/icon";
+
+
+// Importações de contextos e componentes
+import { Button } from "@/components/Button";
+import { CustomInput } from "@/components/Forms/Input";
 import TranslationContext from "../../contexts/TranslationContext";
 import AuthContext from "@/contexts/AuthContext";
 import { emailExists } from "@/services/user";
 import AlertContext from "@/contexts/AlertContext";
-import {Feather} from "@expo/vector-icons";
+import { StatusBar } from "expo-status-bar";
 
 const forgetPasswordSchema = Yup.object({
     email: Yup.string()
@@ -50,37 +70,51 @@ export default function ForgetPassword() {
     };
 
     return (
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
-            <StatusBar barStyle="dark-content"/>
+        <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            className="flex-1"
+        >
+            <StatusBar style="dark" />
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-                <VStack p={10} space={4} flex={1} alignItems={"center"}>
-                    <Feather name="unlock" size={40} color="black" />
-                    <Text>
+                <VStack
+                    space="md"
+                    className="flex-1 items-center p-10"
+                >
+                    <Center className="w-16 h-16 mb-2">
+                        <Icon as={Feather} name="unlock" size="xl" color="$gray800" />
+                    </Center>
+
+                    <Text className="text-center text-gray-700 mb-4">
                         {t('reset_password_description')}
                     </Text>
+
                     <Controller
                         control={control}
-                        name={"email"}
+                        name="email"
                         render={({ field: { onChange } }) => (
-                            <Input
-                                placeholder={"E-mail"}
-                                size={"lg"}
-                                placeholderTextColor={"gray.400"}
+                            <CustomInput
+                                placeholder="E-mail"
+                                size="lg"
+                                placeholderTextColor="gray.400"
                                 onChangeText={onChange}
                                 errorMessage={errors.email?.message}
-                                keyboardType={'email-address'}
+                                keyboardType="email-address"
                                 autoCapitalize="none"
                                 autoCorrect={false}
+                                leftIcon={
+                                    <Icon as={Feather} name="mail" size="sm" color="$gray500" />
+                                }
                             />
                         )}
                     />
+
                     <Button
-                        width={'full'}
-                        title={t('text_password_send')}
+                        width="full"
+                        title={loading ? "Enviando..." : t('text_password_send')}
                         height={12}
                         onPress={handleSubmit(handleResetPassword)}
                         isLoading={loading}
-                        isLoadingText="Enviando..."
+                        icon={loading ? undefined : <Icon as={Feather} name="send" size="sm" color="$white" />}
                     />
                 </VStack>
             </ScrollView>

@@ -1,5 +1,7 @@
 import React from 'react';
-import { Select, VStack, FormControl } from 'native-base';
+import {Select} from "@/components/ui/select";
+import {FormControl} from "@/components/ui/form-control";
+import {VStack} from "@/components/ui/vstack";
 
 interface CustomSelectProps {
     options: any[];

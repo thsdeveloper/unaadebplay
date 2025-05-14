@@ -25,7 +25,9 @@
         {
           "username": "thsdeveloper"
         }
-      ]
+      ],
+      "expo-router",
+      "expo-asset"
     ],
     "assetBundlePatterns": [
       "**/*"

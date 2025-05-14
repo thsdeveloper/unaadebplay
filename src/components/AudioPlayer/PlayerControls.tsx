@@ -1,7 +1,9 @@
 import React from 'react';
-import {Box, HStack, IconButton, Slider, Text} from 'native-base';
 import {FontAwesome5, MaterialIcons} from '@expo/vector-icons';
 import colors from "@/constants/colors";
+import {Box} from "@/components/ui/box";
+import {HStack} from "@/components/ui/hstack";
+import {Slider} from "react-native";
 
 const PlayerControls = ({isPlaying, duration, position, onPlayPausePress, stopSound, onPositionChange }) => {
     const formattedDuration = Math.round(duration / 1000);
