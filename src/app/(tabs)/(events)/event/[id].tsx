@@ -6,9 +6,11 @@ import { UserTypes } from "@/types/UserTypes";
 import { formatTime, handleErrors } from "@/utils/directus";
 import { getItem, getItems, setCreateItem } from "@/services/items";
 import SkeletonItem from "@/components/SkeletonItem";
-import { Button } from "@/components/Button";
+import { Button } from "@/components/ui/button";
 import AlertContext from "@/contexts/AlertContext";
 import AuthContext from "@/contexts/AuthContext";
+import {Text} from "@/components/ui/text";
+
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useGlobalSearchParams, Stack } from "expo-router";
 
@@ -22,9 +24,6 @@ import {
 import {
     HStack
 } from "@/components/ui/hstack";
-import {
-    Text
-} from "@/components/ui/text";
 import {
     ScrollView
 } from "@/components/ui/scroll-view";
@@ -95,12 +94,6 @@ export default function EventDetailsPage() {
             setLoadingSubscriptions(false);
         }
     };
-
-    function LogoTitle() {
-        return (
-            <Feather name="youtube" size={40} color='blue' />
-        );
-    }
 
     return (
         <ScrollView>
