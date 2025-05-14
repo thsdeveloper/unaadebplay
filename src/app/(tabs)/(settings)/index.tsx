@@ -123,44 +123,6 @@ export default function Index() {
                                     />
                                 )}
                             />
-                            {/*<Controller*/}
-                            {/*    control={control}*/}
-                            {/*    name={'phone'}*/}
-                            {/*    defaultValue={user?.phone}*/}
-                            {/*    render={({field: {onChange, value}}) => (*/}
-                            {/*        <Input*/}
-                            {/*            placeholder={'Telefone'}*/}
-                            {/*            value={value}*/}
-                            {/*            onChangeText={onChange}*/}
-                            {/*            errorMessage={errors.phone?.message}*/}
-                            {/*            mask={{*/}
-                            {/*                type: 'cel-phone',*/}
-                            {/*                options: {*/}
-                            {/*                    maskType: 'BRL',*/}
-                            {/*                    withDDD: true,*/}
-                            {/*                    dddMask: '(99) ',*/}
-                            {/*                }*/}
-                            {/*            }}*/}
-                            {/*        />*/}
-                            {/*    )}*/}
-                            {/*/>*/}
-                            {/*<Controller*/}
-                            {/*    control={control}*/}
-                            {/*    name={'gender'}*/}
-                            {/*    defaultValue={user?.gender}*/}
-                            {/*    render={({field: {onChange, value}}) => (*/}
-                            {/*        <RadioInput*/}
-                            {/*            message={'Escolha o seu gênero:'}*/}
-                            {/*            errorMessage={errors.gender?.message}*/}
-                            {/*            options={[*/}
-                            {/*                {value: 'masculino', label: 'Masculino'},*/}
-                            {/*                {value: 'feminino', label: 'Feminino'},*/}
-                            {/*            ]}*/}
-                            {/*            value={value}*/}
-                            {/*            onChange={onChange}*/}
-                            {/*        />*/}
-                            {/*    )}*/}
-                            {/*/>*/}
                             <Controller
                                 control={control}
                                 name={'location'}
