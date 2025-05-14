@@ -1,9 +1,5 @@
 import React, {useContext, useEffect, useState} from "react";
-import {RefreshControl} from "react-native";
-import {
-    Box,
-    FlatList,
-} from "native-base";
+import {FlatList, RefreshControl} from "react-native";
 import {CardPost} from "@/components/CardPost";
 import TranslationContext from "@/contexts/TranslationContext";
 import {PostsTypes} from "@/types/PostsTypes";
@@ -11,6 +7,7 @@ import {getItems} from "@/services/items";
 import SkeletonItem from "@/components/SkeletonItem";
 import {handleErrors} from "@/utils/directus";
 import AlertContext from "@/contexts/AlertContext";
+import {Box} from "@/components/ui/box";
 
 export default function PostsTabs() {
     const [posts, setPosts] = useState<PostsTypes[]>([]);

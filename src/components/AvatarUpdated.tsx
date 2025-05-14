@@ -1,26 +1,19 @@
-import React, {useState, useEffect, useContext} from 'react';
-import {
-    Text,
-    Actionsheet,
-    useDisclose,
-    Box,
-    Icon,
-    IAvatarProps,
-    Spinner,
-    HStack,
-} from 'native-base';
+import React, {useState, useContext} from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import {Ionicons} from "@expo/vector-icons";
 import AlertContext from "../contexts/AlertContext";
 import {Platform, TouchableOpacity} from "react-native";
 import ConfigContext from "../contexts/ConfigContext";
 import authContext from "../contexts/AuthContext";
-import {setDeleteFile, setUpdateFile, uploadFile} from "../services/files";
-import {DirectusFile, DirectusUser} from "@directus/sdk";
-import {handleErrors} from "../utils/directus";
-import {updateUserMe} from "../services/user";
-import {UserTypes} from "../types/UserTypes";
+import {setDeleteFile, setUpdateFile, uploadFile} from "@/services/files";
+import {handleErrors} from "@/utils/directus";
+import {updateUserMe} from "@/services/user";
 import {Avatar} from "./Avatar";
+import {useDisclose} from "@gluestack-ui/hooks";
+import {Box} from "@/components/ui/box";
+import {HStack} from "@/components/ui/hstack";
+import {Spinner} from "@/components/ui/spinner";
+import {Actionsheet} from "@/components/ui/select/select-actionsheet";
 
 type Props = IAvatarProps & {
     userAvatarID: string;

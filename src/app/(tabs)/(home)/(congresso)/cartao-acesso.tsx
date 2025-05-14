@@ -1,4 +1,3 @@
-import {Badge, Box, Button, Heading, HStack, Image, ScrollView, Spinner, Text, VStack} from "native-base";
 import * as Clipboard from "expo-clipboard";
 import colors from "@/constants/colors";
 import React, {useContext, useEffect, useState} from "react";
@@ -10,7 +9,13 @@ import {FontAwesome6, MaterialIcons} from "@expo/vector-icons";
 import axios from "axios";
 import {SubscribedHosTypes} from "@/types/SubscribedHosTypes";
 import {useAuth} from "@/contexts/AuthContext";
-import {Linking} from "react-native";
+import {Linking, ScrollView} from "react-native";
+import {VStack} from "@/components/ui/vstack";
+import {Spinner} from "@/components/ui/spinner";
+import {Box} from "@/components/ui/box";
+import {HStack} from "@/components/ui/hstack";
+import {Heading} from "@/components/ui/heading";
+import {Button} from "@/components/ui/button";
 
 export default function CartaoAcesso() {
     const [loading, setLoading] = useState<boolean>(true);

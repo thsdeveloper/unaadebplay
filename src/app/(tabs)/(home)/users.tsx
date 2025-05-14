@@ -1,6 +1,9 @@
-import React, {useState, useCallback, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {FlatList, TouchableOpacity, Text, View, ActivityIndicator} from 'react-native';
-import {Box, Input, HStack} from 'native-base';
+import {Box} from '@/components/ui/box';
+import {Input} from '@/components/ui/input';
+import {HStack} from '@/components/ui/hstack';
+
 import {Feather} from '@expo/vector-icons';
 import {getUsers} from "@/services/user";
 import UserItem from "@/components/UserItem";

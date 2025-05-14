@@ -1,6 +1,7 @@
-import {Box, Center} from 'native-base'
 import React, {useRef} from "react";
 import LottieView from "lottie-react-native";
+import {Center} from "@/components/ui/center";
+import {Box} from "@/components/ui/box";
 
 export function LoadingLottier(){
     const animation = useRef(null);

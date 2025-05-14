@@ -1,14 +1,10 @@
 import React, { useState, useContext } from "react";
-import { Box, Button } from "native-base";
-import { loadMercadoPago } from "@mercadopago/sdk-js";
-
 import AlertContext from "@/contexts/AlertContext";
-import colors from "@/constants/colors";
-
+import {Box} from "@/components/ui/box";
+import {Button} from "@/components/ui/button";
 export default function PaymentMercadoPago() {
     const [cardData, setCardData] = useState(null);
     const alert = useContext(AlertContext);
-
 
     const cardTokenGeneration = async () => {
         try {

@@ -1,6 +1,5 @@
 import React, {useState, useEffect, useContext} from 'react';
 import {FlatList, TouchableOpacity, SafeAreaView} from 'react-native';
-import {Box, Text, VStack, Divider, Spinner, Stack} from 'native-base';
 import {getItems} from '@/services/items';
 import {RepertoriesTypes} from '@/types/RepertoriesTypes';
 import {Image} from "@/components/Image";
@@ -9,6 +8,10 @@ import { FontAwesome } from '@expo/vector-icons';
 import colors from "@/constants/colors";
 import {useRepertorieContext} from "@/contexts/AudioPlayerContext";
 import SkeletonItem from "@/components/SkeletonItem";
+import {Box} from "@/components/ui/box";
+import {VStack} from "@/components/ui/vstack";
+import {Divider} from "@/components/ui/divider";
+import {Stack} from "expo-router";
 
 const Repertories = () => {
     const [repertoires, setRepertoires] = useState<RepertoriesTypes[]>();
@@ -41,7 +44,7 @@ const Repertories = () => {
 
     const renderItem = ({item}: { item: RepertoriesTypes }) => (
         <TouchableOpacity onPress={() => handleAudioPress(item)}>
-            <Stack direction="row" space={"sm"} p={2}>
+            <Box direction="row" space={"sm"} p={2}>
                 <Box>
                     <Image width={'20'} height={'20'} assetId={item.image_cover.id}/>
                 </Box>
@@ -54,7 +57,7 @@ const Repertories = () => {
                         <Text color="gray.500" fontWeight={"bold"}>{item.category[0]}</Text>
                     </VStack>
                 </Box>
-            </Stack>
+            </Box>
             <Divider/>
         </TouchableOpacity>
     );

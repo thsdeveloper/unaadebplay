@@ -1,7 +1,10 @@
-import {HStack, Avatar, VStack, Text, Box, Spacer, IInputProps} from 'native-base'
 import {ReponseUser} from "../services/auth";
 import {useEffect, useState} from "react";
 import {getImageData} from "../utils/directus";
+import {VStack} from "@/components/ui/vstack";
+import {HStack} from "@/components/ui/hstack";
+import {Box} from "@/components/ui/box";
+import {Avatar} from "@/components/Avatar";
 
 type Props = {
     user?: ReponseUser;
@@ -40,7 +43,6 @@ export function ItemListUser({user}: Props) {
                         {user.email}
                     </Text>
                 </VStack>
-                <Spacer/>
                 <Text fontSize="xs" _dark={{
                     color: "warmGray.50"
                 }} color="coolGray.800" alignSelf="flex-start">

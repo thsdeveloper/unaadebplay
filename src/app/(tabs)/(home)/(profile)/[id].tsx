@@ -1,15 +1,18 @@
 import React, {useEffect, useState} from 'react';
-import {Box, VStack, Text, HStack, Center, ScrollView} from 'native-base';
 import {getUser} from "@/services/user";
 import {UserTypes} from "@/types/UserTypes";
 import {Avatar} from "@/components/Avatar";
-import {TouchableOpacity} from "react-native";
+import {ScrollView, TouchableOpacity} from "react-native";
 import {LoadingLottier} from "@/components/LoadingLottier";
 import {Link, useGlobalSearchParams} from "expo-router";
 import LikedIcon from "@/components/LikedIcon";
 import colors from "@/constants/colors";
 import SectionInfo from "@/components/SectionInfo";
 import {Feather} from "@expo/vector-icons";
+import {Box} from "@/components/ui/box";
+import {VStack} from "@/components/ui/vstack";
+import {HStack} from "@/components/ui/hstack";
+import {Center} from "@/components/ui/center";
 
 
 export default function UserProfile({route}: any) {

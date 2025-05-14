@@ -1,4 +1,3 @@
-import {Text, Icon, Box, Flex, Button, VStack, HStack, Divider} from 'native-base'
 import {useAuth} from "@/contexts/AuthContext";
 import {relativeTime} from "@/utils/directus";
 import {AntDesign, FontAwesome5} from "@expo/vector-icons";
@@ -11,6 +10,13 @@ import colors from "@/constants/colors";
 import AlertContext from "@/contexts/AlertContext";
 import {updateUserMe} from "@/services/user";
 import {Href, Link, useNavigation} from "expo-router";
+import {HStack} from "@/components/ui/hstack";
+import {Box} from "@/components/ui/box";
+import {Icon} from "@/components/ui/icon";
+import {VStack} from "@/components/ui/vstack";
+import {Button} from "@/components/ui/button";
+import {Divider} from "@/components/ui/divider";
+import {Text} from "@/components/ui/text";
 
 export function HeaderDrawer() {
     const {logout, user} = useAuth()
@@ -86,7 +92,7 @@ export function HeaderDrawer() {
                             <Box>
                                 <Link href={'/(tabs)/(settings)'} asChild>
                                     <TouchableOpacity>
-                                        <Flex alignItems={'center'} direction="row" borderBottomWidth={'2'}
+                                        <Box alignItems={'center'} direction="row" borderBottomWidth={'2'}
                                               borderBottomColor={'lightBlue.900'}>
                                             <Box p={4}>
                                                 <Avatar userAvatarID={user?.avatar} height={50} width={50}/>
@@ -97,7 +103,7 @@ export function HeaderDrawer() {
                                                 <Text color={"text.400"} fontSize={'xs'}>Ultimo
                                                     acesso: {relativeTime(user?.last_access)}</Text>
                                             </Box>
-                                        </Flex>
+                                        </Box>
                                     </TouchableOpacity>
                                 </Link>
                             </Box>

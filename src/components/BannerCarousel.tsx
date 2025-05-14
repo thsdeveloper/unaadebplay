@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Dimensions, StyleSheet} from 'react-native';
-import {Box, FlatList, Pressable, Skeleton, Text} from 'native-base';
+import {Dimensions, FlatList, StyleSheet} from 'react-native';
 import {LinearGradient} from 'expo-linear-gradient';
 
 import {BannerTypes} from '@/types/BannerTypes';
@@ -8,6 +7,9 @@ import {Image} from '@/components/Image';
 import PaginationDots from "@/components/PaginationDots";
 import {getItems} from "@/services/items";
 import {Link} from "expo-router";
+import {Pressable} from "@/components/ui/pressable";
+import {Box} from "@/components/ui/box";
+import {Skeleton} from "@/components/ui/skeleton";
 
 
 const {width: screenWidth} = Dimensions.get('window');

@@ -1,18 +1,16 @@
 import React, {useContext, useState, useEffect} from "react";
-import {TouchableOpacity, Animated} from "react-native";
-import {Box, Text, Stack, VStack, HStack} from "native-base";
+import {Animated} from "react-native";
 import BannerCarousel from "@/components/BannerCarousel";
 import TranslationContext from "@/contexts/TranslationContext";
 import colors from "@/constants/colors";
 import BannerCarouselUsers from "@/components/BannerCarouselUsers";
-import {Feather} from '@expo/vector-icons';
 import AvatarGroup from "@/components/AvatarGroup";
 import InfoCongressCarousel from "@/components/InfoCongressCarousel";
-// import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
-import {Link} from "expo-router";
 import {useNavigation} from "expo-router";
 import {BlurView} from 'expo-blur';
 import SectionInfo from "@/components/SectionInfo";
+import {Box} from "@/components/ui/box";
+import {Text} from "@/components/ui/text";
 
 export default function HomeTabs() {
     const [refreshing, setRefreshing] = useState(false);
@@ -51,40 +49,40 @@ export default function HomeTabs() {
                 </Box>
             </Box>
             <Box pb={4}>
-                <Stack space={"sm"} m={2} direction={"row"} alignItems={"center"}>
+                <Box space={"sm"} m={2} direction={"row"} alignItems={"center"}>
                     <Text fontWeight={'bold'} fontSize={'lg'} color={colors.dark}>
                         {t('text_section_banner')}
                     </Text>
-                </Stack>
+                </Box>
                 <BannerCarousel refreshing={refreshing} setRefreshing={setRefreshing}/>
             </Box>
             <Box>
-                <Stack m={2} space={"sm"} direction={"row"} alignItems={"center"}>
+                <Box m={2} space={"sm"} direction={"row"} alignItems={"center"}>
                     <Text fontWeight={'bold'} fontSize={'lg'} color={colors.dark}>
                         {t('title_coordenation_geral')}
                     </Text>
-                </Stack>
+                </Box>
                 <Box>
                     <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing} idRole={'a4c63b39-f3e8-471a-9ef8-7550b09c950b'}/>
                 </Box>
             </Box>
             <Box>
-                <Stack m={2} space={"sm"} direction={"row"} alignItems={"center"}>
+                <Box m={2} space={"sm"} direction={"row"} alignItems={"center"}>
                     <Text fontWeight={'bold'} fontSize={'lg'} color={colors.dark}>
                         {t('text_section_diretoria')}
                     </Text>
-                </Stack>
+                </Box>
                 <Box>
                     <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing} idRole={'fb948a78-4c3e-408e-b712-327eec70ad54'}/>
                 </Box>
             </Box>
 
             <Box pb={2}>
-                <Stack m={2} space={"sm"} direction={"row"} alignItems={"center"}>
+                <Box m={2} space={"sm"} direction={"row"} alignItems={"center"}>
                     <Text fontWeight={'bold'} fontSize={'lg'} color={colors.dark}>
                         {t('text_pr_coodenadores')}
                     </Text>
-                </Stack>
+                </Box>
                 <Box>
                     <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing} idRole={'d70cd26d-07cb-4cff-9524-df3276c4f9cc'}/>
                 </Box>

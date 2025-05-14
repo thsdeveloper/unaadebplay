@@ -1,6 +1,5 @@
 import React, {useContext, useEffect, useRef, useState} from 'react';
 import {Dimensions, TouchableOpacity, SafeAreaView, Platform} from 'react-native';
-import {Text, Box, Heading} from 'native-base';
 import {Link, useNavigation} from "expo-router";
 import colors from "@/constants/colors";
 import {LinearGradient} from 'expo-linear-gradient';
@@ -14,6 +13,8 @@ import Animated, {useAnimatedStyle, useSharedValue, withSpring} from 'react-nati
 import AlertContext from "@/contexts/AlertContext";
 import {Image} from '@/components/Image'
 import {handleErrors} from "@/utils/directus";
+import {Box} from "@/components/ui/box";
+import {Heading} from "@/components/ui/heading";
 
 const windowWidth = Dimensions.get('window').width;
 

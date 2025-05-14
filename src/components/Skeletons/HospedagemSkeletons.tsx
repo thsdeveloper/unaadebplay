@@ -1,5 +1,6 @@
 import React from 'react';
-import {Skeleton, VStack, HStack, Box} from 'native-base';
+import {VStack} from "@/components/ui/vstack";
+import {Skeleton} from "@/components/ui/skeleton";
 
 export function HospedagemSkeleton() {
     return (

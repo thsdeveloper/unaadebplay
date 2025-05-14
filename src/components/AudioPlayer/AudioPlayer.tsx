@@ -6,9 +6,10 @@ import {RepertoriesTypes} from '@/types/RepertoriesTypes';
 import {useAudioPlayer} from '@/hooks/useAudioPlayer';
 import CollapsedView from "@/components/AudioPlayer/CollapsedView";
 import {getAssetURI} from "@/services/files";
-import {Actionsheet, useDisclose} from "native-base";
 import {useRepertorieContext} from "@/contexts/AudioPlayerContext";
 import ExpandedView from "@/components/AudioPlayer/ExpandedView";
+import {useDisclose} from "@gluestack-ui/hooks";
+import {Actionsheet} from "@/components/ui/select/select-actionsheet";
 
 const AudioPlayer = () => {
     const {repertorieID, setRepertorieID} = useRepertorieContext();

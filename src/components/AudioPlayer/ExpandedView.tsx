@@ -1,13 +1,10 @@
-import React, {useContext} from 'react';
-import {ImageBackground, useWindowDimensions} from 'react-native';
-import {Box, ScrollView, Text, VStack, IconButton, HStack, Heading} from 'native-base';
-import {AntDesign, MaterialIcons} from '@expo/vector-icons';
+import {ScrollView, useWindowDimensions} from 'react-native';
 import PlayerControls from './PlayerControls';
-import {LinearGradient} from 'expo-linear-gradient';
-import ConfigContext from "@/contexts/ConfigContext";
 import {RepertoriesTypes} from "@/types/RepertoriesTypes";
 import RenderHtml from "react-native-render-html";
-import {Image} from "@/components/Image";
+import {Box} from "@/components/ui/box";
+import {VStack} from "@/components/ui/vstack";
+import {Heading} from "@/components/ui/heading";
 
 interface ExpandedViewProps {
     album: RepertoriesTypes | null;

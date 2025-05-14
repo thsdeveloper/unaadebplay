@@ -1,9 +1,9 @@
 import {Dimensions, StyleSheet} from 'react-native';
-import {Box, FlatList, Text} from "native-base";
 import {Link} from "expo-router";
-import { Button } from "native-base";
 import colors from "@/constants/colors";
 import {Feather} from "@expo/vector-icons";
+import {Box} from "@/components/ui/box";
+import {Button} from "@/components/ui/button";
 
 const windowWidth = Dimensions.get('window').width;
 

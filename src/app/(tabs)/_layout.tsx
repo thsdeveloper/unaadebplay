@@ -6,7 +6,7 @@ import {Redirect} from "expo-router";
 import {View} from "react-native";
 import AudioPlayer from "@/components/AudioPlayer/AudioPlayer";
 import {BottomTabBar} from "@react-navigation/bottom-tabs";
-import {Box} from "native-base";
+import {Box} from "@/components/ui/box";
 
 export default function TabsLayout() {
     const {signed, loading} = useAuth();

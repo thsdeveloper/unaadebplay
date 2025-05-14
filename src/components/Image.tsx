@@ -1,7 +1,8 @@
-import {Skeleton, Box} from 'native-base';
 import React, {useContext, useEffect, useState} from 'react';
 import {Image as ImageRN, ImageProps} from "react-native";
 import ConfigContext from "../contexts/ConfigContext";
+import {Skeleton} from "@/components/ui/skeleton";
+import {Box} from "@/components/ui/box";
 
 type Props = Omit<ImageProps, 'source'> & {
     assetId: string | undefined;

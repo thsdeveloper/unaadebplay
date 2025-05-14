@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {authentication, createDirectus, rest} from '@directus/sdk';
 
-const url = 'https://back-unaadeb.onrender.com'
+const url = 'https://directus-production-8bae.up.railway.app'
 
 class LocalStorage {
     async get() {

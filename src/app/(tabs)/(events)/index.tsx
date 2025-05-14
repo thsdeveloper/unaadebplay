@@ -1,6 +1,5 @@
 import React, {useState, useEffect, useContext} from 'react';
-import {RefreshControl, TouchableOpacity} from 'react-native';
-import {Box, Text, VStack, Divider, Spinner, Stack, SectionList, HStack} from 'native-base';
+import {RefreshControl, SectionList, TouchableOpacity} from 'react-native';
 import {getItems} from '@/services/items';
 import {Image} from "@/components/Image";
 import TranslationContext from "@/contexts/TranslationContext";
@@ -8,9 +7,15 @@ import {MaterialIcons} from '@expo/vector-icons';
 import colors from "@/constants/colors";
 import SkeletonItem from "@/components/SkeletonItem";
 import {EventsTypes} from "@/types/EventsTypes";
-import {Link} from "expo-router";
+import {Link, Stack} from "expo-router";
 import AlertContext from "@/contexts/AlertContext";
 import {handleErrors} from "@/utils/directus";
+import {HStack} from "@/components/ui/hstack";
+import {Box} from "@/components/ui/box";
+import {VStack} from "@/components/ui/vstack";
+import {Spinner} from "@/components/ui/spinner";
+import {Text} from "@/components/ui/text";
+import {Divider} from "@/components/ui/divider";
 
 const EventPage = () => {
     const [events, setEvents] = useState<Array<{ title: string, data: EventsTypes[] }>>([]);

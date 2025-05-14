@@ -1,9 +1,11 @@
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import {Icon, Pressable, Text, VStack} from "native-base";
 import {Entypo} from "@expo/vector-icons";
 import {useContext, useState} from "react";
 import * as Linking from 'expo-linking';
 import AlertContext from "@/contexts/AlertContext";
+import {VStack} from "@/components/ui/vstack";
+import {Pressable} from "react-native";
+import {Icon} from "@/components/ui/icon";
 
 interface PropsLikedIcon{
     color: string

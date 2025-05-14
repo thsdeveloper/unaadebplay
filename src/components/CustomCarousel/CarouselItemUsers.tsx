@@ -1,12 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {Dimensions} from 'react-native';
+import {Dimensions, FlatList} from 'react-native';
 import {GlobalQueryParams} from "@/types/GlobalQueryParamsTypes";
-import {Box, FlatList, Text} from "native-base";
 import colors from "@/constants/colors";
 import {Avatar} from "@/components/Avatar";
 import {UserTypes} from "@/types/UserTypes";
 import {getUsers} from "@/services/user";
 import {Link} from "expo-router";
+import {Box} from "@/components/ui/box";
 
 const windowWidth = Dimensions.get('window').width;
 
