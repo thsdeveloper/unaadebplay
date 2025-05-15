@@ -1,4 +1,3 @@
-// src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { signOut, signIn, requestPassword, requestResetPassword, checkAndRefreshToken, refreshAuthToken } from "@/services/auth";
@@ -167,7 +166,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     async function logout() {
         try {
             await setUser(null);
-            await signOut();
+            // await signOut();
             router.replace('/(auth)/sign-in');
         } catch (error) {
             const message = handleErrors(error.errors);

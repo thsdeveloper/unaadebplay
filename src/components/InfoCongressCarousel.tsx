@@ -15,6 +15,7 @@ import {Image} from '@/components/Image'
 import {handleErrors} from "@/utils/directus";
 import {Box} from "@/components/ui/box";
 import {Heading} from "@/components/ui/heading";
+import {Text} from "@/components/ui/text"
 
 const windowWidth = Dimensions.get('window').width;
 
@@ -83,8 +84,8 @@ export default function InfoCongressCarousel() {
         return (
             <Link href={`/(tabs)/(home)/(congresso)/${item.id}`} asChild>
                 <TouchableOpacity activeOpacity={0.9}>
-                    <Box flex={1} justifyContent={"center"} alignItems={"center"}>
-                        <Box shadow={6} pt={paddingTop} pb={4}>
+                    <Box>
+                        <Box>
                             <Animated.View style={animatedStyle}>
                                 <Image
                                     borderRadius={10}
@@ -95,17 +96,15 @@ export default function InfoCongressCarousel() {
                                 />
                             </Animated.View>
                         </Box>
-                        <Text color={colors.text}>{item.name}</Text>
+                        <Text className={'text-red-500'}>{item.name}</Text>
                     </Box>
-                    <Box alignItems={"center"} p={0}>
+                    <Box className={'text-center'}>
                         <Feather name="chevron-down" size={30} color={colors.light}/>
                     </Box>
-                    <Box alignItems={"center"} pb={4}>
-                        <Box alignItems={"center"} pb={4}>
-                            <Heading color={colors.light}
-                                     fontWeight={"extrabold"}>{item?.theme}</Heading>
-                            <Heading color={colors.light}
-                                     fontSize={14}>{item?.description}</Heading>
+                    <Box>
+                        <Box>
+                            <Heading>{item?.theme}</Heading>
+                            <Heading>{item?.description}</Heading>
                         </Box>
                     </Box>
                 </TouchableOpacity>
@@ -119,7 +118,7 @@ export default function InfoCongressCarousel() {
             style={{flex: 1}}>
             <SafeAreaView accessibilityViewIsModal={false}>
                 {isLoading ? (
-                    <Box alignItems={"center"} justifyContent={"center"} flex={1} shadow={6} pt={2}>
+                    <Box>
                         <CongressItemSkeletons windowWidth={windowWidth} />
                     </Box>
                 ) : (

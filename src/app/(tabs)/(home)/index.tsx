@@ -43,19 +43,19 @@ export default function HomeTabs() {
             {useNativeDriver: false}
         )} scrollEventThrottle={16} bounces={false}>
 
-            <Box flex={1} justifyContent="center">
-                <Box>
-                    <InfoCongressCarousel/>
-                </Box>
+            <Box>
+                <InfoCongressCarousel/>
             </Box>
-            <Box pb={4}>
-                <Box space={"sm"} m={2} direction={"row"} alignItems={"center"}>
-                    <Text fontWeight={'bold'} fontSize={'lg'} color={colors.dark}>
+
+            <Box>
+                <Box>
+                    <Text>
                         {t('text_section_banner')}
                     </Text>
                 </Box>
                 <BannerCarousel refreshing={refreshing} setRefreshing={setRefreshing}/>
             </Box>
+
             <Box>
                 <Box m={2} space={"sm"} direction={"row"} alignItems={"center"}>
                     <Text fontWeight={'bold'} fontSize={'lg'} color={colors.dark}>
@@ -63,9 +63,11 @@ export default function HomeTabs() {
                     </Text>
                 </Box>
                 <Box>
-                    <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing} idRole={'a4c63b39-f3e8-471a-9ef8-7550b09c950b'}/>
+                    <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing}
+                                         idRole={'a4c63b39-f3e8-471a-9ef8-7550b09c950b'}/>
                 </Box>
             </Box>
+
             <Box>
                 <Box m={2} space={"sm"} direction={"row"} alignItems={"center"}>
                     <Text fontWeight={'bold'} fontSize={'lg'} color={colors.dark}>
@@ -73,7 +75,8 @@ export default function HomeTabs() {
                     </Text>
                 </Box>
                 <Box>
-                    <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing} idRole={'fb948a78-4c3e-408e-b712-327eec70ad54'}/>
+                    <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing}
+                                         idRole={'fb948a78-4c3e-408e-b712-327eec70ad54'}/>
                 </Box>
             </Box>
 
@@ -84,7 +87,8 @@ export default function HomeTabs() {
                     </Text>
                 </Box>
                 <Box>
-                    <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing} idRole={'d70cd26d-07cb-4cff-9524-df3276c4f9cc'}/>
+                    <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing}
+                                         idRole={'d70cd26d-07cb-4cff-9524-df3276c4f9cc'}/>
                 </Box>
             </Box>
             <Box px={2} pb={2} pt={2}>

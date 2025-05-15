@@ -2,7 +2,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { authentication, createDirectus, rest, staticToken, refresh } from '@directus/sdk';
 
-const url = 'https://directus-production-8bae.up.railway.app';
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
 // Classe de armazenamento personalizada que emite eventos quando os tokens mudam
 class EnhancedLocalStorage {
@@ -67,7 +67,7 @@ class EnhancedLocalStorage {
 const storage = new EnhancedLocalStorage();
 
 // Criar o cliente Directus com autenticação
-const directusClient = createDirectus(url)
+const directusClient = createDirectus(apiUrl)
     .with(authentication('json', { storage }))
     .with(rest());
 

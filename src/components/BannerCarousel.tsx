@@ -10,6 +10,7 @@ import {Link} from "expo-router";
 import {Pressable} from "@/components/ui/pressable";
 import {Box} from "@/components/ui/box";
 import {Skeleton} from "@/components/ui/skeleton";
+import {Text} from "@/components/ui/text";
 
 
 const {width: screenWidth} = Dimensions.get('window');

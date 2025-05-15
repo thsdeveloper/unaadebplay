@@ -1,4 +1,3 @@
-// src/services/auth.ts
 import { passwordRequest, passwordReset, readMe, refresh } from "@directus/sdk";
 import directusClient, { storage } from "./api";
 import {UserTypes} from "@/types/UserTypes";
