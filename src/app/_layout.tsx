@@ -14,6 +14,7 @@ import {Slot} from 'expo-router'
 import AppUpdateManager from "@/components/AppUpdateManager";
 import {StatusBar} from "expo-status-bar";
 import {useApiErrorHandler} from "@/utils/apiErrorHandler";
+import colors from "tailwindcss/colors";
 
 export default function RootLayout() {
     const [appIsReady, setAppIsReady] = useState(false);
@@ -53,8 +54,7 @@ export default function RootLayout() {
 
     return (
         <GluestackUIProvider mode="light">
-                <StatusBar barStyle="light-content" translucent={true}/>
-                <AlertProvider>
+            <AlertProvider>
                     <AuthProvider>
                         <ConfigProvider value={config}>
                             <TranslationProvider>

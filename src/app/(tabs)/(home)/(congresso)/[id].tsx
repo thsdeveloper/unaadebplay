@@ -21,6 +21,7 @@ import {Box} from "@/components/ui/box";
 import {HStack} from "@/components/ui/hstack";
 import {Heading} from "@/components/ui/heading";
 import {Button} from "@/components/ui/button";
+import {Text} from "@/components/ui/text";
 
 export default function CongressoPage() {
     const [congress, setCongress] = useState<CongressType | null>(null);
@@ -167,7 +168,7 @@ export default function CongressoPage() {
                                 repertório {congress.name}</Heading>
                         </HStack>
                     </Box>
-                    <CarouselItemRepertories idCongresso={congress.id}/>
+                    {/*<CarouselItemRepertories idCongresso={congress.id}/>*/}
                 </Box>
 
                 <Box>
@@ -176,7 +177,7 @@ export default function CongressoPage() {
                             <Feather name="package" size={20} color={colors.light}/>
                             <Heading size={"md"} color={colors.light}>Mais {congress.theme}</Heading>
                         </HStack>
-                        <CarouselItemCongress/>
+                        {/*<CarouselItemCongress/>*/}
                     </Box>
                 </Box>
 
@@ -187,7 +188,7 @@ export default function CongressoPage() {
                             <Heading size={"md"} color={colors.light}>Cantores e preletores</Heading>
                         </HStack>
                     </Box>
-                    <CarouselItemUsers convidados={convidados}/>
+                    {/*<CarouselItemUsers convidados={convidados}/>*/}
                 </Box>
             </ScrollView>
         </LinearGradient>

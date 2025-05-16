@@ -4,13 +4,12 @@ import {Feather} from "@expo/vector-icons";
 import {Avatar} from "@/components/Avatar";
 import {useAuth} from "@/contexts/AuthContext";
 import colors from "@/constants/colors";
-import {Platform, TouchableOpacity} from "react-native";
+import {TouchableOpacity} from "react-native";
 import {Box} from "@/components/ui/box";
 
 export default function HomeLayout() {
     const {user} = useAuth()
-    const padding = Platform.OS === 'android' ? 4 : 0
-
+    console.log('user', user)
     return (
         <>
             <Stack screenOptions={{
@@ -20,20 +19,27 @@ export default function HomeLayout() {
                 <Stack.Screen name={'index'} options={{
                     headerTransparent: true,
                     headerTintColor: colors.white,
-                    title: `Olá ${user?.first_name}`,
+                    title: `Olá ${user?.first_name}, bem-vindo`, // Remover título para estilo Netflix
+                    headerShadowVisible: false,
                     headerRight: () => (
-                        <Link href={'/users'} asChild>
-                            <TouchableOpacity activeOpacity={0.7} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-                                <Feather name="users" size={24} color={colors.white}/>
-                            </TouchableOpacity>
-                        </Link>
-                    ),
-                    headerLeft: () => (
                         <Box>
-                            <Link href={'/modal'}>
-                                <Avatar userAvatarID={user?.avatar} name={user?.first_name} height={28} width={28}/>
+                            <Link href={'/users'} asChild>
+                                <TouchableOpacity activeOpacity={0.7}
+                                                  hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                                    <Feather name="users" size={20} color={colors.white}/>
+                                </TouchableOpacity>
                             </Link>
                         </Box>
+                    ),
+                    headerLeft: () => (
+                    <Box>
+                        <Link href={'/modal'}>
+                            <Avatar
+                                userAvatarID={user?.avatar}
+                                name={user?.first_name}
+                                size={'sm'}/>
+                        </Link>
+                    </Box>
                     )
                 }}/>
                 <Stack.Screen

@@ -1,11 +1,12 @@
-import {useContext, useEffect, useState} from "react";
+import React, { useContext } from "react";
 import ConfigContext from "@/contexts/ConfigContext";
 import {
-    Avatar as ComponentAvatar,
+    Avatar as GluestackAvatar,
     AvatarBadge,
     AvatarFallbackText,
     AvatarImage,
 } from "@/components/ui/avatar";
+import {useAuth} from "@/contexts/AuthContext";
 
 type AvatarProps = {
     userAvatarID?: string;
@@ -13,42 +14,68 @@ type AvatarProps = {
     height?: number | string;
     name?: string;
     isOnline?: boolean;
+    size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
     [key: string]: any;
 };
 
 export function Avatar({
                            userAvatarID,
-                           width = 40,
-                           height = 40,
-                           name = "",
-                           isOnline = true,
+                           width,
+                           height,
+                           name,
+                           isOnline,
+                           size = "md",
                            ...rest
                        }: AvatarProps) {
-    const {url_api, avatar_default} = useContext(ConfigContext);
-    const defaultImage = `${url_api}/assets/${avatar_default}?fit=cover&timestamp=${new Date().getTime()}`;
-    const [imageSrc, setImageSrc] = useState<string>(defaultImage);
+    // Usar ConfigContext para garantir que temos a URL correta
+    const config = useContext(ConfigContext);
+    const {user} = useAuth()
 
-    useEffect(() => {
-        const userImage = userAvatarID
-            ? `${url_api}/assets/${userAvatarID}?fit=cover&timestamp=${new Date().getTime()}`
-            : defaultImage;
-        setImageSrc(userImage);
-    }, [userAvatarID, avatar_default, url_api]);
+    // Construir a URL de forma mais robusta
+    const avatarUrl = React.useMemo(() => {
+        if (!userAvatarID || !config.url_api) return null;
+        return `${config.url_api}/assets/${userAvatarID}?fit=cover&timestamp=${Date.now()}`;
+    }, [userAvatarID, config.url_api]);
+
+    // Usar um objeto de estilo customizado se width/height forem fornecidos
+    const customStyle = React.useMemo(() => {
+        if (!width && !height) return null;
+        return {
+            width: width,
+            height: height || width, // Se apenas width for fornecido, use-o para height também
+        };
+    }, [width, height]);
+
+    console.log('avatarUrl', avatarUrl)
 
     return (
-        <ComponentAvatar
-            className={'bg-indigo-600'}
-            size="xs"
+        <GluestackAvatar
+            size={size}
+            bgColor="$indigo600"
             {...rest}
+            style={[rest.style, customStyle]}
         >
-            {/* Fallback text que aparece se a imagem falhar ao carregar */}
-            <AvatarFallbackText className="text-white">{name}</AvatarFallbackText>
-            <AvatarImage source={{uri: imageSrc}} />
+            <AvatarFallbackText>
+                {user?.first_name}
+            </AvatarFallbackText>
 
-            {/* Badge para indicar status online (opcional) */}
-            {isOnline !== undefined && (
-                <AvatarBadge className={isOnline ? "bg-green-500" : "bg-gray-400"}/>
+            {avatarUrl && (
+                <AvatarImage
+                    source={{ uri: avatarUrl }}
+                    alt={`${name || 'User'}'s avatar`}
+                />
             )}
-        </ComponentAvatar>
+
+            {isOnline !== undefined && (
+                <AvatarBadge
+                    bgColor={isOnline ? "$green500" : "$gray400"}
+                    borderColor="$white"
+                    borderWidth={1}
+                />
+            )}
+        </GluestackAvatar>
     );
 }
+
+// Reexportando o AvatarGroup
+export { AvatarGroup } from "@/components/ui/avatar";
