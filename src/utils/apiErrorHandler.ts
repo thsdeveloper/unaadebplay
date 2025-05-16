@@ -1,7 +1,9 @@
-// src/utils/apiErrorHandler.ts
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Platform } from 'react-native';
+import {useTokenRefresh} from "@/contexts/TokenRefreshContext";
+import {useNetwork} from "@/contexts/NetworkContext";
+import {retryWithBackoff} from "@/utils/retry";
 
 // Função para verificar se o erro é de token expirado
 function isTokenExpiredError(error: any): boolean {
@@ -15,21 +17,41 @@ function isTokenExpiredError(error: any): boolean {
 // Hook para adicionar tratamento global de erros de API
 export function useApiErrorHandler() {
     const { checkSession, logout } = useAuth();
+    const { isConnected } = useNetwork();
+    const { showRefreshIndicator, hideRefreshIndicator } = useTokenRefresh();
 
     useEffect(() => {
         // Função para tratar erros de API
         const handleApiError = async (error: any) => {
+            // Se estiver offline, não tente renovar token
+            if (!isConnected) {
+                console.log('Dispositivo offline, ignorando erros de autenticação');
+                return;
+            }
+
             // Verificar se é um erro de token expirado
             if (isTokenExpiredError(error)) {
                 console.log('Token expirado detectado, tentando renovar...');
 
-                // Verificar se o refresh token ainda é válido
-                const isSessionValid = await checkSession();
+                // Mostrar indicador visual
+                showRefreshIndicator();
 
-                // Se não for possível renovar o token, fazer logout
-                if (!isSessionValid) {
+                try {
+                    // Tentativa com backoff exponencial
+                    await retryWithBackoff(async () => {
+                        const isSessionValid = await checkSession();
+                        if (!isSessionValid) {
+                            throw new Error('Falha ao renovar sessão');
+                        }
+                        return true;
+                    }, 2);  // Máximo de 2 tentativas
+
+                    console.log('Token renovado com sucesso');
+                } catch (refreshError) {
                     console.log('Não foi possível renovar o token, fazendo logout...');
                     await logout();
+                } finally {
+                    hideRefreshIndicator();
                 }
             }
         };

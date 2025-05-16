@@ -27,7 +27,8 @@
         }
       ],
       "expo-router",
-      "expo-asset"
+      "expo-asset",
+      "expo-secure-store"
     ],
     "assetBundlePatterns": [
       "**/*"

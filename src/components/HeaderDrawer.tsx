@@ -121,10 +121,10 @@ export function HeaderDrawer() {
                     </Box>
 
 
-                    <Box p={4} width={'full'}>
-                        <Button colorScheme={'danger'} leftIcon={
-                            <Icon as={AntDesign} name="logout" size="sm"/>
-                        } onPress={logout}>Sair da aplicação</Button>
+                    <Box>
+                        <Button onPress={logout}>
+                            <Text>Sair da aplicação</Text>
+                        </Button>
                         <Divider my={4}/>
                         <Button variant={"outline"} colorScheme={'danger'}
                                 leftIcon={<Icon as={AntDesign} name="delete" size="sm"/>} onPress={handleDeleteAcount}>Excluir
