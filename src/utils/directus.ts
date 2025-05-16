@@ -11,13 +11,37 @@ export function relativeTime(dateTimeString: moment.MomentInput) {
     return moment(dateTimeString).startOf('hour').fromNow();
 }
 
-export function handleErrors(errors: any[]): string {
-    if (errors.length > 0) {
+// Substitua a função handleErrors em src/utils/directus.ts
+export function handleErrors(errors: any): string {
+    // Verificar se errors é undefined ou null
+    if (!errors) {
+        return 'Ocorreu um erro desconhecido.';
+    }
+
+    // Se errors é uma string, retornar diretamente
+    if (typeof errors === 'string') {
+        return errors;
+    }
+
+    // Se errors é um objeto Error simples
+    if (errors instanceof Error) {
+        return errors.message;
+    }
+
+    // Se errors é um array (formato esperado do Directus)
+    if (Array.isArray(errors) && errors.length > 0) {
         const firstError = errors[0];
         const code = firstError.extensions?.code || 'UNKNOWN';
-        return ERROR_MESSAGES[code] || 'Ocorreu um erro desconhecido.';
+        return ERROR_MESSAGES[code] || firstError.message || 'Ocorreu um erro desconhecido.';
     }
-    return 'Nenhum erro especificado.';
+
+    // Se errors é um objeto com propriedade message
+    if (typeof errors === 'object' && errors.message) {
+        return errors.message;
+    }
+
+    // Fallback
+    return 'Ocorreu um erro desconhecido.';
 }
 
 export function formatPhoneNumber(phoneNumber) {

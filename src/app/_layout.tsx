@@ -13,14 +13,14 @@ import FlashMessage from "react-native-flash-message";
 import {Slot} from 'expo-router'
 import AppUpdateManager from "@/components/AppUpdateManager";
 import {StatusBar} from "expo-status-bar";
-import { useApiErrorHandler } from '@/utils/apiErrorHandler';
+import {useApiErrorHandler} from "@/utils/apiErrorHandler";
 
 export default function RootLayout() {
-    // Registrar o tratador de erros de API
-    useApiErrorHandler();
-
     const [appIsReady, setAppIsReady] = useState(false);
     const [config, setConfig] = useState({});
+
+    // Registrar o tratador de erros de API
+    useApiErrorHandler();
 
     useEffect(() => {
         async function prepare() {

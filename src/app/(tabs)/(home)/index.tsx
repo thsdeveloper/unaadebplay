@@ -1,5 +1,5 @@
 import React, {useContext, useState, useEffect} from "react";
-import {Animated} from "react-native";
+import {Alert, Animated, TouchableOpacity} from "react-native";
 import BannerCarousel from "@/components/BannerCarousel";
 import TranslationContext from "@/contexts/TranslationContext";
 import colors from "@/constants/colors";
@@ -11,12 +11,23 @@ import {BlurView} from 'expo-blur';
 import SectionInfo from "@/components/SectionInfo";
 import {Box} from "@/components/ui/box";
 import {Text} from "@/components/ui/text";
+import {useBiometricAuth} from "@/hooks/useBiometricAuth";
 
 export default function HomeTabs() {
     const [refreshing, setRefreshing] = useState(false);
     const {t} = useContext(TranslationContext);
     const navigation = useNavigation()
     const [scrollY, setScrollY] = useState(new Animated.Value(0));
+    const {
+        isBiometricAvailable,
+        isBiometricEnabled,
+        biometricType,
+        loading: biometricLoading,
+        initialized: biometricInitialized,  // Adicione este
+        saveBiometricCredentials,
+        authenticateWithBiometrics,
+        checkBiometricAvailability  // Adicione este
+    } = useBiometricAuth();
 
 
     const headerBackgroundColor = scrollY.interpolate({
@@ -110,6 +121,24 @@ export default function HomeTabs() {
             <Box py={4} bgColor={colors.secundary2} borderTopWidth={4} borderColor={colors.darkRed}>
                 <AvatarGroup/>
             </Box>
+
+            <TouchableOpacity
+                onLongPress={() => {
+                    checkBiometricAvailability().then(() => {
+                        Alert.alert(
+                            "Status da Biometria",
+                            `Disponível: ${isBiometricAvailable ? "Sim" : "Não"}\n` +
+                            `Habilitada: ${isBiometricEnabled ? "Sim" : "Não"}\n` +
+                            `Tipo: ${biometricType}\n` +
+                            `Inicializada: ${biometricInitialized ? "Sim" : "Não"}`
+                        );
+                    });
+                }}
+                style={{ position: 'absolute', bottom: 20, right: 20, width: 40, height: 40 }}
+            >
+               <Text>THIAGO</Text>
+
+            </TouchableOpacity>
         </Animated.ScrollView>
     );
 }

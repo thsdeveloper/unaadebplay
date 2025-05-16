@@ -5,8 +5,12 @@ import {View} from "react-native";
 import AudioPlayer from "@/components/AudioPlayer/AudioPlayer";
 import {BottomTabBar} from "@react-navigation/bottom-tabs";
 import {Box} from "@/components/ui/box";
+import {useApiErrorHandler} from "@/utils/apiErrorHandler";
 
 export default function TabsLayout() {
+    // Registrar o tratador de erros de API
+    useApiErrorHandler();
+
     return (
         <View style={{flex: 1}}>
             <Tabs

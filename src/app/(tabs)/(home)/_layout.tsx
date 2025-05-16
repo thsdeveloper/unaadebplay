@@ -29,9 +29,9 @@ export default function HomeLayout() {
                         </Link>
                     ),
                     headerLeft: () => (
-                        <Box pr={padding}>
+                        <Box>
                             <Link href={'/modal'}>
-                                <Avatar userAvatarID={user?.avatar} height={28} width={28}/>
+                                <Avatar userAvatarID={user?.avatar} name={user?.first_name} height={28} width={28}/>
                             </Link>
                         </Box>
                     )
