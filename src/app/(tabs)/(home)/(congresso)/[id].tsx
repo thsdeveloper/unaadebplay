@@ -3,7 +3,7 @@ import {Link, useGlobalSearchParams, useNavigation} from "expo-router";
 import {getItem, getItems} from "@/services/items";
 import {BlurView} from "expo-blur";
 import colors from "@/constants/colors";
-import {Entypo, Feather} from "@expo/vector-icons";
+import {Feather} from "@expo/vector-icons";
 import CongressItemSkeletons from "@/components/Skeletons/CongressItemSkeletons";
 import {CongressType} from "@/types/CongressType";
 import {formatTime} from "@/utils/directus";
@@ -15,6 +15,13 @@ import AlertContext from "@/contexts/AlertContext";
 import {SubscribedHosTypes} from "@/types/SubscribedHosTypes";
 import {useAuth} from "@/contexts/AuthContext";
 import {ScrollView} from "react-native";
+import {Pressable} from "@/components/ui/pressable";
+import {Center} from "@/components/ui/center";
+import {Box} from "@/components/ui/box";
+import {HStack} from "@/components/ui/hstack";
+import {Heading} from "@/components/ui/heading";
+import {Button} from "@/components/ui/button";
+import {Text} from "@/components/ui/text";
 
 export default function CongressoPage() {
     const [congress, setCongress] = useState<CongressType | null>(null);
@@ -153,29 +160,6 @@ export default function CongressoPage() {
                         )}
                     </Box>
                 </Box>
-
-                {/*<Box px={4} mt={4}>*/}
-                {/*    <HStack>*/}
-                {/*        <HStack flex={1} space={2} justifyContent={'center'} alignItems={"center"}*/}
-                {/*                alignContent={"center"}>*/}
-                {/*            <LikedIcon color={colors.light} iconName={'heart'} title={'Curtir'}/>*/}
-                {/*        </HStack>*/}
-                {/*        <HStack flex={1} space={2} justifyContent={'center'} alignItems={"center"}*/}
-                {/*                justifyItems={"center"}>*/}
-                {/*            <Pressable onPress={() => console.log('Curtir')} alignItems={"center"}>*/}
-                {/*                <Feather name="share-2" size={30} color={colors.light}/>*/}
-                {/*                <Text color={colors.light}>Compartilhar</Text>*/}
-                {/*            </Pressable>*/}
-                {/*        </HStack>*/}
-                {/*        <HStack flex={1} space={2} justifyContent={'center'}>*/}
-                {/*            <Pressable onPress={() => console.log('Curtir')} alignItems={"center"}>*/}
-                {/*                <Feather name="youtube" size={30} color={colors.light}/>*/}
-                {/*                <Text color={colors.light}>Youtube</Text>*/}
-                {/*            </Pressable>*/}
-                {/*        </HStack>*/}
-                {/*    </HStack>*/}
-                {/*</Box>*/}
-
                 <Box>
                     <Box px={2} py={2} mt={2}>
                         <HStack alignItems={"center"} space={2}>
@@ -184,7 +168,7 @@ export default function CongressoPage() {
                                 repertório {congress.name}</Heading>
                         </HStack>
                     </Box>
-                    <CarouselItemRepertories idCongresso={congress.id}/>
+                    {/*<CarouselItemRepertories idCongresso={congress.id}/>*/}
                 </Box>
 
                 <Box>
@@ -193,7 +177,7 @@ export default function CongressoPage() {
                             <Feather name="package" size={20} color={colors.light}/>
                             <Heading size={"md"} color={colors.light}>Mais {congress.theme}</Heading>
                         </HStack>
-                        <CarouselItemCongress/>
+                        {/*<CarouselItemCongress/>*/}
                     </Box>
                 </Box>
 
@@ -204,7 +188,7 @@ export default function CongressoPage() {
                             <Heading size={"md"} color={colors.light}>Cantores e preletores</Heading>
                         </HStack>
                     </Box>
-                    <CarouselItemUsers convidados={convidados}/>
+                    {/*<CarouselItemUsers convidados={convidados}/>*/}
                 </Box>
             </ScrollView>
         </LinearGradient>

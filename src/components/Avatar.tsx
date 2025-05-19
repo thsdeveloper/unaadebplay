@@ -1,13 +1,12 @@
-import { useContext, useEffect, useState } from "react";
+import React, { useContext } from "react";
 import ConfigContext from "@/contexts/ConfigContext";
-import { Box } from "@/components/ui/box";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
-    Avatar as ComponentAvatar,
+    Avatar as GluestackAvatar,
     AvatarBadge,
     AvatarFallbackText,
     AvatarImage,
 } from "@/components/ui/avatar";
+import {useAuth} from "@/contexts/AuthContext";
 
 type AvatarProps = {
     userAvatarID?: string;
@@ -15,70 +14,68 @@ type AvatarProps = {
     height?: number | string;
     name?: string;
     isOnline?: boolean;
+    size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
     [key: string]: any;
 };
 
 export function Avatar({
                            userAvatarID,
-                           width = 40,
-                           height = 40,
-                           name = "",
+                           width,
+                           height,
+                           name,
                            isOnline,
+                           size = "md",
                            ...rest
                        }: AvatarProps) {
-    const { url_api, avatar_default } = useContext(ConfigContext);
-    const [loading, setLoading] = useState(true);
-    const defaultImage = `${url_api}/assets/${avatar_default}?fit=cover&timestamp=${new Date().getTime()}`;
-    const [imageSrc, setImageSrc] = useState<string>(defaultImage);
+    // Usar ConfigContext para garantir que temos a URL correta
+    const config = useContext(ConfigContext);
+    const {user} = useAuth()
 
-    useEffect(() => {
-        const userImage = userAvatarID
-            ? `${url_api}/assets/${userAvatarID}?fit=cover&timestamp=${new Date().getTime()}`
-            : defaultImage;
-        setImageSrc(userImage);
-    }, [userAvatarID, avatar_default, url_api]);
+    // Construir a URL de forma mais robusta
+    const avatarUrl = React.useMemo(() => {
+        if (!userAvatarID || !config.url_api) return null;
+        return `${config.url_api}/assets/${userAvatarID}?fit=cover&timestamp=${Date.now()}`;
+    }, [userAvatarID, config.url_api]);
 
-    // Função para gerar iniciais do nome (para o fallback)
-    const getInitials = (name: string) => {
-        return name
-            .split(' ')
-            .map(part => part[0])
-            .join('')
-            .toUpperCase()
-            .substring(0, 2);
-    };
+    // Usar um objeto de estilo customizado se width/height forem fornecidos
+    const customStyle = React.useMemo(() => {
+        if (!width && !height) return null;
+        return {
+            width: width,
+            height: height || width, // Se apenas width for fornecido, use-o para height também
+        };
+    }, [width, height]);
+
+    console.log('avatarUrl', avatarUrl)
 
     return (
-        <ComponentAvatar
-            size={typeof width === 'number' ? `${width}px` : width}
+        <GluestackAvatar
+            size={size}
+            bgColor="$indigo600"
             {...rest}
+            style={[rest.style, customStyle]}
         >
-            {loading && (
-                <Box className="z-10 absolute">
-                    <Skeleton
-                        className="rounded-full border-2 border-gray-400"
-                        width={width}
-                        height={height}
-                        startColor="gray.200"
-                        endColor="gray.400"
-                    />
-                </Box>
+            <AvatarFallbackText>
+                {user?.first_name}
+            </AvatarFallbackText>
+
+            {avatarUrl && (
+                <AvatarImage
+                    source={{ uri: avatarUrl }}
+                    alt={`${name || 'User'}'s avatar`}
+                />
             )}
 
-            <AvatarImage
-                source={{ uri: imageSrc }}
-                onLoadStart={() => setLoading(true)}
-                onLoad={() => setLoading(false)}
-                alt={name || "User avatar"}
-            />
-
-            {/* Fallback text que aparece se a imagem falhar ao carregar */}
-            <AvatarFallbackText>{getInitials(name)}</AvatarFallbackText>
-
-            {/* Badge para indicar status online (opcional) */}
             {isOnline !== undefined && (
-                <AvatarBadge className={isOnline ? "bg-green-500" : "bg-gray-400"} />
+                <AvatarBadge
+                    bgColor={isOnline ? "$green500" : "$gray400"}
+                    borderColor="$white"
+                    borderWidth={1}
+                />
             )}
-        </ComponentAvatar>
+        </GluestackAvatar>
     );
 }
+
+// Reexportando o AvatarGroup
+export { AvatarGroup } from "@/components/ui/avatar";

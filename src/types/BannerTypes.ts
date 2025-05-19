@@ -1,9 +1,9 @@
-import { GenericItem } from '../services/items';
+import { GenericItem } from '@/services/items';
 
 export interface BannerTypes extends GenericItem {
-    title: string | null;
     status: string | null;
     sort: number | null;
+    title: string | null;
     date_created: Date | null;
     image: string;
     description: string | null;
