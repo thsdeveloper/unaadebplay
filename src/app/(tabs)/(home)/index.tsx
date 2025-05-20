@@ -23,16 +23,15 @@ export default function HomeTabs() {
         isBiometricEnabled,
         biometricType,
         loading: biometricLoading,
-        initialized: biometricInitialized,  // Adicione este
+        initialized: biometricInitialized,
         saveBiometricCredentials,
         authenticateWithBiometrics,
-        checkBiometricAvailability  // Adicione este
+        checkBiometricAvailability
     } = useBiometricAuth();
-
 
     const headerBackgroundColor = scrollY.interpolate({
         inputRange: [0, 50, 100],
-        outputRange: ['rgba(15, 70, 82, 0)', 'rgba(15, 70, 82, 0.5)', 'rgba(15, 70, 82, 0.9)'],
+        outputRange: ['rgba(15, 70, 82, 0)', 'rgb(13,15,23)', 'rgb(13,15,23)'],
         extrapolate: 'clamp'
     });
 
@@ -65,7 +64,7 @@ export default function HomeTabs() {
                 >
                     <BlurView
                         style={{flex: 1}}
-                        intensity={20}
+                        intensity={30}
                         tint={'dark'}
                     />
                 </Animated.View>
@@ -98,16 +97,16 @@ export default function HomeTabs() {
                 <InfoCongressCarousel/>
             </Box>
 
-            <Box className="mt-[-40px] bg-white rounded-t-3xl pt-5">
+            <Box className="mt-[-40px] bg-background-dark px-4">
                 <Box>
-                    <Text>
+                    <Text className={'font-extrabold text-2xl text-white p-4'}>
                         {t('text_section_banner')}
                     </Text>
                 </Box>
                 <BannerCarousel refreshing={refreshing} setRefreshing={setRefreshing}/>
                 <Box>
-                    <Box m={2} space={"sm"} direction={"row"} alignItems={"center"}>
-                        <Text fontWeight={'bold'} fontSize={'lg'} color={colors.dark}>
+                    <Box>
+                        <Text>
                             {t('title_coordenation_geral')}
                         </Text>
                     </Box>
@@ -118,8 +117,8 @@ export default function HomeTabs() {
                 </Box>
 
                 <Box>
-                    <Box m={2} space={"sm"} direction={"row"} alignItems={"center"}>
-                        <Text fontWeight={'bold'} fontSize={'lg'} color={colors.dark}>
+                    <Box>
+                        <Text>
                             {t('text_section_diretoria')}
                         </Text>
                     </Box>

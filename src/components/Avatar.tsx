@@ -46,8 +46,6 @@ export function Avatar({
         };
     }, [width, height]);
 
-    console.log('avatarUrl', avatarUrl)
-
     return (
         <GluestackAvatar
             size={size}

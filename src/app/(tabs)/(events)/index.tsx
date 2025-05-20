@@ -1,4 +1,4 @@
-// (tabs)/(events)/index.tsx
+// (tabs)/(events)/notifications.tsx
 import React, { useState, useEffect, useContext } from 'react';
 import { RefreshControl, SectionList, Dimensions } from 'react-native';
 import { getItems } from '@/services/items';
