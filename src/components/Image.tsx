@@ -34,7 +34,6 @@ export function Image({assetId, width, height, borderRadius, ...props}: Props) {
     const handleImageLoaded = () => {
         setLoading(false);
     };
-    console.log('imageSrc', imageSrc)
 
     // Componente de carregamento
     const loadingSkeleton = (

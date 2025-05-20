@@ -15,6 +15,7 @@ import {VStack} from "@/components/ui/vstack";
 import {Box} from "@/components/ui/box";
 import {Badge} from "@/components/ui/badge";
 import {CustomInput} from "@/components/Forms/Input";
+import {Link} from "expo-router";
 
 const signUpSchema = Yup.object({
     first_name: Yup.string().trim().min(2, 'O primeiro nome deve ter pelo menos 2 caracteres').required('O campo nome é obrigatório'),
@@ -173,6 +174,11 @@ export default function Index() {
                                     onPress={handleSubmit(handleUpdateUser)}
                                     isLoading={loading}
                                     isLoadingText="Cadastrando..."/>
+                        </Box>
+                        <Box>
+                            <Link href={`/(tabs)/(settings)/notification-settings`} asChild>
+                                <Button title={'Configurar notificações'}/>
+                            </Link>
                         </Box>
                     </Box>
             </ScrollView>

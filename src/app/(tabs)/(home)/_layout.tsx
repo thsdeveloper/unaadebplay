@@ -1,11 +1,10 @@
 import {Link, Stack} from 'expo-router';
 import React from "react";
-import {Feather} from "@expo/vector-icons";
 import {Avatar} from "@/components/Avatar";
 import {useAuth} from "@/contexts/AuthContext";
 import colors from "@/constants/colors";
-import {TouchableOpacity} from "react-native";
 import {Box} from "@/components/ui/box";
+import {NotificationBell} from "@/components/NotificationBell"; // Importamos o novo componente
 
 export default function HomeLayout() {
     const {user} = useAuth()
@@ -19,40 +18,49 @@ export default function HomeLayout() {
                 <Stack.Screen name={'index'} options={{
                     headerTransparent: true,
                     headerTintColor: colors.white,
-                    title: `Olá ${user?.first_name}, bem-vindo`, // Remover título para estilo Netflix
+                    title: `Olá ${user?.first_name}, bem-vindo`,
                     headerShadowVisible: false,
                     headerRight: () => (
                         <Box>
-                            <Link href={'/users'} asChild>
-                                <TouchableOpacity activeOpacity={0.7}
-                                                  hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-                                    <Feather name="users" size={20} color={colors.white}/>
-                                </TouchableOpacity>
-                            </Link>
+                            <NotificationBell color={colors.white} />
                         </Box>
                     ),
                     headerLeft: () => (
-                    <Box>
-                        <Link href={'/modal'}>
-                            <Avatar
-                                userAvatarID={user?.avatar}
-                                name={user?.first_name}
-                                size={'sm'}/>
-                        </Link>
-                    </Box>
+                        <Box>
+                            <Link href={'/modal'}>
+                                <Avatar
+                                    userAvatarID={user?.avatar}
+                                    name={user?.first_name}
+                                    size={'sm'}/>
+                            </Link>
+                        </Box>
                     )
                 }}/>
+
+                {/* Adicionamos a tela de notificações à stack */}
+                <Stack.Screen
+                    name={'notifications'}
+                    options={{
+                        title: 'Notificações',
+                        headerStyle: {
+                            backgroundColor: colors.primary,
+                        },
+                        headerBackTitle: 'Voltar',
+                        headerTintColor: colors.white,
+                    }}
+                />
+
                 <Stack.Screen
                     name={'contribua'}
-                    options={{headerShown: false, presentation: 'modal'}
-                    }/>
+                    options={{headerShown: false, presentation: 'modal'}}
+                />
                 <Stack.Screen
                     name={'(congresso)/[id]'}
                     options={{
                         title: 'Home page de Tabs',
                         headerTransparent: false
-                    }
-                    }/>
+                    }}
+                />
                 <Stack.Screen
                     name={'(congresso)/convidado/[id]'}
                     options={
@@ -67,8 +75,8 @@ export default function HomeLayout() {
                         },
                         headerBackTitle: 'Voltar',
                         headerTintColor: colors.white,
-                    }
-                    }/>
+                    }}
+                />
                 <Stack.Screen
                     name={'(congresso)/cartao-acesso'}
                     options={{
@@ -78,8 +86,8 @@ export default function HomeLayout() {
                         },
                         headerBackTitle: 'Voltar',
                         headerTintColor: colors.white,
-                    }
-                    }/>
+                    }}
+                />
                 <Stack.Screen
                     name={'(congresso)/pagamento-hospedagem'}
                     options={{
@@ -89,8 +97,8 @@ export default function HomeLayout() {
                         },
                         headerBackTitle: 'Voltar',
                         headerTintColor: colors.white,
-                    }
-                    }/>
+                    }}
+                />
                 <Stack.Screen
                     name={'[itemId]'}
                     options={{title: 'Details itemID'}}/>
@@ -103,8 +111,8 @@ export default function HomeLayout() {
                         headerStyle: {
                             backgroundColor: colors.primary,
                         }
-                    }
-                    }/>
+                    }}
+                />
                 <Stack.Screen
                     name={'(profile)/[id]'}
                     options={{
@@ -139,6 +147,5 @@ export default function HomeLayout() {
                     options={{title: 'Repertórios', presentation: 'modal'}}/>
             </Stack>
         </>
-
     );
 }

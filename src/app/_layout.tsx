@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import "../../global.css";
-import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
+import {GluestackUIProvider} from "@/components/ui/gluestack-ui-provider";
 import {AuthProvider} from '@/contexts/AuthContext';
 import {AlertProvider} from "@/contexts/AlertContext";
 import 'react-native-gesture-handler';
@@ -12,9 +12,9 @@ import {getSettings} from "@/services/settings";
 import FlashMessage from "react-native-flash-message";
 import {Slot} from 'expo-router'
 import AppUpdateManager from "@/components/AppUpdateManager";
-import {StatusBar} from "expo-status-bar";
 import {useApiErrorHandler} from "@/utils/apiErrorHandler";
-import colors from "tailwindcss/colors";
+import {NotificationProvider} from "@/contexts/NotificationContext";
+import {NotificationToast} from "@/components/NotificationToast";
 
 export default function RootLayout() {
     const [appIsReady, setAppIsReady] = useState(false);
@@ -39,7 +39,7 @@ export default function RootLayout() {
             }
         }
 
-        prepare();
+        prepare();''
     }, []);
 
     useEffect(() => {
@@ -55,18 +55,21 @@ export default function RootLayout() {
     return (
         <GluestackUIProvider mode="light">
             <AlertProvider>
-                    <AuthProvider>
-                        <ConfigProvider value={config}>
+                <AuthProvider>
+                    <ConfigProvider value={config}>
+                        <NotificationProvider>
                             <TranslationProvider>
                                 <AudioPlayerProvider>
+                                    <NotificationToast/>
                                     <FlashMessage position="top"/>
                                     <AppUpdateManager/>
                                     <Slot/>
                                 </AudioPlayerProvider>
                             </TranslationProvider>
-                        </ConfigProvider>
-                    </AuthProvider>
-                </AlertProvider>
+                        </NotificationProvider>
+                    </ConfigProvider>
+                </AuthProvider>
+            </AlertProvider>
         </GluestackUIProvider>
     );
 }

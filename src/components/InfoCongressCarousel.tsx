@@ -46,13 +46,13 @@ const CongressItem = memo(({ item, animatedStyle }: { item: CongressType; animat
 
                     {/* Gradiente superior - funciona em iOS e Android */}
                     <LinearGradient
-                        colors={['rgba(0,0,0,0.7)', 'transparent']}
+                        colors={['transparent', 'rgba(0,0,0,2.9)', 'rgba(0,0,0,0.0)']}
                         style={styles.topGradient}
                     />
 
                     {/* Gradiente inferior - funciona em iOS e Android */}
                     <LinearGradient
-                        colors={['transparent', 'rgba(0,0,0,0.7)', 'rgba(0,0,0,0.9)']}
+                        colors={['transparent', 'rgba(0,0,0,0.7)', 'rgba(0,0,0,1.5)']}
                         style={styles.bottomGradient}
                     />
                 </View>
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        height: 350,
+        height: 400,
     },
     contentContainer: {
         position: 'absolute',

@@ -13,6 +13,13 @@
       "resizeMode": "contain",
       "backgroundColor": "#E51C44"
     },
+    "notification": {
+      "icon": "./assets/icon.png",
+      "color": "#E51C44",
+      "iosDisplayInForeground": true,
+      "androidMode": "default",
+      "androidCollapsedTitle": "Novas notificações"
+    },
     "plugins": [
       [
         "expo-image-picker",
@@ -24,6 +31,14 @@
         "expo-updates",
         {
           "username": "thsdeveloper"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#E51C44",
+          "sounds": ["./assets/notification-sound.wav"]
         }
       ],
       "expo-router",
@@ -54,7 +69,11 @@
     },
     "android": {
       "package": "com.unaadebplay",
-      "versionCode": 7
+      "versionCode": 7,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      }
     },
     "ios": {
       "bundleIdentifier": "com.unaadebplay",
