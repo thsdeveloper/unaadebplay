@@ -1,16 +1,18 @@
-// Versão aprimorada do TranslationContext.tsx com sistema de atualização
-
 import React, { createContext, ReactNode, useContext, useEffect, useState, useCallback } from 'react';
 import { getTranslation, getTranslationVersion } from '@/services/translations';
 import AlertContext from "./AlertContext";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { AppState, AppStateStatus } from 'react-native';
+import * as Ably from 'ably';
 
 // Constantes para armazenamento
 const TRANSLATIONS_STORAGE_KEY = '@UNAADEB:Translations';
 const TRANSLATIONS_VERSION_KEY = '@UNAADEB:TranslationsVersion';
 const TRANSLATIONS_TIMESTAMP_KEY = '@UNAADEB:TranslationsTimestamp';
+
+// Chave API do Ably (use a chave Subscribe only para o cliente)
+const ABLY_API_KEY = 'WXWHKQ.vz-8Cw:OGdi-jTgFS6BXzMTPrQCkv6ofIyw7jh1b3PhR-CMwpc';
 
 interface Translation {
     id: string;
@@ -24,13 +26,15 @@ interface TranslationContextData {
     refreshTranslations: () => Promise<void>;
     isLoading: boolean;
     lastUpdated: Date | null;
+    realtimeConnected: boolean;
 }
 
 const TranslationContext = createContext<TranslationContextData>({
     t: (key: string) => key,
     refreshTranslations: async () => {},
     isLoading: true,
-    lastUpdated: null
+    lastUpdated: null,
+    realtimeConnected: false
 });
 
 interface TranslationProviderProps {
@@ -46,33 +50,36 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
     const [isLoading, setIsLoading] = useState(true);
     const [currentVersion, setCurrentVersion] = useState<string>('');
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+    const [realtimeConnected, setRealtimeConnected] = useState(false);
     const alert = useContext(AlertContext);
 
+    // Referência para o cliente Ably e o canal
+    const ablyClientRef = React.useRef<Ably.Realtime | null>(null);
+    const ablyChannelRef = React.useRef<Ably.Types.RealtimeChannelPromise | null>(null);
+    const isAppActive = React.useRef<boolean>(true);
+
     // Função para buscar traduções do servidor
-    const fetchTranslationsFromServer = async (force = false) => {
+    const fetchTranslationsFromServer = async (force = false, silent = false) => {
         try {
-            setIsLoading(true);
+            if (!silent) setIsLoading(true);
 
             // Verificar se precisamos atualizar comparando a versão
             let needsUpdate = force;
 
-            if (!force) {
-                try {
-                    // Obter a versão atual do servidor (pode ser um timestamp ou hash)
-                    const serverVersion = await getTranslationVersion();
+            try {
+                // Obter a versão atual do servidor (pode ser um timestamp ou hash)
+                const serverVersion = await getTranslationVersion();
 
-                    if (serverVersion !== currentVersion) {
-                        console.log('Nova versão de traduções disponível:', serverVersion);
-                        needsUpdate = true;
-                        setCurrentVersion(serverVersion);
-                    } else {
-                        console.log('Traduções já estão atualizadas');
-                    }
-                } catch (error) {
-                    console.error('Erro ao verificar versão das traduções:', error);
-                    // Se não conseguir verificar a versão, atualizamos por segurança
+                if (serverVersion !== currentVersion) {
+                    console.log('Nova versão de traduções disponível:', serverVersion);
                     needsUpdate = true;
+                    setCurrentVersion(serverVersion);
+                } else {
+                    console.log('Traduções já estão atualizadas');
                 }
+            } catch (error) {
+                console.error('Erro ao verificar versão das traduções:', error);
+                needsUpdate = force;
             }
 
             if (needsUpdate) {
@@ -102,15 +109,23 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
                 }
 
                 console.log('Traduções atualizadas com sucesso');
+
+                // Mostrar notificação se for atualização silenciosa e app estiver ativo
+                if (silent && isAppActive.current && AppState.currentState === 'active') {
+                    alert.success('Traduções atualizadas');
+                }
             }
         } catch (error) {
             console.error('Erro ao buscar traduções:', error);
-            alert.error('Erro ao buscar traduções do servidor');
+
+            if (force && !silent) {
+                alert.error('Erro ao buscar traduções do servidor');
+            }
 
             // Tentar usar cache em caso de erro
             await loadFromCache();
         } finally {
-            setIsLoading(false);
+            if (!silent) setIsLoading(false);
         }
     };
 
@@ -152,13 +167,87 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
         }
     }, [alert]);
 
-    // Verificar atualizações quando o app volta para o primeiro plano
+    // Função para conectar ao Ably
+    const connectToAbly = useCallback(() => {
+        if (ablyClientRef.current) return;
+
+        try {
+            console.log('Conectando ao Ably...');
+
+            // Inicializar cliente Ably
+            ablyClientRef.current = new Ably.Realtime({
+                key: ABLY_API_KEY,
+                echoMessages: false
+            });
+
+            // Eventos de conexão
+            ablyClientRef.current.connection.on('connected', () => {
+                console.log('Ably conectado');
+                setRealtimeConnected(true);
+            });
+
+            ablyClientRef.current.connection.on('disconnected', () => {
+                console.log('Ably desconectado');
+                setRealtimeConnected(false);
+            });
+
+            ablyClientRef.current.connection.on('failed', (err) => {
+                console.error('Falha na conexão Ably:', err);
+                setRealtimeConnected(false);
+            });
+
+            // Inscrever-se no canal de traduções
+            ablyChannelRef.current = ablyClientRef.current.channels.get('translations');
+
+            // Inscrever-se no evento de atualização
+            ablyChannelRef.current.subscribe('updated', (message) => {
+                console.log('Evento Ably recebido - atualização de traduções:', message.data);
+
+                // Atualizar traduções silenciosamente
+                fetchTranslationsFromServer(true, true);
+            });
+
+        } catch (error) {
+            console.error('Erro ao conectar ao Ably:', error);
+        }
+    }, []);
+
+    // Função para desconectar do Ably
+    const disconnectFromAbly = useCallback(() => {
+        if (!ablyClientRef.current) return;
+
+        try {
+            console.log('Desconectando do Ably...');
+
+            // Cancelar inscrição e fechar o canal
+            if (ablyChannelRef.current) {
+                ablyChannelRef.current.unsubscribe();
+            }
+
+            // Fechar conexão
+            ablyClientRef.current.close();
+            ablyClientRef.current = null;
+            ablyChannelRef.current = null;
+
+            setRealtimeConnected(false);
+        } catch (error) {
+            console.error('Erro ao desconectar do Ably:', error);
+        }
+    }, []);
+
+    // Monitorar estado do app para gerenciar conexão do Ably
     useEffect(() => {
         const handleAppStateChange = async (nextAppState: AppStateStatus) => {
             if (nextAppState === 'active') {
-                console.log('App voltou para o primeiro plano, verificando traduções...');
+                console.log('App voltou para o primeiro plano');
+                isAppActive.current = true;
 
-                // Verificar se o intervalo de atualização já passou
+                // Reconectar ao Ably se estiver desconectado
+                if (!realtimeConnected) {
+                    connectToAbly();
+                }
+
+                // Verificar por atualizações se passou muito tempo
                 if (lastUpdated) {
                     const now = new Date();
                     const diffMinutes = (now.getTime() - lastUpdated.getTime()) / (1000 * 60);
@@ -167,10 +256,16 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
                         console.log(`Traduções não são atualizadas há ${Math.floor(diffMinutes)} minutos. Atualizando...`);
                         const netInfo = await NetInfo.fetch();
                         if (netInfo.isConnected) {
-                            fetchTranslationsFromServer();
+                            fetchTranslationsFromServer(true, false);
                         }
                     }
                 }
+            } else if (nextAppState === 'background') {
+                console.log('App foi para segundo plano');
+                isAppActive.current = false;
+
+                // Opcional: desconectar do Ably em segundo plano para economizar bateria
+                // disconnectFromAbly();
             }
         };
 
@@ -180,15 +275,18 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
         return () => {
             appStateSubscription.remove();
         };
-    }, [lastUpdated, refreshInterval]);
+    }, [connectToAbly, disconnectFromAbly, lastUpdated, refreshInterval, realtimeConnected]);
 
-    // Inicialização - primeiro tentar cache, depois servidor
+    // Inicialização - carregar cache, conectar ao Ably e buscar atualizações
     useEffect(() => {
         const initTranslations = async () => {
             setIsLoading(true);
 
             // Primeiro tentar carregar do cache
             const cacheLoaded = await loadFromCache();
+
+            // Conectar ao Ably
+            connectToAbly();
 
             // Depois verificar se precisamos atualizar do servidor
             const netInfo = await NetInfo.fetch();
@@ -203,7 +301,12 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
         };
 
         initTranslations();
-    }, []);
+
+        // Limpar recursos ao desmontar o componente
+        return () => {
+            disconnectFromAbly();
+        };
+    }, [connectToAbly, disconnectFromAbly]);
 
     // Função de tradução com suporte a parâmetros
     const t = useCallback((key: string, params?: Record<string, string>) => {
@@ -224,7 +327,8 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
                 t,
                 refreshTranslations,
                 isLoading,
-                lastUpdated
+                lastUpdated,
+                realtimeConnected
             }}
         >
             {children}

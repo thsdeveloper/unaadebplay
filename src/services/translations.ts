@@ -15,29 +15,42 @@ export async function getTranslation() {
 
 // Função para obter a versão atual das traduções
 // Esta função consulta a última data de modificação das traduções
+// Função atualizada para obter a versão atual das traduções sem depender de date_updated
 export async function getTranslationVersion() {
     try {
-        // Abordagem 1: Obter a entrada mais recentemente modificada
+        // Abordagem 1: Obter uma contagem de itens na coleção de traduções
+        // Quando o número total muda, sabemos que houve alterações
         const result = await directusClient.request(
             readItems('translations', {
-                sort: ['-date_updated'],
-                limit: 1,
-                fields: ['date_updated']
+                aggregate: { count: 'id' },
+                limit: 1
             })
         );
 
-        // Retorna o timestamp da última atualização ou gera um hash baseado na data atual
-        if (result && result.length > 0 && result[0].date_updated) {
-            return result[0].date_updated;
+        if (result && result.length > 0) {
+            // Usar a contagem total como versão
+            return `count-${result[0].count || 0}`;
         }
 
-        // Abordagem 2: Alternativa se o método acima falhar
-        // Gerar um timestamp como fallback
-        return new Date().toISOString();
+        // Se a abordagem acima falhar, tentamos uma segunda estratégia
+        const sample = await directusClient.request(
+            readItems('translations', {
+                limit: 1,
+                fields: ['id']
+            })
+        );
+
+        if (sample && sample.length > 0) {
+            // Usar um ID de amostra + timestamp atual como versão
+            return `id-${sample[0].id}-${Date.now()}`;
+        }
+
+        // Fallback final
+        return `timestamp-${Date.now()}`;
     } catch (error) {
-        console.error('Erro ao obter versão das traduções:', error);
-        // Retornar timestamp atual como fallback
-        return new Date().toISOString();
+        // Versão de fallback usando apenas o timestamp atual
+        console.warn('Usando fallback para versão das traduções:', error);
+        return `time-${Date.now()}`;
     }
 }
 

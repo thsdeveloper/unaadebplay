@@ -12,6 +12,9 @@ import SectionInfo from "@/components/SectionInfo";
 import {Box} from "@/components/ui/box";
 import {Text} from "@/components/ui/text";
 import {useBiometricAuth} from "@/hooks/useBiometricAuth";
+import TranslatedHeading from "@/components/Translated/TranslatedHeading";
+import {VStack} from "@/components/ui/vstack";
+import SectionContainer from "@/components/SectionContainer";
 
 export default function HomeTabs() {
     const [refreshing, setRefreshing] = useState(false);
@@ -97,65 +100,130 @@ export default function HomeTabs() {
                 <InfoCongressCarousel/>
             </Box>
 
-            <Box className="mt-[-40px] bg-background-dark px-4">
-                <Box>
-                    <Text className={'font-extrabold text-2xl text-white p-4'}>
-                        {t('text_section_banner')}
-                    </Text>
-                </Box>
-                <BannerCarousel refreshing={refreshing} setRefreshing={setRefreshing}/>
-                <Box>
-                    <Box>
-                        <Text>
-                            {t('title_coordenation_geral')}
-                        </Text>
-                    </Box>
-                    <Box>
-                        <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing}
-                                             idRole={'a4c63b39-f3e8-471a-9ef8-7550b09c950b'}/>
-                    </Box>
-                </Box>
-
-                <Box>
-                    <Box>
-                        <Text>
-                            {t('text_section_diretoria')}
-                        </Text>
-                    </Box>
-                    <Box>
-                        <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing}
-                                             idRole={'fb948a78-4c3e-408e-b712-327eec70ad54'}/>
-                    </Box>
-                </Box>
-
-                <Box pb={2}>
-                    <Box m={2} space={"sm"} direction={"row"} alignItems={"center"}>
-                        <Text fontWeight={'bold'} fontSize={'lg'} color={colors.dark}>
-                            {t('text_pr_coodenadores')}
-                        </Text>
-                    </Box>
-                    <Box>
-                        <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing}
-                                             idRole={'d70cd26d-07cb-4cff-9524-df3276c4f9cc'}/>
-                    </Box>
-                </Box>
-                <Box px={2} pb={2} pt={2}>
-                    <SectionInfo to={'/youtube'}
-                                 title={'Acesse nosso canal no Youtube'}
-                                 description={'Todos os vídeos do congresso'}
-                                 icon={'youtube'}
-                                 bgColor={colors.accent}
-                    />
-                </Box>
-                <Box px={2} pb={2} pt={2}>
+            <SectionContainer
+                title="Seja parceiro dessa obra"
+                seeAllRoute="/(tabs)/(events)"
+                icon="home"
+            >
+                <Box className="mx-3">
                     <SectionInfo to={'/contribua'}
                                  title={'Contribua para a UNAADEB'}
                                  description={'Faça sua doação em PIX para o congresso'}
                                  icon={'award'}
                                  bgColor={colors.secundary2}
+                                 iconVariant="floating"
                     />
                 </Box>
-                <Box py={4} bgColor={colors.secundary2} borderTopWidth={4} borderColor={colors.darkRed}>
+            </SectionContainer>
+
+            <SectionContainer
+                title="Destaques no tempo"
+                subtitle={'kjgkjhgj'}
+                seeAllRoute="/(tabs)/(events)"
+                icon="home"
+            >
+                <BannerCarousel
+                    refreshing={refreshing}
+                    setRefreshing={setRefreshing}
+                />
+            </SectionContainer>
+
+            <SectionContainer
+                title="Destaques no tempo"
+                subtitle={'kjgkjhgj'}
+                seeAllRoute="/(tabs)/(events)"
+                icon="home"
+            >
+                <BannerCarouselUsers
+                    refreshing={refreshing}
+                    setRefreshing={setRefreshing}
+                    idRole="862a4a56-6f34-4d1f-9ddd-3585d6a71ab8"
+                    showNames={true}
+                />
+            </SectionContainer>
+
+            <Box className="mt-[-40px] bg-background-dark px-3 py-3">
+                {/*<Box>*/}
+                {/*    <SectionInfo to={'/contribua'}*/}
+                {/*                 title={'Contribua para a UNAADEB'}*/}
+                {/*                 description={'Faça sua doação em PIX para o congresso'}*/}
+                {/*                 icon={'award'}*/}
+                {/*                 bgColor={colors.secundary2}*/}
+                {/*                 iconVariant="floating"*/}
+                {/*    />*/}
+                {/*</Box>*/}
+                <Box>
+                    <Box>
+                        <TranslatedHeading
+                            translationKey="title_coordenation_geral"
+                            size={'xl'}
+                            animateUpdates={true}
+                        />
+                    </Box>
+                    <Box>
+                        <BannerCarouselUsers
+                            refreshing={refreshing}
+                            setRefreshing={setRefreshing}
+                            idRole="862a4a56-6f34-4d1f-9ddd-3585d6a71ab8"
+                            showNames={true}
+                        />
+                    </Box>
+                </Box>
+                <Box>
+                    <Box>
+                        <TranslatedHeading
+                            translationKey="diretoria_unaadeb"
+                            size={'xl'}
+                            animateUpdates={true}
+                        />
+                    </Box>
+                    <Box>
+                        <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing}
+                                             idRole={'862a4a56-6f34-4d1f-9ddd-3585d6a71ab8'}/>
+                    </Box>
+                </Box>
+
+                <Box>
+                    <TranslatedHeading
+                        translationKey="pr_coodenadores"
+                        size={'xl'}
+                        animateUpdates={true}
+                    />
+                    <Box>
+                        <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing}
+                                             idRole={'862a4a56-6f34-4d1f-9ddd-3585d6a71ab8'}/>
+                    </Box>
+                </Box>
+                <VStack space={'md'} className={'mt-4'}>
+                    <SectionInfo to={'/youtube'}
+                                 title={'Acesse nosso canal no Youtube'}
+                                 description={'Todos os vídeos do congresso'}
+                                 icon={'youtube'}
+                                 bgColor="#FF0000"
+                                 variant="gradient"
+                                 iconVariant="floating"
+                    />
+
+                    <SectionInfo
+                        to="/programacao"
+                        title="Programação completa"
+                        description="Cronograma diário de atividades"
+                        icon="clock"
+                        bgColor="#2980B9" // Azul
+                        variant="gradient"
+                        iconVariant="floating"
+                    />
+                    <SectionInfo
+                        to="/alimentacao"
+                        title="Onde comer"
+                        description="Restaurantes e lanchonetes próximos"
+                        icon="coffee"
+                        bgColor="#C0392B" // Vermelho
+                        variant="outline"
+                        iconVariant="square"
+                    />
+                </VStack>
+                <Box>
                     <AvatarGroup/>
                 </Box>
 
