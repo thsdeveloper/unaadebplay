@@ -37,21 +37,10 @@ export function Avatar({
         return `${config.url_api}/assets/${userAvatarID}?fit=cover&timestamp=${Date.now()}`;
     }, [userAvatarID, config.url_api]);
 
-    // Usar um objeto de estilo customizado se width/height forem fornecidos
-    const customStyle = React.useMemo(() => {
-        if (!width && !height) return null;
-        return {
-            width: width,
-            height: height || width, // Se apenas width for fornecido, use-o para height também
-        };
-    }, [width, height]);
-
     return (
         <GluestackAvatar
             size={size}
-            bgColor="$indigo600"
             {...rest}
-            style={[rest.style, customStyle]}
         >
             <AvatarFallbackText>
                 {user?.first_name}
