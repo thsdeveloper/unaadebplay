@@ -1,14 +1,22 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { StyleSheet, FlatList, RefreshControl, AppState, AppStateStatus } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { FlatList, RefreshControl } from 'react-native';
+import { Stack } from 'expo-router';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useNotifications } from '@/contexts/NotificationContext';
-import { Box } from '@/components/ui/box';
-import { Text } from '@/components/ui/text';
-import { Stack, useFocusEffect } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
+import { 
+    NotificationItem, 
+    NotificationHeader, 
+    EmptyNotifications,
+    PERFORMANCE_CONFIG 
+} from '@/components/notifications';
+import { 
+    useNotificationHandlers, 
+    useNotificationRefresh 
+} from '@/components/notifications/hooks';
+import { debugNotifications } from '@/services/notification';
 import colors from '@/constants/colors';
-import { NotificationItem } from '@/components/NotificationItem';
-import LottieView from 'lottie-react-native';
-import {Button} from "@/components/ui/button";
-import {Spinner} from "@/components/ui/spinner";
+import type { NotificationData } from '@/services/notification';
 
 export default function NotificationsScreen() {
     const {
@@ -16,97 +24,60 @@ export default function NotificationsScreen() {
         refreshNotifications,
         markAsRead,
         markAllAsRead,
+        deleteNotification,
         unreadCount,
-        isLoading
+        isLoading,
+        clearAllNotifications,
+        sendTestNotification
     } = useNotifications();
+    
+    const { user } = useAuth();
 
-    const [refreshing, setRefreshing] = useState(false);
-    const [appState, setAppState] = useState<AppStateStatus>(AppState.currentState);
+    // Custom hooks
+    const { refreshing, onRefresh } = useNotificationRefresh({ refreshNotifications });
+    
+    const {
+        handleReadNotification,
+        handleDeleteNotification,
+        handleMarkAllAsRead,
+        handleClearAll
+    } = useNotificationHandlers({
+        markAsRead,
+        deleteNotification,
+        markAllAsRead,
+        clearAllNotifications,
+        unreadCount,
+        notificationCount: notifications.length
+    });
 
-    // Atualiza as notificações quando a tela recebe foco
-    useFocusEffect(
-        useCallback(() => {
-            console.log('Tela de notificações recebeu foco - atualizando notificações');
-            refreshNotifications();
+    // Memoized values
+    const keyExtractor = useCallback((item: NotificationData) => item.id, []);
 
-            return () => {
-                // Cleanup se necessário
-            };
-        }, [])
-    );
+    const renderNotificationItem = useCallback(({ item }: { item: NotificationData }) => (
+        <NotificationItem
+            notification={item}
+            onPress={handleReadNotification}
+            onDelete={handleDeleteNotification}
+        />
+    ), [handleReadNotification, handleDeleteNotification]);
 
-    // Monitora mudanças no estado do aplicativo
-    useEffect(() => {
-        const subscription = AppState.addEventListener('change', nextAppState => {
-            console.log('App state changed in notification screen:', nextAppState);
-            if (
-                appState.match(/inactive|background/) &&
-                nextAppState === 'active'
-            ) {
-                console.log('App voltou para o primeiro plano na tela de notificações - atualizando');
-                refreshNotifications();
-            }
-            setAppState(nextAppState);
-        });
+    const listHeaderComponent = useMemo(() => (
+        <NotificationHeader
+            notificationCount={notifications.length}
+            unreadCount={unreadCount}
+            onMarkAllAsRead={handleMarkAllAsRead}
+        />
+    ), [notifications.length, unreadCount, handleMarkAllAsRead]);
 
-        return () => {
-            subscription.remove();
-        };
-    }, [appState]);
-
-    const onRefresh = async () => {
-        setRefreshing(true);
-        await refreshNotifications();
-        setRefreshing(false);
-    };
-
-    const handleReadNotification = async (id: string) => {
-        await markAsRead(id);
-        // Atualiza a lista após marcar como lida
-        refreshNotifications();
-    };
-
-    const renderEmptyComponent = () => {
-        if (isLoading) {
-            return (
-                <Box style={styles.loadingContainer}>
-                    <Spinner size="large" color={colors.primary} />
-                    <Text style={styles.loadingText}>Carregando notificações...</Text>
-                </Box>
-            );
-        }
-
-        return (
-            <Box style={styles.emptyContainer}>
-                {/* Componente de estado vazio - animação */}
-                <Box style={styles.emptyImageContainer}>
-                    <LottieView
-                        source={require('@/assets/empty-notifications.json')}
-                        autoPlay
-                        loop
-                        style={styles.emptyAnimation}
-                    />
-                </Box>
-                <Text style={styles.emptyTitle}>Sem notificações</Text>
-                <Text style={styles.emptyText}>
-                    Você não tem nenhuma notificação no momento. Novas atividades aparecerão aqui.
-                </Text>
-                <Button
-                    onPress={refreshNotifications}
-                    style={styles.refreshButton}
-                    size="md"
-                >
-                    <Text style={styles.refreshButtonText}>Atualizar</Text>
-                </Button>
-            </Box>
-        );
-    };
-
-    const handleMarkAllAsRead = async () => {
-        await markAllAsRead();
-        // Atualiza a lista após marcar todas como lidas
-        refreshNotifications();
-    };
+    const listEmptyComponent = useMemo(() => (
+        <EmptyNotifications
+            isLoading={isLoading}
+            onRefresh={refreshNotifications}
+            onSendTest={sendTestNotification}
+            onDebug={() => debugNotifications(user?.id || '')}
+            userId={user?.id}
+        />
+    ), [isLoading, refreshNotifications, sendTestNotification, user?.id]);
 
     return (
         <>
@@ -117,36 +88,21 @@ export default function NotificationsScreen() {
                         backgroundColor: colors.primary,
                     },
                     headerTintColor: colors.white,
-                    headerRight: () => (
-                        unreadCount > 0 ? (
-                            <Button
-                                size="sm"
-                                variant="link"
-                                onPress={handleMarkAllAsRead}
-                                style={styles.markAllButton}
-                            >
-                                <Text style={styles.markAllText}>Marcar todas como lidas</Text>
-                            </Button>
-                        ) : null
-                    ),
+                    headerShadowVisible: false,
                 }}
             />
 
-            <Box style={styles.container}>
+            <GestureHandlerRootView className="flex-1 bg-white">
                 <FlatList
                     data={notifications}
-                    keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
-                        <NotificationItem
-                            notification={item}
-                            onPress={handleReadNotification}
-                        />
-                    )}
-                    contentContainerStyle={[
-                        styles.listContent,
-                        notifications.length === 0 && styles.emptyListContent
-                    ]}
-                    ListEmptyComponent={renderEmptyComponent}
+                    keyExtractor={keyExtractor}
+                    renderItem={renderNotificationItem}
+                    ListHeaderComponent={listHeaderComponent}
+                    ListEmptyComponent={listEmptyComponent}
+                    contentContainerStyle={{
+                        flexGrow: 1,
+                        backgroundColor: notifications.length === 0 ? '#FFFFFF' : '#F9FAFB'
+                    }}
                     refreshControl={
                         <RefreshControl
                             refreshing={refreshing}
@@ -155,76 +111,18 @@ export default function NotificationsScreen() {
                             tintColor={colors.primary}
                         />
                     }
+                    showsVerticalScrollIndicator={false}
+                    // Performance optimizations
+                    removeClippedSubviews={true}
+                    maxToRenderPerBatch={PERFORMANCE_CONFIG.MAX_RENDER_PER_BATCH}
+                    updateCellsBatchingPeriod={PERFORMANCE_CONFIG.UPDATE_CELLS_BATCHING_PERIOD}
+                    initialNumToRender={PERFORMANCE_CONFIG.INITIAL_NUM_TO_RENDER}
+                    windowSize={PERFORMANCE_CONFIG.WINDOW_SIZE}
+                    maintainVisibleContentPosition={{
+                        minIndexForVisible: 0,
+                    }}
                 />
-            </Box>
+            </GestureHandlerRootView>
         </>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f5f5f5',
-    },
-    listContent: {
-        padding: 16,
-        flexGrow: 1,
-    },
-    emptyListContent: {
-        flex: 1,
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingTop: 100,
-    },
-    loadingText: {
-        marginTop: 16,
-        fontSize: 16,
-        color: '#666',
-    },
-    emptyContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 32,
-        paddingTop: 100,
-    },
-    emptyImageContainer: {
-        marginBottom: 20,
-    },
-    emptyAnimation: {
-        width: 200,
-        height: 200,
-    },
-    emptyTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 8,
-    },
-    emptyText: {
-        fontSize: 16,
-        color: '#666',
-        textAlign: 'center',
-        marginBottom: 24,
-        lineHeight: 22,
-    },
-    refreshButton: {
-        backgroundColor: colors.primary,
-        borderRadius: 8,
-        paddingHorizontal: 24,
-    },
-    refreshButtonText: {
-        color: '#fff',
-        fontWeight: '600',
-    },
-    markAllButton: {
-        marginRight: 8,
-    },
-    markAllText: {
-        color: colors.white,
-        fontSize: 14,
-    },
-});
