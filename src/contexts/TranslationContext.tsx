@@ -12,7 +12,7 @@ const TRANSLATIONS_VERSION_KEY = '@UNAADEB:TranslationsVersion';
 const TRANSLATIONS_TIMESTAMP_KEY = '@UNAADEB:TranslationsTimestamp';
 
 // Chave API do Ably (use a chave Subscribe only para o cliente)
-const ABLY_API_KEY = 'WXWHKQ.vz-8Cw:OGdi-jTgFS6BXzMTPrQCkv6ofIyw7jh1b3PhR-CMwpc';
+const ABLY_API_KEY = process.env.EXPO_PUBLIC_ABLY_API_KEY;
 
 interface Translation {
     id: string;
@@ -200,7 +200,7 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
             ablyChannelRef.current = ablyClientRef.current.channels.get('translations');
 
             // Inscrever-se no evento de atualização
-            ablyChannelRef.current.subscribe('updated', (message) => {
+            ablyChannelRef.current.subscribe('updated', (message: any) => {
                 console.log('Evento Ably recebido - atualização de traduções:', message.data);
 
                 // Atualizar traduções silenciosamente

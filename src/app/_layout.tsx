@@ -15,6 +15,7 @@ import AppUpdateManager from "@/components/AppUpdateManager";
 import {useApiErrorHandler} from "@/utils/apiErrorHandler";
 import {NotificationProvider} from "@/contexts/NotificationContext";
 import {NotificationToast} from "@/components/NotificationToast";
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
 
 export default function RootLayout() {
     const [appIsReady, setAppIsReady] = useState(false);
@@ -39,7 +40,8 @@ export default function RootLayout() {
             }
         }
 
-        prepare();''
+        prepare();
+        ''
     }, []);
 
     useEffect(() => {
@@ -53,23 +55,25 @@ export default function RootLayout() {
     }
 
     return (
-        <GluestackUIProvider mode="light">
-            <AlertProvider>
-                <AuthProvider>
-                    <ConfigProvider value={config}>
-                        <NotificationProvider>
-                            <TranslationProvider>
-                                <AudioPlayerProvider>
-                                    <NotificationToast/>
-                                    <FlashMessage position="top"/>
-                                    <AppUpdateManager/>
-                                    <Slot/>
-                                </AudioPlayerProvider>
-                            </TranslationProvider>
-                        </NotificationProvider>
-                    </ConfigProvider>
-                </AuthProvider>
-            </AlertProvider>
-        </GluestackUIProvider>
+        <GestureHandlerRootView style={{flex: 1}}>
+            <GluestackUIProvider mode="light">
+                <AlertProvider>
+                    <AuthProvider>
+                        <ConfigProvider value={config}>
+                            <NotificationProvider>
+                                <TranslationProvider>
+                                    <AudioPlayerProvider>
+                                        <NotificationToast/>
+                                        <FlashMessage position="top"/>
+                                        <AppUpdateManager/>
+                                        <Slot/>
+                                    </AudioPlayerProvider>
+                                </TranslationProvider>
+                            </NotificationProvider>
+                        </ConfigProvider>
+                    </AuthProvider>
+                </AlertProvider>
+            </GluestackUIProvider>
+        </GestureHandlerRootView>
     );
 }

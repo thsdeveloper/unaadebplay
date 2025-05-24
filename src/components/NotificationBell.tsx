@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useRef, memo, useCallback, useMemo } from 'react';
+import { StyleSheet, Pressable } from 'react-native';
 import { Feather } from "@expo/vector-icons";
 import { Box } from "@/components/ui/box";
 import { Text } from "@/components/ui/text";
@@ -11,126 +11,254 @@ import Animated, {
     useAnimatedStyle,
     withSpring,
     withSequence,
-    withTiming
+    withTiming,
+    withRepeat,
+    Easing,
+    cancelAnimation,
+    runOnJS,
 } from 'react-native-reanimated';
 
 interface NotificationBellProps {
     color?: string;
 }
 
-export function NotificationBell({ color = colors.white }: NotificationBellProps) {
-    const { unreadCount, refreshNotifications, isLoading } = useNotifications();
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+export const NotificationBell = memo(function NotificationBell({
+    color = colors.white
+}: NotificationBellProps) {
+    const {
+        unreadCount,
+        refreshNotifications,
+        isLoading,
+        realtimeConnected
+    } = useNotifications();
+
     const router = useRouter();
 
     // Animation values
-    const scale = useSharedValue(1);
-    const rotation = useSharedValue(0);
-    const prevUnreadCount = useRef(unreadCount);
+    const bellScale = useSharedValue(1);
+    const bellRotation = useSharedValue(0);
+    const badgeScale = useSharedValue(1);
+    const pulseScale = useSharedValue(1);
 
-    // Animate when unread count changes
+    // Referencias para controle de animações
+    const prevUnreadCount = useRef(unreadCount);
+    const animationTimeoutRef = useRef<NodeJS.Timeout>();
+    const refreshIntervalRef = useRef<NodeJS.Timeout>();
+
+    // Callback para cancelar animação de pulso
+    const cancelPulseAnimation = useCallback(() => {
+        'worklet';
+        cancelAnimation(pulseScale);
+        pulseScale.value = withTiming(1, { duration: 300 });
+    }, []);
+
+    // Animação quando unread count muda
     useEffect(() => {
+        if (unreadCount === prevUnreadCount.current) return;
+
         if (unreadCount > prevUnreadCount.current) {
-            // Bell shake animation
-            scale.value = withSequence(
-                withSpring(1.2, { damping: 2 }),
-                withSpring(1, { damping: 3 })
+            // Nova notificação recebida - animação mais dramática
+            bellScale.value = withSequence(
+                withSpring(1.3, { damping: 3, stiffness: 400 }),
+                withSpring(1, { damping: 8, stiffness: 200 })
             );
 
-            rotation.value = withSequence(
-                withTiming(-0.1, { duration: 100 }),
-                withTiming(0.1, { duration: 100 }),
-                withTiming(-0.1, { duration: 100 }),
-                withTiming(0, { duration: 100 })
+            bellRotation.value = withSequence(
+                withTiming(-15, { duration: 100, easing: Easing.out(Easing.quad) }),
+                withTiming(15, { duration: 100, easing: Easing.inOut(Easing.quad) }),
+                withTiming(-10, { duration: 80, easing: Easing.inOut(Easing.quad) }),
+                withTiming(0, { duration: 100, easing: Easing.out(Easing.quad) })
+            );
+
+            badgeScale.value = withSequence(
+                withSpring(1.4, { damping: 2, stiffness: 300 }),
+                withSpring(1, { damping: 4, stiffness: 200 })
+            );
+
+            // Efeito de pulso contínuo por alguns segundos
+            pulseScale.value = withRepeat(
+                withSequence(
+                    withTiming(1.1, { duration: 800 }),
+                    withTiming(1, { duration: 800 })
+                ),
+                3, // 3 repetições
+                false
+            );
+
+            // Parar a animação de pulso após um tempo
+            if (animationTimeoutRef.current) {
+                clearTimeout(animationTimeoutRef.current);
+            }
+
+            animationTimeoutRef.current = setTimeout(() => {
+                runOnJS(cancelPulseAnimation)();
+            }, 5000);
+
+        } else if (unreadCount < prevUnreadCount.current) {
+            // Notificação lida - animação sutil
+            badgeScale.value = withSequence(
+                withSpring(0.8, { damping: 3, stiffness: 200 }),
+                withSpring(1, { damping: 6, stiffness: 150 })
             );
         }
 
         prevUnreadCount.current = unreadCount;
-    }, [unreadCount]);
+    }, [unreadCount, cancelPulseAnimation]);
 
-    // Refresh notifications on component mount
+
+    // Função de refresh otimizada
+    const refreshIfNeeded = useCallback(() => {
+        if (!isLoading) {
+            refreshNotifications();
+        }
+    }, [isLoading, refreshNotifications]);
+
+    // Cálculo do intervalo de refresh memoizado
+    const refreshInterval = useMemo(() => {
+        if (!realtimeConnected) return 15000; // 15s se offline
+        if (unreadCount > 0) return 45000; // 45s se há não lidas
+        return 90000; // 90s se tudo ok
+    }, [realtimeConnected, unreadCount]);
+
+    // Refresh automático mais inteligente
     useEffect(() => {
-        // Força uma atualização imediata quando o componente é montado
+        // Força uma atualização quando o componente monta
         refreshNotifications();
 
-        // Set up interval to refresh notifications periodically (com intervalo menor)
-        const intervalId = setInterval(() => {
-            // Não atualiza se já estiver carregando para evitar requisições múltiplas
-            if (!isLoading) {
-                refreshNotifications();
+        // Setup do intervalo
+        refreshIntervalRef.current = setInterval(refreshIfNeeded, refreshInterval);
+
+        return () => {
+            if (refreshIntervalRef.current) {
+                clearInterval(refreshIntervalRef.current);
             }
-        }, 30000); // Reduzido para 30 segundos para maior responsividade
-
-        return () => clearInterval(intervalId);
-    }, []);
-
-    const animatedStyle = useAnimatedStyle(() => {
-        return {
-            transform: [
-                { scale: scale.value },
-                { rotate: `${rotation.value}rad` }
-            ]
+            if (animationTimeoutRef.current) {
+                clearTimeout(animationTimeoutRef.current);
+            }
         };
-    });
+    }, [refreshInterval, refreshIfNeeded]);
 
-    const handleNotificationPress = () => {
-        // Atualizar as notificações antes de navegar para garantir dados atualizados
-        refreshNotifications().then(() => {
-            router.push('/notifications');
-        });
-    };
+    // Estilos animados
+    const bellAnimatedStyle = useAnimatedStyle(() => ({
+        transform: [
+            { scale: bellScale.value * pulseScale.value },
+            { rotate: `${bellRotation.value}deg` }
+        ]
+    }), []);
+
+    const badgeAnimatedStyle = useAnimatedStyle(() => {
+        const scale = badgeScale.value;
+        const opacity = unreadCount > 0 ? 1 : 0;
+
+        return {
+            transform: [{ scale }],
+            opacity: withTiming(opacity, { duration: 200 })
+        };
+    }, [unreadCount]);
+
+    // Callbacks memoizados
+    const handleNotificationPress = useCallback(() => {
+        // Pequena animação de feedback
+        bellScale.value = withSequence(
+            withSpring(0.9, { damping: 8, stiffness: 400 }),
+            withSpring(1, { damping: 6, stiffness: 200 })
+        );
+
+        // Navegar imediatamente para melhor UX
+        router.push('/notifications');
+
+        // Refresh em background
+        refreshNotifications();
+    }, [router, refreshNotifications]);
+
+    const bellIcon = useMemo(() => "bell", []);
+
+    const accessibilityLabel = useMemo(() => {
+        if (unreadCount === 0) {
+            return "Notificações - Nenhuma nova notificação";
+        }
+        return `Notificações - ${unreadCount} ${unreadCount === 1 ? 'nova notificação' : 'novas notificações'}`;
+    }, [unreadCount]);
+
+    // Badge de contagem memoizado
+    const Badge = useMemo(() => {
+        if (unreadCount === 0) return null;
+
+        return (
+            <Animated.View style={[styles.badge, badgeAnimatedStyle]}>
+                <Text style={styles.badgeText}>
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                </Text>
+            </Animated.View>
+        );
+    }, [unreadCount, badgeAnimatedStyle]);
 
     return (
-        <Box>
-            <TouchableOpacity
-                activeOpacity={0.7}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        <Box style={styles.container}>
+            <AnimatedPressable
+                style={styles.pressable}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 onPress={handleNotificationPress}
+                accessible={true}
+                accessibilityLabel={accessibilityLabel}
+                accessibilityRole="button"
+                accessibilityHint="Toque para ver suas notificações"
             >
-                <Box style={styles.container}>
-                    <Animated.View style={animatedStyle}>
-                        {isLoading ? (
-                            // Indicador de carregamento animado sutil quando estiver atualizando
-                            <Feather name="bell" size={22} color={color} style={{opacity: 0.7}} />
-                        ) : (
-                            <Feather name="bell" size={22} color={color} />
-                        )}
+                <Box style={styles.bellContainer}>
+                    <Animated.View style={bellAnimatedStyle}>
+                        <Feather
+                            name={bellIcon}
+                            size={24}
+                            color={color}
+                        />
                     </Animated.View>
 
-                    {unreadCount > 0 && (
-                        <Box style={styles.badge}>
-                            <Text style={styles.badgeText}>
-                                {unreadCount > 99 ? '99+' : unreadCount}
-                            </Text>
-                        </Box>
-                    )}
+                    {Badge}
                 </Box>
-            </TouchableOpacity>
+            </AnimatedPressable>
         </Box>
     );
-}
+});
 
 const styles = StyleSheet.create({
     container: {
         position: 'relative',
-        padding: 5,
+    },
+    pressable: {
+        // Adicionar estilo para o pressable se necessário
+    },
+    bellContainer: {
+        position: 'relative',
+        padding: 8,
     },
     badge: {
         position: 'absolute',
-        top: -5,
-        right: -5,
-        backgroundColor: colors.danger || '#FF3B30',
-        borderRadius: 10,
-        minWidth: 18,
-        height: 18,
+        top: 2,
+        right: 2,
+        backgroundColor: colors.primary || '#FF3B30',
+        borderRadius: 12,
+        minWidth: 20,
+        height: 20,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 4,
-        borderWidth: 1.5,
-        borderColor: 'rgba(255, 255, 255, 0.8)',
+        paddingHorizontal: 6,
+        borderWidth: 2,
+        borderColor: 'rgba(255, 255, 255, 0.9)',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 1,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 2,
+        elevation: 3,
     },
     badgeText: {
         color: 'white',
-        fontSize: 10,
+        fontSize: 11,
         fontWeight: 'bold',
-    }
+        lineHeight: 14,
+    },
 });
