@@ -11,14 +11,13 @@ export function useNotificationRefresh({ refreshNotifications }: UseNotification
     const [focusCount, setFocusCount] = useState(0);
     const lastBackgroundTime = useRef(Date.now());
 
-    // Atualizar apenas na primeira vez que a tela recebe foco
+    // Atualizar quando a tela recebe foco (removido para evitar loops)
+    // O NotificationContext já gerencia as atualizações
     useFocusEffect(
         useCallback(() => {
-            if (focusCount === 0) {
-                refreshNotifications();
-                setFocusCount(1);
-            }
-        }, [focusCount, refreshNotifications])
+            // Incrementar contador de foco apenas para tracking
+            setFocusCount(prev => prev + 1);
+        }, [])
     );
 
     // Monitorar mudanças de estado do app

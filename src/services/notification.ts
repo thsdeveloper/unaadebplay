@@ -243,6 +243,8 @@ export async function removeTokenFromServer(userId: string): Promise<void> {
 export async function fetchNotifications(userId: string, limit = 50): Promise<NotificationData[]> {
     try {
         // Buscar notificações do usuário
+        console.log('[fetchNotifications] Buscando notificações para userId:', userId);
+        
         const notifications = await directusClient.request(
             readItems('notifications', {
                 filter: {
@@ -252,9 +254,34 @@ export async function fetchNotifications(userId: string, limit = 50): Promise<No
                 limit
             })
         );
+        
+        console.log('[fetchNotifications] Notificações encontradas:', notifications.length);
+        
+        // Debug: ver estrutura da primeira notificação
+        if (notifications.length > 0) {
+            console.log('[fetchNotifications] Primeira notificação:', {
+                id: notifications[0].id,
+                user_id: notifications[0].user_id,
+                status: notifications[0].status,
+                deleted_at: notifications[0].deleted_at,
+                campos: Object.keys(notifications[0])
+            });
+        }
+        
+        // Filtrar notificações deletadas no cliente
+        const activeNotifications = notifications.filter(n => {
+            // Se não tem campo status ou status é true, mostrar
+            const shouldShow = n.status !== false;
+            if (!shouldShow) {
+                console.log('[fetchNotifications] Notificação filtrada (deletada):', n.id);
+            }
+            return shouldShow;
+        });
+        
+        console.log('[fetchNotifications] Notificações ativas:', activeNotifications.length);
 
         // Mapear notificações verificando se os campos existem
-        return notifications.map(notification => ({
+        return activeNotifications.map(notification => ({
             id: notification.id,
             title: notification.title || 'Sem título',
             body: notification.message || notification.body || 'Sem mensagem',

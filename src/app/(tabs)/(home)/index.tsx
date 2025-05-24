@@ -1,4 +1,4 @@
-import React, {useContext, useState, useEffect, useCallback} from "react";
+import React, {useContext, useState, useEffect, useCallback, useMemo} from "react";
 import {Alert, Animated, RefreshControl, TouchableOpacity} from "react-native";
 import BannerCarousel from "@/components/BannerCarousel";
 import TranslationContext from "@/contexts/TranslationContext";
@@ -16,7 +16,7 @@ import TranslatedHeading from "@/components/Translated/TranslatedHeading";
 import {VStack} from "@/components/ui/vstack";
 import SectionContainer from "@/components/SectionContainer";
 
-export default function HomeTabs() {
+const HomeTabs = React.memo(() => {
     const [refreshing, setRefreshing] = useState(false);
     const {t} = useContext(TranslationContext);
     const navigation = useNavigation()
@@ -32,20 +32,23 @@ export default function HomeTabs() {
         checkBiometricAvailability
     } = useBiometricAuth();
 
-    const headerBackgroundColor = scrollY.interpolate({
-        inputRange: [0, 50, 100],
-        outputRange: ['rgba(15, 70, 82, 0)', 'rgb(13,15,23)', 'rgb(13,15,23)'],
-        extrapolate: 'clamp'
-    });
+    const headerBackgroundColor = useMemo(() => 
+        scrollY.interpolate({
+            inputRange: [0, 50, 100],
+            outputRange: ['rgba(15, 70, 82, 0)', 'rgb(13,15,23)', 'rgb(13,15,23)'],
+            extrapolate: 'clamp'
+        })
+    , [scrollY]);
 
-    // Adicionar esta função
     const handleRefresh = useCallback(() => {
         setRefreshing(true);
-        // Chamar funções de atualização necessárias
-        // Atualizar setTimeout apenas para demonstração, substitua pela lógica real
-        setTimeout(() => {
+        // Aguarda um tempo mínimo para garantir feedback visual
+        Promise.all([
+            new Promise(resolve => setTimeout(resolve, 1000)),
+            // Aqui você pode adicionar outras chamadas de API se necessário
+        ]).then(() => {
             setRefreshing(false);
-        }, 2000);
+        });
     }, []);
 
     useEffect(() => {
@@ -82,22 +85,25 @@ export default function HomeTabs() {
                 [{nativeEvent: {contentOffset: {y: scrollY}}}],
                 {useNativeDriver: false}
             )}
-            scrollEventThrottle={20}
-            bounces={true} // Mudar para true para permitir o bounce
+            removeClippedSubviews={true}
+            scrollEventThrottle={16}
+            bounces={true}
             showsVerticalScrollIndicator={false}
             refreshControl={
                 <RefreshControl
                     refreshing={refreshing}
                     onRefresh={handleRefresh}
-                    colors={[colors.light, colors.light]}
+                    colors={[colors.primary]}
                     tintColor={colors.primary}
-                    title="Atualizando..."
-                    titleColor={colors.primary}
+                    progressBackgroundColor={colors.background}
                 />
             }
         >
             <Box>
-                <InfoCongressCarousel/>
+                <InfoCongressCarousel 
+                    refreshing={refreshing}
+                    onRefresh={handleRefresh}
+                />
             </Box>
 
             <SectionContainer
@@ -249,4 +255,6 @@ export default function HomeTabs() {
 
         </Animated.ScrollView>
     );
-}
+});
+
+export default HomeTabs;

@@ -175,10 +175,14 @@ const useAccelerometerEffect = () => {
     };
 };
 
-export default function InfoCongressCarousel() {
+interface InfoCongressCarouselProps {
+    refreshing?: boolean;
+    onRefresh?: () => void;
+}
+
+export default function InfoCongressCarousel({ refreshing = false, onRefresh }: InfoCongressCarouselProps) {
     const [congress, setCongress] = useState<CongressType[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [refreshing, setRefreshing] = useState<boolean>(false);
     const [activeIndex, setActiveIndex] = useState<number>(0);
     const alert = useContext(AlertContext);
     const carouselRef = useRef<any>(null);
@@ -205,15 +209,15 @@ export default function InfoCongressCarousel() {
             alert.error(`Erro: ${message}`);
         } finally {
             setIsLoading(false);
-            setRefreshing(false);
         }
     }, [refreshing, activeIndex, alert]);
 
-    // Função para lidar com o gesto de "pull to refresh"
-    const onRefresh = useCallback(() => {
-        setRefreshing(true);
-        loadCongress();
-    }, [loadCongress]);
+    // Carrega os dados quando refreshing muda
+    useEffect(() => {
+        if (refreshing) {
+            loadCongress();
+        }
+    }, [refreshing, loadCongress]);
 
     // Carrega os dados na inicialização
     useEffect(() => {
@@ -237,63 +241,41 @@ export default function InfoCongressCarousel() {
     }, []);
 
     return (
-        <ScrollView
-            style={styles.scrollContainer}
-            contentContainerStyle={styles.scrollContentContainer}
-            refreshControl={
-                <RefreshControl
-                    refreshing={refreshing}
-                    onRefresh={onRefresh}
-                    colors={[colors.primary, colors.accent]}
-                    tintColor={colors.primary}
-                    title="Atualizando..."
-                    titleColor={colors.primary}
+        <View style={styles.container}>
+            <StatusBar style="light"/>
+
+            {isLoading && !refreshing ? (
+                <CongressItemSkeletons windowWidth={windowWidth}/>
+            ) : (
+                <Carousel<CongressType>
+                    vertical={false}
+                    ref={carouselRef}
+                    data={congress}
+                    renderItem={renderCarouselItem}
+                    onSnapToItem={onItemChange}
+                    sliderWidth={windowWidth}
+                    firstItem={activeIndex}
+                    itemWidth={windowWidth}
+                    inactiveSlideOpacity={0.7}
+                    inactiveSlideScale={1}
+                    autoplay={false}
+                    loop={true}
+                    contentContainerCustomStyle={styles.carouselContainer}
                 />
-            }
-            ref={scrollViewRef}
-        >
-            <View style={styles.container}>
-                <StatusBar style="light"/>
+            )}
 
-                {isLoading && !refreshing ? (
-                    <CongressItemSkeletons windowWidth={windowWidth}/>
-                ) : (
-                    <Carousel<CongressType>
-                        vertical={false}
-                        ref={carouselRef}
-                        data={congress}
-                        renderItem={renderCarouselItem}
-                        onSnapToItem={onItemChange}
-                        sliderWidth={windowWidth}
-                        firstItem={activeIndex}
-                        itemWidth={windowWidth}
-                        inactiveSlideOpacity={0.7}
-                        inactiveSlideScale={1}
-                        autoplay={false}
-                        loop={true}
-                        contentContainerCustomStyle={styles.carouselContainer}
-                    />
-                )}
-
-                {/* Indicador de atualização personalizado (opcional) */}
-                {refreshing && (
-                    <View style={styles.refreshIndicator}>
-                        <Text style={styles.refreshText}>Atualizando dados do congresso...</Text>
-                    </View>
-                )}
-            </View>
-        </ScrollView>
+            {/* Indicador de atualização personalizado (opcional) */}
+            {refreshing && (
+                <View style={styles.refreshIndicator}>
+                    <Text style={styles.refreshText}>Atualizando dados do congresso...</Text>
+                </View>
+            )}
+        </View>
     );
 }
 
 // Usando StyleSheet em vez de Tailwind para garantir compatibilidade com iOS
 const styles = StyleSheet.create({
-    scrollContainer: {
-        flex: 1,
-    },
-    scrollContentContainer: {
-        flexGrow: 1,
-    },
     container: {
         height: windowHeight * 0.70,
         width: windowWidth,

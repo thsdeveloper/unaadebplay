@@ -148,6 +148,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const ablyClientRef = useRef<Ably.Realtime | null>(null);
     const ablyChannelRef = useRef<Ably.Types.RealtimeChannelPromise | null>(null);
     const isAppActive = useRef<boolean>(true);
+    
+    // Referência para controlar requisições em andamento
+    const refreshPromiseRef = useRef<Promise<void> | null>(null);
 
     // Storage para cache de notificações
     const notificationStorage = useRef(new NotificationStorage());
@@ -353,40 +356,64 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     };
 
     // Carregar notificações do servidor
-    const refreshNotifications = async (silent = false) => {
-        if (!userId) return;
-
-        try {
-            if (!silent) setIsLoading(true);
-            setIsRefreshing(true);
-
-            const notifs = await fetchNotifications(userId);
-            setNotifications(notifs);
-
-            const unread = notifs.filter(n => !n.read).length;
-            setUnreadCount(unread);
-
-            // Atualizar cache
-            await notificationStorage.current.set(notifs);
-            setLastUpdated(new Date());
-
-            if (silent && isAppActive.current) {
-                // Mostrar feedback sutil apenas se for atualização silenciosa
-                console.log('Notificações atualizadas silenciosamente');
-            }
-        } catch (error) {
-            console.error('Erro ao atualizar notificações:', error);
-            if (!silent) {
-                alert.error('Erro ao carregar notificações');
-            }
-
-            // Tentar usar cache em caso de erro
-            await loadFromCache();
-        } finally {
-            setIsLoading(false);
-            setIsRefreshing(false);
+    const refreshNotifications = useCallback(async (silent = false) => {
+        console.log('[NotificationContext] refreshNotifications chamado:', { userId, silent, isLoading });
+        
+        if (!userId) {
+            console.log('[NotificationContext] Sem userId, abortando refresh');
+            return;
         }
-    };
+
+        // Se já há uma requisição em andamento, retornar a promise existente
+        if (refreshPromiseRef.current) {
+            console.log('[NotificationContext] Já há uma requisição em andamento, retornando promise existente');
+            return refreshPromiseRef.current;
+        }
+
+        // Criar nova promise para esta requisição
+        refreshPromiseRef.current = (async () => {
+            try {
+                if (!silent) {
+                    console.log('[NotificationContext] Definindo isLoading = true');
+                    setIsLoading(true);
+                }
+                setIsRefreshing(true);
+
+                console.log('[NotificationContext] Buscando notificações para userId:', userId);
+                const notifs = await fetchNotifications(userId);
+                console.log('[NotificationContext] Notificações recebidas:', notifs?.length || 0);
+                
+                setNotifications(notifs);
+
+                const unread = notifs.filter(n => !n.read).length;
+                setUnreadCount(unread);
+
+                // Atualizar cache
+                await notificationStorage.current.set(notifs);
+                setLastUpdated(new Date());
+
+                if (silent && isAppActive.current) {
+                    // Mostrar feedback sutil apenas se for atualização silenciosa
+                    console.log('Notificações atualizadas silenciosamente');
+                }
+            } catch (error) {
+                console.error('[NotificationContext] Erro ao atualizar notificações:', error);
+                if (!silent) {
+                    alert.error('Erro ao carregar notificações');
+                }
+
+                // Tentar usar cache em caso de erro
+                await loadFromCache();
+            } finally {
+                console.log('[NotificationContext] Finally block - Definindo isLoading = false');
+                setIsLoading(false);
+                setIsRefreshing(false);
+                refreshPromiseRef.current = null;
+            }
+        })();
+
+        return refreshPromiseRef.current;
+    }, [userId, alert]);
 
     // Marcar notificação como lida
     const markAsRead = async (notificationId: string) => {
@@ -436,6 +463,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     // Deletar notificação
     const deleteNotificationFunc = async (notificationId: string) => {
+        console.log('[NotificationContext] Deletando notificação:', notificationId);
         try {
             // Otimização: Atualizar UI primeiro para resposta imediata
             const notificationToDelete = notifications.find(n => n.id === notificationId);
@@ -448,21 +476,19 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             }
 
             // Executar delete no servidor em background
-            deleteNotification(notificationId).catch(error => {
-                console.error('Erro ao deletar no servidor:', error);
-                // Reverter em caso de erro
-                setNotifications(notifications);
-                if (notificationToDelete && !notificationToDelete.read) {
-                    setUnreadCount(prev => prev + 1);
-                }
-                alert.error('Erro ao deletar notificação');
-            });
+            await deleteNotification(notificationId);
+            console.log('[NotificationContext] Notificação deletada com sucesso');
 
             // Atualizar cache
             await notificationStorage.current.set(updatedNotifications);
 
         } catch (error) {
-            console.error('Erro ao deletar notificação:', error);
+            console.error('[NotificationContext] Erro ao deletar notificação:', error);
+            // Reverter em caso de erro
+            setNotifications(notifications);
+            if (notificationToDelete && !notificationToDelete.read) {
+                setUnreadCount(prev => prev + 1);
+            }
             alert.error('Erro ao deletar notificação');
         }
     };
@@ -485,6 +511,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     // Enviar notificação de teste
     const sendTestNotification = async () => {
         try {
+            console.log('[NotificationContext] Enviando notificação de teste');
+            
+            // Criar notificação local
             await Notifications.scheduleNotificationAsync({
                 content: {
                     title: 'Notificação de Teste',
@@ -493,10 +522,35 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
                 },
                 trigger: null,
             });
+            
+            // Criar notificação no servidor também para aparecer na lista
+            if (userId) {
+                try {
+                    const { createItem } = await import('@directus/sdk');
+                    const { directusClient } = await import('@/services/api');
+                    
+                    await directusClient.request(
+                        createItem('notifications', {
+                            user_id: userId,
+                            title: 'Notificação de Teste',
+                            message: 'Esta é uma notificação de teste criada pelo app!',
+                            body: 'Esta é uma notificação de teste criada pelo app!',
+                            read: false,
+                            status: true,
+                            created_at: new Date().toISOString()
+                        })
+                    );
+                    
+                    // Atualizar lista após criar
+                    await refreshNotifications();
+                } catch (err) {
+                    console.error('[NotificationContext] Erro ao criar notificação no servidor:', err);
+                }
+            }
 
             alert.success('Notificação de teste enviada!');
         } catch (error) {
-            console.error('Erro ao enviar notificação de teste:', error);
+            console.error('[NotificationContext] Erro ao enviar notificação de teste:', error);
             alert.error('Erro ao enviar notificação de teste');
         }
     };

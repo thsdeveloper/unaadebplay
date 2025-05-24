@@ -20,12 +20,12 @@ export default function HomeLayout() {
                     headerTintColor: colors.white,
                     title: `Olá ${user?.first_name}, bem-vindo`,
                     headerShadowVisible: false,
-                    headerRight: () => (
+                    headerRight: () => user ? (
                         <Box>
                             <NotificationBell color={colors.white} />
                         </Box>
-                    ),
-                    headerLeft: () => (
+                    ) : null,
+                    headerLeft: () => user ? (
                         <Box>
                             <Link href={'/modal'}>
                                 <Avatar
@@ -34,7 +34,7 @@ export default function HomeLayout() {
                                     size={'sm'}/>
                             </Link>
                         </Box>
-                    )
+                    ) : null
                 }}/>
 
                 {/* Adicionamos a tela de notificações à stack */}

@@ -29,7 +29,7 @@
     "@gluestack-ui/select": "^0.1.31",
     "@gluestack-ui/spinner": "^0.1.15",
     "@gluestack-ui/toast": "^1.0.9",
-    "@hookform/resolvers": "^2.9.11",
+    "@hookform/resolvers": "^5.0.1",
     "@legendapp/motion": "^2.4.0",
     "@mercadopago/sdk-js": "^0.0.3",
     "@react-native-async-storage/async-storage": "2.1.2",

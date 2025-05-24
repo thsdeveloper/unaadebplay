@@ -1,39 +1,23 @@
 import * as React from "react";
-import { useWindowDimensions, FlatList, Platform } from 'react-native';
+import { useWindowDimensions, FlatList, Platform, Animated, View } from 'react-native';
 import RenderHtml from 'react-native-render-html';
 import * as Yup from "yup";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup/dist/yup";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import { MaterialIcons, Ionicons, FontAwesome6 } from '@expo/vector-icons';
+import { Link } from 'expo-router';
 
 // Componentes locais
-import {
-    Box
-} from "@/components/ui/box";
-import {
-    VStack
-} from "@/components/ui/vstack";
-import {
-    HStack
-} from "@/components/ui/hstack";
-import {
-    Text
-} from "@/components/ui/text";
-import {
-    Heading
-} from "@/components/ui/heading";
-import {
-    KeyboardAvoidingView
-} from "@/components/ui/keyboard-avoiding-view";
-import {
-    Pressable
-} from "@/components/ui/pressable";
-import {
-    ScrollView
-} from "@/components/ui/scroll-view";
-import {
-    Center
-} from "@/components/ui/center";
+import { Box } from "@/components/ui/box";
+import { VStack } from "@/components/ui/vstack";
+import { HStack } from "@/components/ui/hstack";
+import { Text } from "@/components/ui/text";
+import { Heading } from "@/components/ui/heading";
+import { Pressable } from "@/components/ui/pressable";
+import { ScrollView } from "@/components/ui/scroll-view";
+import { Center } from "@/components/ui/center";
 import {
     Modal,
     ModalContent,
@@ -42,16 +26,14 @@ import {
     ModalBody,
     ModalFooter
 } from "@/components/ui/modal";
-import {
-    Checkbox,
-    CheckboxIndicator,
-    CheckboxIcon,
-    CheckboxLabel,
-    CheckboxGroup
-} from "@/components/ui/checkbox";
+import { Button, ButtonText, ButtonSpinner } from "@/components/ui/button";
+
+// Componentes de autenticação
+import { AuthLayout } from "@/components/auth/AuthLayout";
+import { AuthHeader } from "@/components/auth/AuthHeader";
+import { AuthInput } from "@/components/auth/AuthInput";
 
 // Componentes de formulário e outras importações
-import { Button } from '@/components/Button';
 import { CustomSelect } from '@/components/Forms/Select';
 import { CustomInput } from '@/components/Forms/Input';
 import { setUser } from "@/services/user";
@@ -61,7 +43,6 @@ import ConfigContext from "@/contexts/ConfigContext";
 import TranslationContext from "@/contexts/TranslationContext";
 import CheckboxCustom from "@/components/Forms/Checkbox";
 import { useAuth } from "@/contexts/AuthContext";
-import colors from "@/constants/colors";
 import AlertContext from "@/contexts/AlertContext";
 import { Sector } from "@/types/Sector";
 import { GlobalQueryParams } from "@/types/GlobalQueryParamsTypes";
@@ -69,29 +50,32 @@ import { calculateAge, formatDateToISO, formatPhoneNumber } from "@/utils/direct
 import { RadioInput } from "@/components/Forms/Radio";
 import { sendVerificationSMS, verifyCode } from "@/services/twilio";
 import CountdownTimer from "@/components/CountdownTimer";
-import { FontAwesome6 } from '@expo/vector-icons';
 import { validateSchemaSignUp } from '@/schema-validations/sign-up-validation';
-import { StatusBar } from "expo-status-bar";
 
-const FormSigUpUser = () => {
+export default function SignUp() {
     const window = useWindowDimensions();
     const contentWidth = window.width;
     const { login } = useAuth();
 
     const { id_role_default } = useContext(ConfigContext);
     const { t } = useContext(TranslationContext);
+    const config = useContext(ConfigContext);
 
     const [loading, setLoading] = useState(false);
     const [sectors, setSectors] = useState<Sector[]>([]);
-    const [step, setStep] = useState(1); // Controla o passo atual do fluxo
-    const [verificationCode, setVerificationCode] = useState(''); // Armazena o código de verificação inserido pelo usuário
+    const [step, setStep] = useState(1);
+    const [verificationCode, setVerificationCode] = useState('');
 
     const [legalDocuments, setLegalDocuments] = useState<LegalDocumentsTypes[]>([]);
     const [activeDocument, setActiveDocument] = useState<"terms" | "privacy" | null>(null);
     const [userObject, setUserObject] = useState<any>(null);
     const [isTermsModalVisible, setIsTermsModalVisible] = useState(false);
     const [isMinor, setIsMinor] = useState<boolean>(false);
-    const alert = useContext(AlertContext)
+    const alert = useContext(AlertContext);
+
+    // Animações
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const progressAnim = useRef(new Animated.Value(0)).current;
 
     const validationSchema = validateSchemaSignUp(isMinor);
     type FormDataProps = Yup.InferType<typeof validationSchema>;
@@ -109,25 +93,29 @@ const FormSigUpUser = () => {
         }
 
         fetchData();
+
+        // Animação de entrada
+        Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+        }).start();
     }, []);
 
     const toggleTermsModal = () => {
         setIsTermsModalVisible(!isTermsModalVisible);
     };
 
-    const { control, handleSubmit, trigger, formState: { errors, isValid, isLoading } } = useForm<FormDataProps>({
+    const { control, handleSubmit, trigger, formState: { errors, isValid } } = useForm<FormDataProps>({
         resolver: yupResolver(validationSchema),
         mode: 'all'
     });
 
     const onCheckFormAndSubmit = () => {
-        // Força a validação de todos os campos do formulário
         trigger().then(isFormValid => {
             if (!isFormValid) {
-                // Se o formulário não estiver válido, mostra um alerta de erro
-                alert.error("Existem campos que faltam ser preenchidos");
+                alert.error("Por favor, preencha todos os campos obrigatórios");
             } else {
-                // Se o formulário estiver válido, prepara os dados para submissão
                 handleSubmit(handleSignUp)();
             }
         });
@@ -148,12 +136,20 @@ const FormSigUpUser = () => {
         try {
             const formattedPhoneNumber = formatPhoneNumber(dataUserForm.phone);
             const statusVerification = await sendVerificationSMS(formattedPhoneNumber, 'sms');
-            alert.success(`SMS enviado com sucesso, confirme o código de acesso para o número ${statusVerification.to}`, 8000)
+            alert.success(`Código enviado para ${statusVerification.to}`, 8000)
 
             setUserObject(newUserObject);
-            setStep(2);
+            
+            // Animação de transição para o próximo passo
+            Animated.timing(progressAnim, {
+                toValue: 1,
+                duration: 300,
+                useNativeDriver: true,
+            }).start(() => {
+                setStep(2);
+            });
         } catch (error) {
-            alert.error(`Não foi possível enviar o código de ativação: ${error}`)
+            alert.error(`Erro ao enviar código: ${error}`)
         } finally {
             setLoading(false)
         }
@@ -170,14 +166,14 @@ const FormSigUpUser = () => {
                 const user = await setUser(userObject);
                 if (user) {
                     await login(userObject.email, userObject.password);
-                    alert.success(`Usuário ${user.first_name} cadastrado com sucesso!`)
+                    alert.success(`Bem-vindo(a), ${user.first_name}!`)
                 }
             } else {
-                alert.error(`Código de verificação inválido com status: ${verificationCheckType.status}`);
+                alert.error(`Código inválido. Tente novamente.`);
             }
         } catch (e) {
             console.error(e)
-            alert.error(`Erro no processo de verificação do código. ${codigoFormatado}`);
+            alert.error(`Erro na verificação. Tente novamente.`);
         } finally {
             setLoading(false)
         }
@@ -188,356 +184,387 @@ const FormSigUpUser = () => {
         { value: 'feminino', label: 'Feminino' },
     ];
 
-    const keyExtractor = (_: any, index: number) => index.toString();
-
     const handleBirthdateChange = (birthdate: string) => {
         const age = calculateAge(birthdate)
         if (age < 18) {
             setIsMinor(age < 18);
-            alert.warning('Usuários menores de idade devem preencher informações do responsável legal.', 10000)
+            alert.warning('Menores de idade devem informar dados do responsável.', 10000)
         }
     };
 
-    const renderItem = () => (
-        <VStack>
-            <StatusBar style="dark" />
-            <Box className="p-4">
-                <Heading className="mt-2 text-center text-gray-600 font-medium px-2" size="sm">
-                    {t('description_sign_up')}
-                </Heading>
-            </Box>
-            <VStack className="space-y-3 mt-0 p-4">
-                <Controller
-                    control={control}
-                    name={'first_name'}
-                    render={({ field: { onChange } }) => (
+    // Cores do degradê
+    const gradientColors: readonly [string, string, ...string[]] = config.hasError
+        ? ['#1e293b', '#334155', '#1e293b'] as const
+        : [
+            config.primary_dark_color || '#1e293b',
+            config.primary_color || '#334155',
+            config.primary_darker_color || '#0f172a'
+        ] as const;
+
+    if (step === 2) {
+        return (
+            <AuthLayout gradientColors={gradientColors}>
+                <Animated.View
+                    style={{
+                        opacity: fadeAnim,
+                        flex: 1,
+                        justifyContent: 'center'
+                    }}
+                >
+                    <Center className="mb-8">
+                        <Box className="w-32 h-32 bg-green-500/20 rounded-full items-center justify-center mb-6">
+                            <FontAwesome6 name="shield-halved" size={60} color="#10b981" />
+                        </Box>
+                        <Heading className="text-white text-2xl font-bold mb-2">
+                            Verificação de Segurança
+                        </Heading>
+                        <Text className="text-center text-white/70 px-8">
+                            Enviamos um código de 6 dígitos para o número cadastrado. 
+                            Digite-o abaixo para confirmar sua identidade.
+                        </Text>
+                    </Center>
+
+                    <VStack className="space-y-6">
+                        <Center>
+                            <CountdownTimer />
+                        </Center>
+
                         <CustomInput
-                            placeholder={'Nome'}
-                            placeholderTextColor={'gray.400'}
-                            onChangeText={onChange}
-                            errorMessage={errors.first_name?.message}
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                        />
-                    )} />
-                <Controller
-                    control={control}
-                    name={'last_name'}
-                    render={({ field: { onChange } }) => (
-                        <CustomInput
-                            placeholder={'Sobrenome'}
-                            placeholderTextColor={'gray.400'}
-                            onChangeText={onChange}
-                            errorMessage={errors.last_name?.message}
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                        />
-                    )} />
-                <Controller
-                    control={control}
-                    name={'birthdate'}
-                    render={({ field: { onChange, value } }) => (
-                        <CustomInput
-                            placeholder={'Data de Nascimento'}
-                            value={value}
-                            onChangeText={onChange}
-                            errorMessage={errors.birthdate?.message}
-                            keyboardType={'numeric'}
-                            onBlur={() => handleBirthdateChange(value)}
+                            className="text-center text-2xl font-bold h-16"
+                            placeholder="0-0-0-0-0-0"
+                            value={verificationCode}
+                            onChangeText={setVerificationCode}
+                            keyboardType="numeric"
+                            style={{ letterSpacing: 8, color: 'white' }}
                             mask={{
                                 type: 'custom',
                                 options: {
-                                    // Define uma máscara para data no formato DD/MM/AAAA
-                                    mask: '99/99/9999'
+                                    mask: '9-9-9-9-9-9'
                                 }
                             }}
                         />
-                    )}
-                />
 
-                {isMinor && (
-                    <VStack className="space-y-2 border-l-4 border-gray-400 pl-2">
-                        <Heading size="md">Dados do responsável</Heading>
-                        <Controller
-                            control={control}
-                            name={'email_responsavel'}
-                            render={({ field: { onChange } }) => (
-                                <CustomInput
-                                    placeholder={'E-mail do Responsável'}
-                                    onChangeText={onChange}
-                                    keyboardType={'email-address'}
-                                    errorMessage={errors.email_responsavel?.message}
-                                />
+                        <Button
+                            className="rounded-xl bg-green-500 h-14"
+                            onPress={handleVerifyCode}
+                            isDisabled={verificationCode.replace(/-/g, '').length !== 6}
+                        >
+                            {loading ? (
+                                <ButtonSpinner color="white" />
+                            ) : (
+                                <>
+                                    <MaterialIcons
+                                        name="verified-user"
+                                        size={20}
+                                        color="white"
+                                        style={{marginRight: 8}}
+                                    />
+                                    <ButtonText className="font-semibold text-base">
+                                        Verificar Código
+                                    </ButtonText>
+                                </>
                             )}
-                        />
-                        <Controller
-                            control={control}
-                            name={'nome_responsavel'}
-                            render={({ field: { onChange } }) => (
-                                <CustomInput
-                                    placeholder={'Nome do Responsável'}
-                                    onChangeText={onChange}
-                                    errorMessage={errors.nome_responsavel?.message}
-                                />
-                            )}
-                        />
-                        <Controller
-                            control={control}
-                            name={'telefone_responsavel'}
-                            render={({ field: { onChange, value } }) => (
-                                <CustomInput
-                                    placeholder={'Telefone do Responsável'}
-                                    onChangeText={onChange}
-                                    value={value}
-                                    errorMessage={errors.telefone_responsavel?.message}
-                                    mask={{
-                                        type: 'cel-phone',
-                                        options: {
-                                            maskType: 'BRL',
-                                            withDDD: true,
-                                            dddMask: '(99) ',
-                                        }
-                                    }}
-                                />
-                            )}
-                        />
+                        </Button>
+
+                        <Pressable
+                            onPress={() => setStep(1)}
+                            className="items-center mt-4"
+                        >
+                            <Text className="text-white/60 text-sm">
+                                Não recebeu o código? <Text className="text-blue-400 font-semibold">Voltar</Text>
+                            </Text>
+                        </Pressable>
                     </VStack>
-                )}
-
-                <Controller
-                    control={control}
-                    name={'sector'}
-                    render={({ field: { onChange } }) => (
-                        <CustomSelect
-                            maxLength={50}
-                            options={sectors}
-                            labelKey="name"
-                            valueKey="id"
-                            placeholder="Selecione o seu setor"
-                            onValueChange={onChange}
-                            errorMessage={errors.sector?.message}
-                        />
-                    )} />
-                <Controller
-                    control={control}
-                    name={'email'}
-                    render={({ field: { onChange } }) => (
-                        <CustomInput
-                            placeholder={'E-mail'}
-                            placeholderTextColor={'gray.400'}
-                            onChangeText={onChange}
-                            errorMessage={errors.email?.message}
-                            autoCapitalize="none"
-                            keyboardType={'email-address'}
-                            autoCorrect={false}
-                        />
-                    )} />
-                <Controller
-                    control={control}
-                    name={'phone'}
-                    render={({ field: { onChange, value } }) => (
-                        <CustomInput
-                            placeholder={'Celular'}
-                            value={value}
-                            onChangeText={onChange}
-                            errorMessage={errors.phone?.message}
-                            mask={{
-                                type: 'cel-phone',
-                                options: {
-                                    maskType: 'BRL',
-                                    withDDD: true,
-                                    dddMask: '(99) ',
-                                }
-                            }}
-                        />
-                    )}
-                />
-                <Controller
-                    control={control}
-                    name={'password'}
-                    render={({ field: { onChange } }) => (
-                        <CustomInput
-                            isPassword={true}
-                            placeholder={'Senha'}
-                            placeholderTextColor={'gray.400'}
-                            onChangeText={onChange}
-                            errorMessage={errors.password?.message}
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                        />
-                    )} />
-                <Controller
-                    control={control}
-                    name={'password_confirmed'}
-                    render={({ field: { onChange } }) => (
-                        <CustomInput
-                            isPassword={true}
-                            placeholder={'Confirme a senha'}
-                            placeholderTextColor={'gray.400'}
-                            onChangeText={onChange}
-                            errorMessage={errors.password_confirmed?.message}
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                        />
-                    )} />
-                <Controller
-                    control={control}
-                    name={'gender'}
-                    render={({ field: { onChange, value } }) => (
-                        <RadioInput
-                            message="Sexo?"
-                            value={value}
-                            options={radioOptions}
-                            onChange={onChange}
-                            errorMessage={errors.gender?.message}
-                        />
-                    )}
-                />
-                <Controller
-                    control={control}
-                    name="acceptTerms"
-                    defaultValue={false}
-                    rules={{ required: 'Você deve aceitar os termos e condições.' }}
-                    render={({ field: { onChange, value } }) => {
-                        return (
-                            <Box>
-                                <CheckboxCustom
-                                    field={{
-                                        onChange: (isChecked) => onChange(isChecked),
-                                        value: '',
-                                        isChecked: !!value,
-                                    }}
-                                    label="Aceito os termos e condições"
-                                    error={errors.acceptTerms?.message}
-                                />
-                                <HStack className="mt-1">
-                                    <Text className="text-sm pr-1">
-                                        Veja os
-                                    </Text>
-                                    <Pressable
-                                        onPress={() => {
-                                            toggleTermsModal();
-                                            setActiveDocument('terms');
-                                        }}
-                                    >
-                                        <Text className="text-blue-500 pr-1">Termos de Uso</Text>
-                                    </Pressable>
-                                    <Text className="text-sm pr-1">
-                                        e
-                                    </Text>
-                                    <Pressable
-                                        onPress={() => {
-                                            toggleTermsModal();
-                                            setActiveDocument('privacy');
-                                        }}
-                                    >
-                                        <Text className="text-blue-500">Política de Privacidade</Text>
-                                    </Pressable>
-                                </HStack>
-                            </Box>
-                        );
-                    }}
-                />
-                <Button
-                    title={'Cadastrar'}
-                    height={12}
-                    className="mt-2"
-                    onPress={onCheckFormAndSubmit}
-                    isLoading={loading}
-                    isLoadingText="Aguarde..."
-                />
-            </VStack>
-        </VStack>
-    );
+                </Animated.View>
+            </AuthLayout>
+        );
+    }
 
     return (
-        <>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                className="flex-1"
-            >
-                {step === 1 && (
-                    <>
-                        <FlatList
-                            data={[0]} // Fornecer um único elemento para renderizar
-                            renderItem={renderItem}
-                            keyExtractor={keyExtractor}
-                            contentContainerStyle={{ paddingHorizontal: 10, paddingBottom: 100 }}
-                        />
+        <AuthLayout gradientColors={gradientColors}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+                <Animated.View style={{ opacity: fadeAnim }}>
+                    <AuthHeader 
+                        title="Criar Conta"
+                        subtitle="Junte-se à comunidade UNAADEB"
+                        showLogo={true}
+                    />
 
-                        {isTermsModalVisible && (
-                            <Modal isOpen={isTermsModalVisible} onClose={toggleTermsModal}>
-                                <ModalContent>
-                                    <ModalCloseButton />
-                                    <ModalHeader>{activeDocument === "terms" ? "Termos de Uso" : "Política de Privacidade"}</ModalHeader>
-                                    <ModalBody>
-                                        <RenderHtml
-                                            contentWidth={contentWidth}
-                                            source={{
-                                                html:
-                                                    activeDocument === "terms"
-                                                        ? legalDocuments.find((doc) => doc.type === "terms")?.content || ""
-                                                        : legalDocuments.find((doc) => doc.type === "privacy")?.content || ""
-                                            }}
-                                        />
-                                    </ModalBody>
-                                    <ModalFooter>
-                                        <Button title={`Fechar`} onPress={toggleTermsModal} />
-                                    </ModalFooter>
-                                </ModalContent>
-                            </Modal>
-                        )}
-                    </>
-                )}
-
-                {step === 2 && (
-                    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-                        <Box className="p-10 w-full">
-                            <Center className="p-10">
-                                <FontAwesome6 name="comment-sms" size={150} color={colors.secundary3} />
-                            </Center>
-                            <Box className="pb-4">
-                                <Text className="text-center">
-                                    Insira o código de 6 dígitos que enviamos para o seu número
-                                    de telefone. Este código ajuda a verificar sua identidade e proteger sua
-                                    conta.
-                                </Text>
-                            </Box>
-                            <HStack className="p-4 justify-center w-full">
-                                <CountdownTimer />
+                    <VStack className="space-y-4">
+                        {/* Dados Pessoais */}
+                        <Box className="space-y-3">
+                            <HStack className="space-x-3">
+                                <Box className="flex-1">
+                                    <AuthInput
+                                        control={control}
+                                        name="first_name"
+                                        label="Nome"
+                                        placeholder="Seu nome"
+                                        error={errors.first_name}
+                                        leftIcon="person"
+                                    />
+                                </Box>
+                                <Box className="flex-1">
+                                    <AuthInput
+                                        control={control}
+                                        name="last_name"
+                                        label="Sobrenome"
+                                        placeholder="Seu sobrenome"
+                                        error={errors.last_name}
+                                    />
+                                </Box>
                             </HStack>
-                            <CustomInput
-                                className="text-center h-20 mb-4"
-                                size="2xl"
-                                placeholder="Código de verificação"
-                                value={verificationCode}
-                                onChangeText={setVerificationCode}
-                                keyboardType="numeric"
+
+                            <AuthInput
+                                control={control}
+                                name="birthdate"
+                                label="Data de Nascimento"
+                                placeholder="DD/MM/AAAA"
+                                error={errors.birthdate}
+                                leftIcon="calendar-today"
                                 mask={{
                                     type: 'custom',
                                     options: {
-                                        mask: '9-9-9-9-9-9'
+                                        mask: '99/99/9999'
                                     }
                                 }}
                             />
-                            <Button
-                                title={loading ? "Verificando código..." : "Verificar código"}
-                                className="rounded-full"
-                                height={16}
-                                backgroundColor={colors.secundary3}
-                                onPress={handleVerifyCode}
-                                isLoading={loading}
+
+                            {/* Dados do Responsável (para menores) */}
+                            {isMinor && (
+                                <Box className="border-l-4 border-yellow-400 pl-4 space-y-3 bg-yellow-400/10 rounded-r-lg p-3">
+                                    <Heading className="text-yellow-400 text-lg font-semibold">
+                                        Dados do Responsável
+                                    </Heading>
+                                    <AuthInput
+                                        control={control}
+                                        name="nome_responsavel"
+                                        label="Nome do Responsável"
+                                        placeholder="Nome completo"
+                                        error={errors.nome_responsavel}
+                                    />
+                                    <AuthInput
+                                        control={control}
+                                        name="email_responsavel"
+                                        label="Email do Responsável"
+                                        placeholder="email@exemplo.com"
+                                        error={errors.email_responsavel}
+                                        type="email"
+                                    />
+                                    <AuthInput
+                                        control={control}
+                                        name="telefone_responsavel"
+                                        label="Telefone do Responsável"
+                                        placeholder="(00) 00000-0000"
+                                        error={errors.telefone_responsavel}
+                                        mask={{
+                                            type: 'cel-phone',
+                                            options: {
+                                                maskType: 'BRL',
+                                                withDDD: true,
+                                                dddMask: '(99) ',
+                                            }
+                                        }}
+                                    />
+                                </Box>
+                            )}
+
+                            <Controller
+                                control={control}
+                                name="sector"
+                                render={({ field: { onChange } }) => (
+                                    <CustomSelect
+                                        options={sectors}
+                                        labelKey="name"
+                                        valueKey="id"
+                                        placeholder="Selecione seu setor"
+                                        onValueChange={onChange}
+                                        errorMessage={errors.sector?.message}
+                                        className="bg-white/10 border-white/20"
+                                    />
+                                )}
+                            />
+
+                            <AuthInput
+                                control={control}
+                                name="email"
+                                label="Email"
+                                placeholder="seu@email.com"
+                                error={errors.email}
+                                type="email"
+                                leftIcon="email"
+                            />
+
+                            <AuthInput
+                                control={control}
+                                name="phone"
+                                label="Celular"
+                                placeholder="(00) 00000-0000"
+                                error={errors.phone}
+                                leftIcon="phone"
+                                mask={{
+                                    type: 'cel-phone',
+                                    options: {
+                                        maskType: 'BRL',
+                                        withDDD: true,
+                                        dddMask: '(99) ',
+                                    }
+                                }}
+                            />
+
+                            <AuthInput
+                                control={control}
+                                name="password"
+                                label="Senha"
+                                placeholder="Mínimo 8 caracteres"
+                                error={errors.password}
+                                type="password"
+                                leftIcon="lock"
+                            />
+
+                            <AuthInput
+                                control={control}
+                                name="password_confirmed"
+                                label="Confirmar Senha"
+                                placeholder="Digite a senha novamente"
+                                error={errors.password_confirmed}
+                                type="password"
+                                leftIcon="lock"
+                            />
+
+                            <Controller
+                                control={control}
+                                name="gender"
+                                render={({ field: { onChange, value } }) => (
+                                    <RadioInput
+                                        message="Sexo"
+                                        value={value}
+                                        options={radioOptions}
+                                        onChange={onChange}
+                                        errorMessage={errors.gender?.message}
+                                        className="text-white"
+                                    />
+                                )}
+                            />
+
+                            {/* Termos e Condições */}
+                            <Controller
+                                control={control}
+                                name="acceptTerms"
+                                defaultValue={false}
+                                render={({ field: { onChange, value } }) => (
+                                    <Box>
+                                        <CheckboxCustom
+                                            field={{
+                                                onChange: (isChecked) => onChange(isChecked),
+                                                value: '',
+                                                isChecked: !!value,
+                                            }}
+                                            label="Aceito os termos e condições"
+                                            error={errors.acceptTerms?.message}
+                                            className="text-white"
+                                        />
+                                        <HStack className="mt-2 flex-wrap">
+                                            <Text className="text-white/70 text-sm">
+                                                Li e concordo com os{' '}
+                                            </Text>
+                                            <Pressable
+                                                onPress={() => {
+                                                    toggleTermsModal();
+                                                    setActiveDocument('terms');
+                                                }}
+                                            >
+                                                <Text className="text-blue-400 text-sm font-semibold">
+                                                    Termos de Uso
+                                                </Text>
+                                            </Pressable>
+                                            <Text className="text-white/70 text-sm"> e </Text>
+                                            <Pressable
+                                                onPress={() => {
+                                                    toggleTermsModal();
+                                                    setActiveDocument('privacy');
+                                                }}
+                                            >
+                                                <Text className="text-blue-400 text-sm font-semibold">
+                                                    Política de Privacidade
+                                                </Text>
+                                            </Pressable>
+                                        </HStack>
+                                    </Box>
+                                )}
                             />
                         </Box>
-                    </ScrollView>
-                )}
-            </KeyboardAvoidingView>
-        </>
-    );
-};
 
-export default function SignUp() {
-    return (
-        <FormSigUpUser />
+                        {/* Botão de Cadastro */}
+                        <Button
+                            className="rounded-xl bg-blue-500 h-14 mt-6"
+                            onPress={onCheckFormAndSubmit}
+                            isDisabled={loading}
+                        >
+                            {loading ? (
+                                <ButtonSpinner color="white" />
+                            ) : (
+                                <>
+                                    <Ionicons
+                                        name="person-add"
+                                        size={20}
+                                        color="white"
+                                        style={{marginRight: 8}}
+                                    />
+                                    <ButtonText className="font-semibold text-base">
+                                        Criar Conta
+                                    </ButtonText>
+                                </>
+                            )}
+                        </Button>
+
+                        {/* Link para Login */}
+                        <HStack className="justify-center mt-4">
+                            <Text className="text-white/70 text-sm">
+                                Já tem uma conta?
+                            </Text>
+                            <Link href="/(auth)/sign-in" asChild>
+                                <Pressable>
+                                    <Text className="text-blue-400 text-sm font-semibold ml-1">
+                                        Fazer login
+                                    </Text>
+                                </Pressable>
+                            </Link>
+                        </HStack>
+                    </VStack>
+                </Animated.View>
+            </ScrollView>
+
+            {/* Modal de Termos */}
+            {isTermsModalVisible && (
+                <Modal isOpen={isTermsModalVisible} onClose={toggleTermsModal}>
+                    <ModalContent>
+                        <ModalCloseButton />
+                        <ModalHeader>
+                            {activeDocument === "terms" ? "Termos de Uso" : "Política de Privacidade"}
+                        </ModalHeader>
+                        <ModalBody>
+                            <RenderHtml
+                                contentWidth={contentWidth}
+                                source={{
+                                    html:
+                                        activeDocument === "terms"
+                                            ? legalDocuments.find((doc) => doc.type === "terms")?.content || ""
+                                            : legalDocuments.find((doc) => doc.type === "privacy")?.content || ""
+                                }}
+                            />
+                        </ModalBody>
+                        <ModalFooter>
+                            <Button 
+                                className="bg-blue-500" 
+                                onPress={toggleTermsModal}
+                            >
+                                <ButtonText>Fechar</ButtonText>
+                            </Button>
+                        </ModalFooter>
+                    </ModalContent>
+                </Modal>
+            )}
+        </AuthLayout>
     );
-};
+}

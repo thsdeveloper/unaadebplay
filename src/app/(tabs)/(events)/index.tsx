@@ -1,18 +1,14 @@
-// (tabs)/(events)/notifications.tsx
-import React, { useState, useEffect, useContext } from 'react';
-import { RefreshControl, SectionList, Dimensions } from 'react-native';
+import React, { useState, useEffect, useContext, useCallback, useMemo } from 'react';
+import { RefreshControl, SectionList, Dimensions, SectionListData } from 'react-native';
 import { getItems } from '@/services/items';
 import TranslationContext from "@/contexts/TranslationContext";
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from "@/constants/colors";
-import SkeletonItem from "@/components/SkeletonItem";
 import { EventsTypes } from "@/types/EventsTypes";
 import AlertContext from "@/contexts/AlertContext";
 import { handleErrors } from "@/utils/directus";
 import { HStack } from "@/components/ui/hstack";
 import { Box } from "@/components/ui/box";
-import { VStack } from "@/components/ui/vstack";
-import { Spinner } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/text";
 import { Heading } from "@/components/ui/heading";
 import { Center } from "@/components/ui/center";
@@ -21,27 +17,44 @@ import { Icon } from "@/components/ui/icon";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import EventCard from '@/components/common/EventCard';
+import EventListSkeletons from '@/components/Skeletons/EventListSkeletons';
 
 const { width } = Dimensions.get('window');
-const cardWidth = width * 0.92;
+const CARD_WIDTH = width * 0.92;
 
-const EventPage = () => {
-    const [events, setEvents] = useState<Array<{ title: string, data: EventsTypes[], formattedDate: string }>>([]);
-    const [isLoadingItemList, setIsLoadingItemList] = useState(false);
+type EventSection = {
+    title: string;
+    data: EventsTypes[];
+    formattedDate: string;
+}
+
+const EVENT_TYPE_COLORS = {
+    'congresso-geral': ['#4A90E2', '#5E5CE6'],
+    'ensaio': ['#F5A623', '#F27121'],
+    'palestras': ['#7ED321', '#56AB2F'],
+    'cpre-congresso': ['#BD10E0', '#9013FE'],
+    'default': ['#50C878', '#00A86B']
+} as const;
+
+const EventPage = React.memo(() => {
+    const [events, setEvents] = useState<EventSection[]>([]);
     const [isLoadingList, setIsLoadingList] = useState(false);
-    const [refreshing, setRefreshing] = useState<boolean>(false);
+    const [refreshing, setRefreshing] = useState(false);
     const { t } = useContext(TranslationContext);
     const alert = useContext(AlertContext);
 
-    const loadEvents = async () => {
+    const loadEvents = useCallback(async () => {
+        if (refreshing) return;
+
         setIsLoadingList(true);
         try {
-            let response = await getItems<EventsTypes>('events');
-            // Ordena os eventos por start_date_time
-            response.sort((a, b) => new Date(a.start_date_time).getTime() - new Date(b.start_date_time).getTime());
+            const response = await getItems<EventsTypes>('events');
 
-            // Agrupe os eventos por start_date_time
-            const eventsByDate = response.reduce((groups, event) => {
+            const sortedEvents = response.sort((a, b) =>
+                new Date(a.start_date_time).getTime() - new Date(b.start_date_time).getTime()
+            );
+
+            const eventsByDate = sortedEvents.reduce<Record<string, { events: EventsTypes[], formattedDate: string }>>((groups, event) => {
                 const eventDate = new Date(event.start_date_time);
                 const formattedDate = format(eventDate, "EEEE, dd 'de' MMMM", { locale: ptBR });
                 const dateKey = eventDate.toISOString().split('T')[0];
@@ -49,7 +62,7 @@ const EventPage = () => {
                 if (!groups[dateKey]) {
                     groups[dateKey] = {
                         events: [],
-                        formattedDate: formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1) // Capitalize
+                        formattedDate: formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1)
                     };
                 }
 
@@ -57,149 +70,129 @@ const EventPage = () => {
                 return groups;
             }, {});
 
-            // Converta o objeto groups em um array de seções
-            const sections = Object.keys(eventsByDate).map(dateKey => ({
+            const sections = Object.entries(eventsByDate).map(([dateKey, group]) => ({
                 title: dateKey,
-                formattedDate: eventsByDate[dateKey].formattedDate,
-                data: eventsByDate[dateKey].events
+                formattedDate: group.formattedDate,
+                data: group.events
             }));
 
             setEvents(sections);
-        } catch (e) {
-            const message = handleErrors(e.errors);
-            alert.error(`Error: ${message}`);
+        } catch (error: any) {
+            const message = handleErrors(error.errors);
+            alert.error(`Erro ao carregar eventos: ${message}`);
         } finally {
             setIsLoadingList(false);
         }
-    };
+    }, [alert, refreshing]);
+
+    const handleRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await loadEvents();
+        setRefreshing(false);
+    }, [loadEvents]);
 
     useEffect(() => {
         loadEvents();
+    }, [loadEvents]);
+
+    const getEventTypeColor = useCallback((eventType: string): string[] => {
+        return EVENT_TYPE_COLORS[eventType as keyof typeof EVENT_TYPE_COLORS] || EVENT_TYPE_COLORS.default;
     }, []);
 
-    // Função para obter a cor baseada no tipo de evento
-    const getEventTypeColor = (eventType: string) => {
-        console.log('eventType', eventType)
-        switch (eventType) {
-            case 'congresso-geral':
-                return ['#4A90E2', '#5E5CE6'];
-            case 'ensaio':
-                return ['#F5A623', '#F27121'];
-            case 'palestras':
-                return ['#7ED321', '#56AB2F'];
-            case 'cpre-congresso':
-                return ['#BD10E0', '#9013FE'];
-            default:
-                return ['#50C878', '#00A86B'];
-        }
-    };
-
-    const renderItem = ({ item }: { item: EventsTypes }) => {
+    const renderItem = useCallback(({ item }: { item: EventsTypes }) => {
         const gradientColors = getEventTypeColor(item.event_type);
         return (
-            <Box width={cardWidth} alignSelf="center">
+            <Box className="w-full px-4">
                 <EventCard
                     event={item}
                     gradientColors={gradientColors}
                 />
             </Box>
         );
-    };
+    }, [getEventTypeColor]);
 
-    const renderSectionHeader = ({ section }: { section: any }) => (
-        <Box className="bg-neutral-100 px-5 py-4 mb-2">
-            <HStack space={2} alignItems="center">
-                <Icon as={MaterialIcons} name="event" size="sm" color={colors.secundary} />
-                <Text fontWeight="bold" color={colors.secundary}>
+    const renderSectionHeader = useCallback(({ section }: { section: SectionListData<EventsTypes, EventSection> }) => (
+        <Box className="bg-white px-5 py-3 mb-2 border-b border-gray-200">
+            <HStack className="items-center space-x-2">
+                <Icon as={MaterialIcons} name="event" size="sm" className="text-purple-600" />
+                <Text className="font-semibold text-base text-gray-800">
                     {section.formattedDate}
                 </Text>
             </HStack>
         </Box>
-    );
+    ), []);
 
-    const renderEmptyComponent = () => (
-        <Center flex={1} p={10}>
+    const renderEmptyComponent = useCallback(() => (
+        <Center className="flex-1 p-10">
             <Icon
                 as={MaterialIcons}
                 name="event-busy"
                 size="6xl"
-                color="gray.300"
+                className="text-gray-300 mb-4"
             />
-            <Heading size="sm" color="gray.400" mt={4}>
-                {t('text_no_events')}
+            <Heading className="text-lg text-gray-600 mb-2">
+                {t('text_no_events') || 'Nenhum evento disponível'}
             </Heading>
-            <Text textAlign="center" mt={2} color="gray.500">
+            <Text className="text-center text-gray-500 mb-6">
                 {t('text_no_events_description') || "Não há eventos agendados para este período."}
             </Text>
             <Pressable
-                mt={6}
-                bg={colors.secundary}
-                px={6}
-                py={2}
-                borderRadius="full"
+                className="bg-purple-600 px-6 py-3 rounded-full"
                 onPress={loadEvents}
             >
-                <Text color="white" fontWeight="bold">
+                <Text className="text-white font-semibold">
                     {t('text_refresh') || "Atualizar"}
                 </Text>
             </Pressable>
         </Center>
-    );
+    ), [t, loadEvents]);
 
-    // Componente de overlay de carregamento
-    const LoadingOverlay = () => (
-        <Box
-            position="absolute"
-            top={0}
-            bottom={0}
-            left={0}
-            right={0}
-            justifyContent="center"
-            alignItems="center"
-            zIndex={999}
-            bg="rgba(0, 0, 0, 0.7)"
-        >
-            <VStack space={3} alignItems="center">
-                <Spinner size="lg" color="white" />
-                <Text color="white" fontWeight="medium">
-                    {t('text_loading') || "Carregando..."}
-                </Text>
-            </VStack>
-        </Box>
+    const keyExtractor = useCallback((item: EventsTypes) => item.id, []);
+
+    const getItemLayout = useCallback((_: any, index: number) => ({
+        length: 200,
+        offset: 200 * index,
+        index,
+    }), []);
+
+    const contentContainerStyle = useMemo(() =>
+        events.length === 0 ? { flex: 1 } : { paddingBottom: 20 },
+        [events.length]
     );
 
     return (
-        <Box className="trueGray.50">
-            {/* Conteúdo principal */}
+        <Box className="flex-1 bg-gray-50">
             {isLoadingList ? (
-                <Box flex={1} justifyContent="center" p={4}>
-                    <SkeletonItem count={3} />
-                </Box>
+                <EventListSkeletons count={5} />
             ) : (
-                <SectionList
+                <SectionList<EventsTypes, EventSection>
                     sections={events}
-                    keyExtractor={(item) => item.id}
+                    keyExtractor={keyExtractor}
                     renderItem={renderItem}
                     renderSectionHeader={renderSectionHeader}
-                    contentContainerStyle={events.length === 0 ? { flex: 1 } : { paddingBottom: 20 }}
+                    contentContainerStyle={contentContainerStyle}
                     stickySectionHeadersEnabled={true}
                     refreshControl={
                         <RefreshControl
-                            title={t('text_refreshing') || "Atualizando..."}
+                            refreshing={refreshing}
+                            onRefresh={handleRefresh}
                             tintColor={colors.secundary}
                             colors={[colors.secundary]}
-                            refreshing={refreshing}
-                            onRefresh={loadEvents}
                         />
                     }
                     ListEmptyComponent={renderEmptyComponent}
+                    getItemLayout={getItemLayout}
+                    removeClippedSubviews={true}
+                    maxToRenderPerBatch={10}
+                    updateCellsBatchingPeriod={50}
+                    windowSize={10}
+                    initialNumToRender={5}
                 />
             )}
-
-            {/* Loading Overlay */}
-            {isLoadingItemList && <LoadingOverlay />}
         </Box>
     );
-};
+});
+
+EventPage.displayName = 'EventPage';
 
 export default EventPage;

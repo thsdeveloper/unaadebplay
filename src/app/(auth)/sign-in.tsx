@@ -1,12 +1,11 @@
 import React, {useContext, useEffect, useState, useRef} from "react";
-import {Platform, ActivityIndicator, Alert, TouchableOpacity} from "react-native";
+import {Platform, ActivityIndicator, Alert, Animated, View} from "react-native";
 import {useNavigation, Link} from "expo-router";
 import {useForm, Controller} from "react-hook-form";
 import {yupResolver} from "@hookform/resolvers/yup";
 import * as Yup from "yup";
 import {LinearGradient} from "expo-linear-gradient";
-import {MaterialIcons, FontAwesome5} from "@expo/vector-icons";
-import * as LocalAuthentication from 'expo-local-authentication';
+import {MaterialIcons, FontAwesome5, Ionicons} from "@expo/vector-icons";
 
 import {useAuth} from "@/contexts/AuthContext";
 import TranslationContext from "@/contexts/TranslationContext";
@@ -21,10 +20,10 @@ import {Text} from "@/components/ui/text";
 import {Pressable} from "@/components/ui/pressable";
 import {ScrollView} from "@/components/ui/scroll-view";
 import {KeyboardAvoidingView} from "@/components/ui/keyboard-avoiding-view";
-import {Button, ButtonText, ButtonIcon, ButtonSpinner} from "@/components/ui/button";
+import {Button, ButtonText, ButtonSpinner} from "@/components/ui/button";
 import {CustomInput} from "@/components/Forms/Input";
-import {Icon} from "@/components/ui/icon";
 import {useBiometricAuth} from "@/hooks/useBiometricAuth";
+import {Image} from "react-native";
 
 const signInSchema = Yup.object({
     email: Yup.string().email("Digite um email válido").required("Email é obrigatório"),
@@ -42,6 +41,11 @@ export default function SignIn() {
     const [rememberMe, setRememberMe] = useState(false);
     const [biometricLoginAttempted, setBiometricLoginAttempted] = useState(false);
     const mountedRef = useRef(true);
+
+    // Animações
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const slideAnim = useRef(new Animated.Value(50)).current;
+    const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
     const {
         isBiometricAvailable,
@@ -64,14 +68,10 @@ export default function SignIn() {
 
         setLoading(true);
         try {
-            console.log("Tentando autenticar com biometria...");
             setBiometricLoginAttempted(true);
             const credentials = await authenticateWithBiometrics();
             if (credentials && mountedRef.current) {
-                console.log("Credenciais biométricas obtidas, fazendo login...");
                 await login(credentials.email, credentials.password, true);
-            } else {
-                console.log("Autenticação biométrica falhou ou foi cancelada");
             }
         } catch (error) {
             console.error("Erro ao fazer login com biometria:", error);
@@ -100,52 +100,26 @@ export default function SignIn() {
         loadCreds();
     }, [setValue]);
 
-    // Função para configurar biometria manualmente
+    // Função para configurar biometria
     const configureBiometrics = async (email: string, password: string) => {
-        console.log("Iniciando configuração de biometria...");
         try {
-            // Tentar salvar credenciais biométricas
             const success = await saveBiometricCredentials(email, password);
 
             if (success) {
                 Alert.alert(
-                    "Configuração Concluída",
-                    `${biometricType} configurado com sucesso! Agora você pode fazer login usando ${biometricType}.`,
+                    "Biometria Configurada",
+                    `${biometricType} foi configurado com sucesso! Use-o para fazer login rapidamente.`,
                     [{text: "OK"}]
                 );
             } else {
                 Alert.alert(
-                    "Erro na Configuração",
-                    `Não foi possível configurar ${biometricType}. Tente novamente mais tarde.`,
+                    "Erro",
+                    `Não foi possível configurar ${biometricType}. Tente novamente.`,
                     [{text: "OK"}]
                 );
             }
         } catch (error) {
             console.error("Erro ao configurar biometria:", error);
-            Alert.alert(
-                "Erro",
-                "Ocorreu um erro ao configurar a biometria. Tente novamente mais tarde.",
-                [{text: "OK"}]
-            );
-        }
-    };
-
-    // Função para verificar manualmente a biometria (debug)
-    const checkBiometricManually = async () => {
-        try {
-            const available = await LocalAuthentication.hasHardwareAsync();
-            const enrolled = await LocalAuthentication.isEnrolledAsync();
-            Alert.alert(
-                "Status da Biometria",
-                `Hardware disponível: ${available ? "Sim" : "Não"}\n` +
-                `Biometria registrada: ${enrolled ? "Sim" : "Não"}\n` +
-                `Biometria habilitada no app: ${isBiometricEnabled ? "Sim" : "Não"}\n` +
-                `Inicialização concluída: ${biometricInitialized ? "Sim" : "Não"}\n` +
-                `Tipo: ${biometricType}`
-            );
-        } catch (error) {
-            console.error('Erro ao verificar biometria manualmente:', error);
-            Alert.alert("Erro", "Não foi possível verificar o status da biometria");
         }
     };
 
@@ -155,39 +129,25 @@ export default function SignIn() {
 
         setLoading(true);
         try {
-            console.log("Tentando login com email e senha...");
             await login(data.email, data.password, rememberMe);
-            console.log("Login bem-sucedido, verificando configuração de biometria");
 
-            // Verificar se podemos configurar biometria
-            console.log("Status para configuração de biometria:", {
-                rememberMe,
-                biometriaDisponivel: isBiometricAvailable,
-                biometriaHabilitada: isBiometricEnabled
-            });
-
-            // Se lembrar-me estiver marcado e biometria disponível, pergunte se deseja configurar
+            // Oferecer configuração de biometria após login bem-sucedido
             if (rememberMe && isBiometricAvailable && !isBiometricEnabled && mountedRef.current) {
-                console.log("Condições satisfeitas para oferecer configuração de biometria");
-
-                // Usar setTimeout para garantir que o alerta aparece após o login completo
                 setTimeout(() => {
                     if (mountedRef.current) {
                         Alert.alert(
-                            "Configurar biometria",
-                            `Deseja usar ${biometricType} para login futuro?`,
+                            "Ativar Login Rápido",
+                            `Deseja usar ${biometricType} para entrar mais rapidamente?`,
                             [
-                                {text: "Não", style: "cancel"},
+                                {text: "Agora não", style: "cancel"},
                                 {
-                                    text: "Sim",
+                                    text: "Ativar",
                                     onPress: () => configureBiometrics(data.email, data.password)
                                 }
                             ]
                         );
                     }
                 }, 500);
-            } else {
-                console.log("Condições para configuração de biometria não satisfeitas");
             }
         } catch (error) {
             console.error("Erro ao fazer login:", error);
@@ -198,58 +158,67 @@ export default function SignIn() {
         }
     }
 
-    // Inicialização e animações
+    // Animações de entrada
+    useEffect(() => {
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 800,
+                useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: 0,
+                duration: 600,
+                delay: 200,
+                useNativeDriver: true,
+            }),
+            Animated.spring(scaleAnim, {
+                toValue: 1,
+                friction: 4,
+                delay: 400,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, []);
+
+    // Inicialização
     useEffect(() => {
         navigation.setOptions?.({headerShown: false});
 
-        // Logs de debug da biometria
-        if (biometricInitialized) {
-            console.log('Status da biometria:', {
-                disponível: isBiometricAvailable,
-                habilitada: isBiometricEnabled,
-                tipo: biometricType
-            });
-        }
-
-        // Autenticação biométrica automática - com limitação para evitar loops
+        // Tentar login automático com biometria
         if (isBiometricEnabled && !loading && !config.isLoading && biometricInitialized && !biometricLoginAttempted) {
-            console.log('Tentando auto-autenticação com biometria...');
-            // Usar setTimeout para adiar a execução fora da fase de renderização
             const timer = setTimeout(() => {
                 if (mountedRef.current && !loading && !biometricLoginAttempted) {
                     handleBiometricLogin();
                 }
             }, 1000);
 
-            // Limpar o timer na desmontagem
             return () => clearTimeout(timer);
         }
 
-        // Marcar a referência de montagem na desmontagem
         return () => {
             mountedRef.current = false;
         };
     }, [navigation, config.isLoading, isBiometricEnabled, biometricInitialized, biometricLoginAttempted]);
 
-    // Cores do degradê - usando valores do config se disponíveis
-    const gradientColors = config.hasError
-        ? ['#0c2d48', '#1a3b5a', '#0a1d2e']
+    // Cores do degradê
+    const gradientColors: readonly [string, string, ...string[]] = config.hasError
+        ? ['#1e293b', '#334155', '#1e293b'] as const
         : [
-            config.primary_dark_color || '#0c2d48',
-            config.primary_color || '#1a3b5a',
-            config.primary_darker_color || '#0a1d2e'
-        ];
+            config.primary_dark_color || '#1e293b',
+            config.primary_color || '#334155',
+            config.primary_darker_color || '#0f172a'
+        ] as const;
 
-    // Renderiza um loader enquanto as configurações estão carregando
     if (config.isLoading) {
         return (
             <LinearGradient
-                colors={['#0c2d48', '#1a3b5a', '#0a1d2e']}
+                colors={['#1e293b', '#334155', '#0f172a']}
                 start={{x: 0, y: 0}}
                 end={{x: 1, y: 1}}
                 style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}
             >
-                <ActivityIndicator size="large" color="#3498db"/>
+                <ActivityIndicator size="large" color="#60a5fa"/>
                 <Text className="text-white mt-4">Carregando...</Text>
             </LinearGradient>
         );
@@ -269,196 +238,214 @@ export default function SignIn() {
                 <ScrollView
                     contentContainerStyle={{flexGrow: 1}}
                     keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
                 >
-                    <Box className="flex-1 px-8 py-12 justify-center">
-                        <Heading
-                            className="text-center text-blue-200 text-2xl font-bold mb-8"
-                            onLongPress={checkBiometricManually}
-                        >
-                            {t('login_title')}
-                        </Heading>
-
-                        <VStack className="space-y-6">
-                            <Controller
-                                control={control}
-                                name="email"
-                                render={({field: {onChange, onBlur, value}}) => (
-                                    <CustomInput
-                                        label={'Digite seu e-mail'}
-                                        placeholder="Digite seu e-mail"
-                                        helperText="Seu nome completo, como no documento"
-                                        value={value}
-                                        onChangeText={onChange}
-                                        onBlur={onBlur}
-                                        errorMessage={errors.email?.message}
-                                        keyboardType="email-address"
-                                        autoCapitalize="none"
-                                        autoCorrect={false}
-                                        leftIcon="email"
+                    <Animated.View
+                        style={{
+                            flex: 1,
+                            opacity: fadeAnim,
+                            transform: [{translateY: slideAnim}]
+                        }}
+                    >
+                        <Box className="flex-1 px-6 py-8 justify-center">
+                            {/* Logo e Título */}
+                            <Animated.View
+                                style={{
+                                    transform: [{scale: scaleAnim}],
+                                    alignItems: 'center',
+                                    marginBottom: 40
+                                }}
+                            >
+                                <Box className="w-32 h-32 mb-6 bg-white/10 rounded-full items-center justify-center">
+                                    <Image
+                                        source={require("@/assets/unaadeb-login.png")}
+                                        className="w-28 h-28 rounded-full"
+                                        alt="Logo"
                                     />
-                                )}
-                            />
+                                </Box>
 
-                            <Controller
-                                control={control}
-                                name="password"
-                                render={({field: {onChange, onBlur, value}}) => (
-                                    <CustomInput
-                                        label={'Senha'}
-                                        placeholder="Digite sua senha"
-                                        value={value}
-                                        onChangeText={onChange}
-                                        onBlur={onBlur}
-                                        errorMessage={errors.password?.message}
-                                        helperText="Mínimo de 8 caracteres"
-                                        autoCapitalize="none"
-                                        autoCorrect={false}
-                                        isPassword={true}
-                                        isRequired={true}
-                                        leftIcon="lock"
-                                    />
-                                )}
-                            />
+                                <Heading className="text-center text-white text-3xl font-bold mb-2">
+                                    {t('login_title') || 'Bem-vindo'}
+                                </Heading>
+                                <Text className="text-center text-blue-200 text-base">
+                                    Entre com sua conta para continuar
+                                </Text>
+                            </Animated.View>
 
-                            <HStack className="justify-between items-center mt-4 mb-4">
-                                <Pressable
-                                    onPress={() => {
-                                        setRememberMe(!rememberMe);
-                                        console.log("Lembrar-me:", !rememberMe);
-                                    }}
-                                    className="flex-row items-center"
-                                >
-                                    <Box
-                                        className={`h-5 w-5 rounded border border-blue-300 mr-2 items-center justify-center ${
-                                            rememberMe ? 'bg-blue-600' : 'bg-transparent'
-                                        }`}
-                                    >
-                                        {rememberMe && (
-                                            <Icon
-                                                as={MaterialIcons}
-                                                name="check"
-                                                size="sm"
-                                                color="white"
+                            <VStack className="space-y-4">
+                                {/* Campo de Email */}
+                                <Controller
+                                    control={control}
+                                    name="email"
+                                    render={({field: {onChange, onBlur, value}}) => (
+                                        <Box>
+                                            <CustomInput
+                                                label="Email"
+                                                placeholder="seu@email.com"
+                                                value={value}
+                                                onChangeText={onChange}
+                                                onBlur={onBlur}
+                                                errorMessage={errors.email?.message}
+                                                keyboardType="email-address"
+                                                autoCapitalize="none"
+                                                autoCorrect={false}
+                                                leftIcon="email"
+                                                className="bg-white/10 border-white/20"
                                             />
-                                        )}
-                                    </Box>
-                                    <Text className="text-sm text-blue-200 font-bold">
-                                        {config.remember_me_text || 'Lembrar-me (necessário para biometria)'}
-                                    </Text>
-                                </Pressable>
-                            </HStack>
+                                        </Box>
+                                    )}
+                                />
 
-                            <Box className={'py-4'}>
-                                <Link href="/(auth)/forget-password" asChild>
-                                    <Pressable>
-                                        <Text className="text-sm text-blue-300 font-medium">
-                                            {config.forgot_password_text || 'Esqueceu a sua senha?'}
+                                {/* Campo de Senha */}
+                                <Controller
+                                    control={control}
+                                    name="password"
+                                    render={({field: {onChange, onBlur, value}}) => (
+                                        <Box>
+                                            <CustomInput
+                                                label="Senha"
+                                                placeholder="••••••••"
+                                                value={value}
+                                                onChangeText={onChange}
+                                                onBlur={onBlur}
+                                                errorMessage={errors.password?.message}
+                                                autoCapitalize="none"
+                                                autoCorrect={false}
+                                                isPassword={true}
+                                                leftIcon="lock"
+                                                className="bg-white/10 border-white/20"
+                                            />
+                                        </Box>
+                                    )}
+                                />
+
+                                {/* Opções: Lembrar-me e Esqueceu senha */}
+                                <HStack className="justify-between items-center">
+                                    <Pressable
+                                        onPress={() => setRememberMe(!rememberMe)}
+                                        className="flex-row items-center"
+                                    >
+                                        <Box
+                                            className={`h-5 w-5 rounded border-2 mr-2 items-center justify-center ${
+                                                rememberMe 
+                                                    ? 'bg-blue-500 border-blue-500' 
+                                                    : 'bg-transparent border-white/50'
+                                            }`}
+                                        >
+                                            {rememberMe && (
+                                                <MaterialIcons
+                                                    name="check"
+                                                    size={14}
+                                                    color="white"
+                                                />
+                                            )}
+                                        </Box>
+                                        <Text className="text-sm text-white/80">
+                                            Lembrar-me
                                         </Text>
                                     </Pressable>
-                                </Link>
-                            </Box>
 
-                            {/* Botão de login biométrico - aparece quando disponível OU quando habilitado */}
-                            {(isBiometricAvailable || isBiometricEnabled) && biometricInitialized && (
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        if (isBiometricEnabled) {
-                                            handleBiometricLogin();
-                                        } else {
-                                            Alert.alert(
-                                                "Autenticação Biométrica",
-                                                `Você pode configurar o ${biometricType} após fazer login com seu email e senha. Marque "Lembrar-me" antes de fazer login.`,
-                                                [{text: "OK"}]
-                                            );
-                                        }
-                                    }}
-                                    activeOpacity={0.8}
-                                    style={{
-                                        backgroundColor: '#2563eb', // bg-blue-700
-                                        borderRadius: 8,
-                                        paddingVertical: 14,
-                                        marginBottom: 16,
-                                        alignItems: 'center',
-                                        flexDirection: 'row',
-                                        justifyContent: 'center'
-                                    }}
-                                    disabled={loading}
-                                >
-                                    <FontAwesome5
-                                        name={biometricType.toLowerCase().includes('face') ? 'face' : 'fingerprint'}
-                                        size={16}
-                                        color="white"
-                                        style={{marginRight: 8}}
-                                    />
-                                    <Text style={{
-                                        color: 'white',
-                                        fontSize: 14,
-                                        fontWeight: '600'
-                                    }}>
-                                        {isBiometricEnabled
-                                            ? `Entrar com ${biometricType}`
-                                            : `Configurar ${biometricType}`}
-                                    </Text>
-                                </TouchableOpacity>
-                            )}
-
-                            <Button
-                                className="rounded-lg bg-blue-600"
-                                isDisabled={!isValid || loading}
-                                size={'lg'}
-                                onPress={handleSubmit(handleSignIn)}
-                            >
-                                {loading ? (
-                                    <ButtonSpinner color="white"/>
-                                ) : (
-                                    <ButtonIcon
-                                        as={FontAwesome5}
-                                        name="sign-in-alt"
-                                        size="sm"
-                                        color="white"
-                                        mr="2"
-                                    />
-                                )}
-                                <ButtonText className="font-medium text-sm ml-2">
-                                    {loading ? "Autenticando..." : (config.login_button_text || "Entrar")}
-                                </ButtonText>
-                            </Button>
-
-                            {config.allow_signup !== false && (
-                                <HStack className="justify-center mt-4">
-                                    <Text className="text-sm text-blue-100">
-                                        {config.signup_question || 'Ainda não tem conta?'}
-                                    </Text>
-                                    <Link href="/sign-up" asChild>
+                                    <Link href="/(auth)/forget-password" asChild>
                                         <Pressable>
-                                            <Text className="text-sm text-blue-300 font-semibold ml-1">
-                                                {config.signup_text || 'Cadastre-se'}
+                                            <Text className="text-sm text-blue-300 font-medium">
+                                                Esqueceu a senha?
                                             </Text>
                                         </Pressable>
                                     </Link>
                                 </HStack>
-                            )}
 
-                            <Center className="mt-8">
-                                <Text className="text-xs text-blue-200 opacity-70">
-                                    {config.copyright_text || `© ${new Date().getFullYear()} - Todos os direitos reservados`}
-                                </Text>
-                            </Center>
-                        </VStack>
-                    </Box>
+                                {/* Botão de Login */}
+                                <Button
+                                    className="rounded-xl bg-blue-500 h-14 shadow-lg"
+                                    isDisabled={!isValid || loading}
+                                    onPress={handleSubmit(handleSignIn)}
+                                >
+                                    {loading ? (
+                                        <ButtonSpinner color="white"/>
+                                    ) : (
+                                        <>
+                                            <Ionicons
+                                                name="log-in"
+                                                size={20}
+                                                color="white"
+                                                style={{marginRight: 8}}
+                                            />
+                                            <ButtonText className="font-semibold text-base">
+                                                Entrar
+                                            </ButtonText>
+                                        </>
+                                    )}
+                                </Button>
 
-                    {/* Botão de debug invisível para verificar biometria */}
-                    <TouchableOpacity
-                        onLongPress={checkBiometricManually}
-                        style={{
-                            position: 'absolute',
-                            bottom: 20,
-                            right: 20,
-                            width: 40,
-                            height: 40,
-                            zIndex: 100
-                        }}
-                    />
+                                {/* Botão de Biometria */}
+                                {(isBiometricAvailable || isBiometricEnabled) && biometricInitialized && (
+                                    <Pressable
+                                        onPress={() => {
+                                            if (isBiometricEnabled) {
+                                                handleBiometricLogin();
+                                            } else {
+                                                Alert.alert(
+                                                    "Login Biométrico",
+                                                    `Para usar ${biometricType}, faça login primeiro e marque "Lembrar-me".`,
+                                                    [{text: "Entendi"}]
+                                                );
+                                            }
+                                        }}
+                                        disabled={loading}
+                                        className={`flex-row items-center justify-center h-14 rounded-xl border-2 ${
+                                            isBiometricEnabled 
+                                                ? 'border-green-400 bg-green-400/10' 
+                                                : 'border-white/30 bg-white/5'
+                                        }`}
+                                    >
+                                        <FontAwesome5
+                                            name={biometricType.toLowerCase().includes('face') ? 'smile' : 'fingerprint'}
+                                            size={20}
+                                            color={isBiometricEnabled ? '#4ade80' : '#ffffff80'}
+                                            style={{marginRight: 12}}
+                                        />
+                                        <Text className={`font-semibold text-base ${
+                                            isBiometricEnabled ? 'text-green-400' : 'text-white/80'
+                                        }`}>
+                                            {isBiometricEnabled
+                                                ? `Entrar com ${biometricType}`
+                                                : `Configurar ${biometricType}`}
+                                        </Text>
+                                    </Pressable>
+                                )}
+
+                                {/* Divisor */}
+                                <Box className="flex-row items-center my-4">
+                                    <Box className="flex-1 h-px bg-white/20" />
+                                    <Text className="mx-4 text-white/60 text-sm">ou</Text>
+                                    <Box className="flex-1 h-px bg-white/20" />
+                                </Box>
+
+                                {/* Link para Cadastro */}
+                                {config.allow_signup !== false && (
+                                    <HStack className="justify-center">
+                                        <Text className="text-sm text-white/70">
+                                            Não tem uma conta?
+                                        </Text>
+                                        <Link href="/sign-up" asChild>
+                                            <Pressable>
+                                                <Text className="text-sm text-blue-400 font-semibold ml-1">
+                                                    Cadastre-se
+                                                </Text>
+                                            </Pressable>
+                                        </Link>
+                                    </HStack>
+                                )}
+
+                                {/* Copyright */}
+                                <Center className="mt-8">
+                                    <Text className="text-xs text-white/40 text-center">
+                                        {config.copyright_text || `© ${new Date().getFullYear()} UNAADEB. Todos os direitos reservados.`}
+                                    </Text>
+                                </Center>
+                            </VStack>
+                        </Box>
+                    </Animated.View>
                 </ScrollView>
             </LinearGradient>
         </KeyboardAvoidingView>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback, memo } from 'react';
+import React, { useEffect, useState, useRef, useCallback, memo, useMemo } from 'react';
 import {
     Dimensions,
     FlatList,
@@ -143,6 +143,13 @@ const BannerItem = memo(({
             </TouchableOpacity>
         </Animated.View>
     );
+}, (prevProps, nextProps) => {
+    // Custom comparison para evitar re-renders desnecessários
+    return prevProps.item.id === nextProps.item.id &&
+           prevProps.index === nextProps.index &&
+           prevProps.activeIndex === nextProps.activeIndex &&
+           prevProps.width === nextProps.width &&
+           prevProps.height === nextProps.height;
 });
 
 // Componente de renderização da paginação
@@ -218,26 +225,37 @@ const BannerCarousel = ({
     const scrollX = useRef(new Animated.Value(0)).current;
     const autoplayTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Carrega os banners da API
-    useEffect(() => {
-        const loadBanners = async () => {
-            try {
+    // Função para carregar banners
+    const loadBanners = useCallback(async () => {
+        try {
+            // Só mostra loading se não tiver banners ou não estiver refreshing
+            if (banners.length === 0 && !refreshing) {
                 setLoading(true);
-                setError(null);
-
-                const response = await getItems<BannerTypes>('banners');
-                setBanners(response);
-            } catch (err) {
-                console.error('Erro ao carregar banners:', err);
-                setError('Não foi possível carregar os banners');
-            } finally {
-                setLoading(false);
-                setRefreshing(false);
             }
-        };
+            setError(null);
 
+            const response = await getItems<BannerTypes>('banners');
+            setBanners(response);
+        } catch (err) {
+            console.error('Erro ao carregar banners:', err);
+            setError('Não foi possível carregar os banners');
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    }, [banners.length, refreshing]);
+
+    // Carrega os banners na inicialização
+    useEffect(() => {
         loadBanners();
-    }, [refreshing]);
+    }, []);
+
+    // Carrega os banners quando refreshing muda para true
+    useEffect(() => {
+        if (refreshing) {
+            loadBanners();
+        }
+    }, [refreshing, loadBanners]);
 
     // Gerenciamento do autoplay
     useEffect(() => {
@@ -307,8 +325,8 @@ const BannerCarousel = ({
         }
     };
 
-    // Renderiza os skeletons durante o carregamento
-    const renderLoader = () => (
+    // Renderiza os skeletons durante o carregamento inicial
+    const renderLoader = useMemo(() => (
         <Box className="items-center justify-center mt-2.5 mb-5">
             <Skeleton width={cardWidth} height={cardHeight} borderRadius={16} className="shadow-sm shadow-black/5" />
             <View className="flex-row justify-center mt-3">
@@ -323,7 +341,7 @@ const BannerCarousel = ({
                 ))}
             </View>
         </Box>
-    );
+    ), [cardWidth, cardHeight]);
 
     // Renderiza mensagem de erro se ocorrer
     const renderError = () => (
@@ -415,8 +433,8 @@ const BannerCarousel = ({
                 stiffness: 100
             }}
         >
-            {loading ? (
-                renderLoader()
+            {loading && banners.length === 0 ? (
+                renderLoader
             ) : error ? (
                 renderError()
             ) : banners.length === 0 ? (

@@ -24,10 +24,14 @@ export const EmptyNotifications = memo<EmptyNotificationsProps>(({
     userId,
     isDevelopment = __DEV__
 }) => {
+    console.log('[EmptyNotifications] Props:', { isLoading, userId, isDevelopment });
+
     if (isLoading) {
+        console.log('[EmptyNotifications] Mostrando LoadingState');
         return <LoadingState />;
     }
 
+    console.log('[EmptyNotifications] Mostrando EmptyState');
     return (
         <EmptyState
             onRefresh={onRefresh}
@@ -65,7 +69,8 @@ const EmptyState = memo<Omit<EmptyNotificationsProps, 'isLoading'>>(({
 }) => (
     <Animated.View
         entering={FadeInDown.duration(500)}
-        className="flex-1 justify-center items-center px-8 pt-20"
+        className="flex-1 justify-center items-center px-8"
+        style={{ backgroundColor: '#FFFFFF' }}
     >
         <EmptyAnimation />
         <EmptyMessage />
@@ -82,9 +87,9 @@ const EmptyState = memo<Omit<EmptyNotificationsProps, 'isLoading'>>(({
 EmptyState.displayName = 'EmptyState';
 
 const EmptyAnimation = memo(() => (
-    <View className="mb-6">
+    <View className="mb-6" style={{ width: 200, height: 200, justifyContent: 'center', alignItems: 'center' }}>
         <LottieView
-            source={require('@/assets/empty-notifications.json')}
+            source={require('@/assets/animations/bell-notification.json')}
             autoPlay
             loop
             style={{ width: 200, height: 200 }}
@@ -125,7 +130,7 @@ const ActionButtons = memo<ActionButtonsProps>(({
 }) => (
     <View className="flex-row gap-4">
         <RefreshButton onPress={onRefresh} />
-        
+
         {isDevelopment && (
             <>
                 {onSendTest && <TestButton onPress={onSendTest} />}

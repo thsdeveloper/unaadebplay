@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { FlatList, RefreshControl } from 'react-native';
+import { FlatList, RefreshControl, View, Text } from 'react-native';
 import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useNotifications } from '@/contexts/NotificationContext';
@@ -101,7 +101,8 @@ export default function NotificationsScreen() {
                     ListEmptyComponent={listEmptyComponent}
                     contentContainerStyle={{
                         flexGrow: 1,
-                        backgroundColor: notifications.length === 0 ? '#FFFFFF' : '#F9FAFB'
+                        backgroundColor: '#FFFFFF',
+                        minHeight: '100%'
                     }}
                     refreshControl={
                         <RefreshControl
