@@ -23,7 +23,7 @@ export async function debugNotifications(userId: string) {
         
         // Teste 1: Buscar sem nenhum filtro
         const allData = await directusClient.request(
-            readItems('notifications', {
+            readItems('notifications' as any, {
                 limit: 10
             })
         );
@@ -39,7 +39,7 @@ export async function debugNotifications(userId: string) {
         
         // Teste 2: Buscar apenas pelo user_id
         const userNotifications = await directusClient.request(
-            readItems('notifications', {
+            readItems('notifications' as any, {
                 filter: {
                     user_id: { _eq: userId }
                 },
@@ -57,7 +57,7 @@ export async function debugNotifications(userId: string) {
         // Teste 4: Tentar diferentes formas de filtro
         try {
             const altFilter = await directusClient.request(
-                readItems('notifications', {
+                readItems('notifications' as any, {
                     filter: {
                         _and: [
                             { user_id: { _eq: userId } }
@@ -84,6 +84,8 @@ Notifications.setNotificationHandler({
         shouldShowAlert: true,
         shouldPlaySound: true,
         shouldSetBadge: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
     }),
 });
 
@@ -246,7 +248,7 @@ export async function fetchNotifications(userId: string, limit = 50): Promise<No
         console.log('[fetchNotifications] Buscando notificações para userId:', userId);
         
         const notifications = await directusClient.request(
-            readItems('notifications', {
+            readItems('notifications' as any, {
                 filter: {
                     user_id: { _eq: userId }
                 },
@@ -299,7 +301,7 @@ export async function fetchNotifications(userId: string, limit = 50): Promise<No
 export async function markNotificationAsRead(notificationId: string): Promise<void> {
     try {
         await directusClient.request(
-            updateItem('notifications', notificationId, {
+            updateItem('notifications' as any, notificationId, {
                 read: true,
                 read_at: new Date().toISOString()
             })
@@ -314,7 +316,7 @@ export async function markNotificationAsRead(notificationId: string): Promise<vo
 export async function markAllNotificationsAsRead(userId: string): Promise<void> {
     try {
         const unreadNotifications = await directusClient.request(
-            readItems('notifications', {
+            readItems('notifications' as any, {
                 filter: {
                     user_id: { _eq: userId },
                     read: { _eq: false },
@@ -326,7 +328,7 @@ export async function markAllNotificationsAsRead(userId: string): Promise<void> 
         // Usar Promise.all para melhor performance
         const updatePromises = unreadNotifications.map(notification =>
             directusClient.request(
-                updateItem('notifications', notification.id, {
+                updateItem('notifications' as any, notification.id, {
                     read: true,
                     read_at: new Date().toISOString()
                 })
@@ -345,7 +347,7 @@ export async function deleteNotification(notificationId: string): Promise<void> 
     try {
         // Soft delete - marcar como inativo
         await directusClient.request(
-            updateItem('notifications', notificationId, {
+            updateItem('notifications' as any, notificationId, {
                 status: false,
                 deleted_at: new Date().toISOString()
             })
@@ -410,7 +412,7 @@ export async function createBulkNotification(data: BulkNotificationData): Promis
         for (const batch of batches) {
             const notificationPromises = batch.map(userId =>
                 directusClient.request(
-                    createItem('notifications', {
+                    createItem('notifications' as any, {
                         user_id: userId,
                         title: data.title,
                         message: data.message,
@@ -437,7 +439,7 @@ export async function getNotificationStats(userId: string) {
     try {
         const [total, unread, read] = await Promise.all([
             directusClient.request(
-                readItems('notifications', {
+                readItems('notifications' as any, {
                     filter: {
                         user_id: { _eq: userId },
                         status: { _eq: true }
@@ -446,7 +448,7 @@ export async function getNotificationStats(userId: string) {
                 })
             ),
             directusClient.request(
-                readItems('notifications', {
+                readItems('notifications' as any, {
                     filter: {
                         user_id: { _eq: userId },
                         status: { _eq: true },
@@ -456,7 +458,7 @@ export async function getNotificationStats(userId: string) {
                 })
             ),
             directusClient.request(
-                readItems('notifications', {
+                readItems('notifications' as any, {
                     filter: {
                         user_id: { _eq: userId },
                         status: { _eq: true },

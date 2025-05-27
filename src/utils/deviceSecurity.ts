@@ -2,14 +2,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Application from 'expo-application';
 import * as Crypto from 'expo-crypto';
 
-const DEVICE_ID_KEY = '@UNAADEB:DeviceId';
+const DEVICE_ID_KEY = 'UNAADEB_DeviceId';
 
 export async function getOrCreateDeviceId(): Promise<string> {
     let deviceId = await AsyncStorage.getItem(DEVICE_ID_KEY);
 
     if (!deviceId) {
         // Combine informações únicas do dispositivo
-        const installationId = Application.androidId || Application.applicationId;
+        const installationId = await Application.getAndroidId() || Application.applicationId;
         const randomBytes = await Crypto.digestStringAsync(
             Crypto.CryptoDigestAlgorithm.SHA256,
             Date.now().toString() + Math.random().toString()

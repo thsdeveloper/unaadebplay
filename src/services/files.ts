@@ -11,7 +11,7 @@ export async function getAssetURI(fileId: string, params?: GlobalQueryParams): P
     }
 }
 
-export async function uploadFile(uri: any): Promise<DirectusFile> {
+export async function uploadFile(uri: any): Promise<DirectusFile<any>> {
     let formData = new FormData();
     let name = uri.split("/").pop();
     let match = /\.(\w+)$/.exec(name);
@@ -20,15 +20,15 @@ export async function uploadFile(uri: any): Promise<DirectusFile> {
     formData.append('file', {uri: uri, name: name, type});
 
     try {
-        return await directusClient.request<DirectusFile>(uploadFiles(formData));
+        return await directusClient.request<DirectusFile<any>>(uploadFiles(formData));
     } catch (error) {
         throw error;
     }
 }
 
-export async function setUpdateFile(id: string, fileObject: FormData | Partial<DirectusFile<object>>): Promise<DirectusFile> {
+export async function setUpdateFile(id: string, fileObject: FormData | Partial<DirectusFile<any>>): Promise<DirectusFile<any>> {
     try {
-        return await directusClient.request<DirectusFile>(updateFile(id, fileObject));
+        return await directusClient.request<DirectusFile<any>>(updateFile(id, fileObject));
     } catch (error) {
         throw error;
     }

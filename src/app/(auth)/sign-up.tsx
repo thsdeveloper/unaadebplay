@@ -3,7 +3,7 @@ import { useWindowDimensions, FlatList, Platform, Animated, View } from 'react-n
 import RenderHtml from 'react-native-render-html';
 import * as Yup from "yup";
 import { Controller, useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup/dist/yup";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { useContext, useEffect, useState, useRef } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialIcons, Ionicons, FontAwesome6 } from '@expo/vector-icons';

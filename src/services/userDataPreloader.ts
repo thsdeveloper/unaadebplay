@@ -1,6 +1,7 @@
 // src/services/userDataPreloader.ts
 import directusClient from './api';
 import { readItems } from '@directus/sdk';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export async function preloadUserData(userId: string) {
     try {
@@ -10,23 +11,23 @@ export async function preloadUserData(userId: string) {
             userPosts,
             userNotifications
         ] = await Promise.all([
-            directusClient.request(readItems('users', {
+            directusClient.request(readItems('users' as any, {
                 filter: { id: { _eq: userId } },
                 fields: ['email', 'avatar', 'first_name', 'last_name', 'role']
             })),
-            directusClient.request(readItems('posts', {
+            directusClient.request(readItems('posts' as any, {
                 filter: { user_created: { _eq: userId } },
                 limit: 5
             })),
-            directusClient.request(readItems('notifications', {
+            directusClient.request(readItems('notifications' as any, {
                 filter: { recipient: { _eq: userId }, read: { _eq: false } }
             }))
         ]);
 
         // Armazenar em cache
-        await AsyncStorage.setItem('@UNAADEB:UserDetailsCache', JSON.stringify(userDetails));
-        await AsyncStorage.setItem('@UNAADEB:UserPostsCache', JSON.stringify(userPosts));
-        await AsyncStorage.setItem('@UNAADEB:UserNotificationsCache', JSON.stringify(userNotifications));
+        await AsyncStorage.setItem('UNAADEB_UserDetailsCache', JSON.stringify(userDetails));
+        await AsyncStorage.setItem('UNAADEB_UserPostsCache', JSON.stringify(userPosts));
+        await AsyncStorage.setItem('UNAADEB_UserNotificationsCache', JSON.stringify(userNotifications));
 
         return { userDetails, userPosts, userNotifications };
     } catch (error) {

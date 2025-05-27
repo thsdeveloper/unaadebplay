@@ -1,243 +1,468 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import { encrypt, decrypt } from '@/utils/crypto';
+import Constants from 'expo-constants';
 
 // Chaves para armazenamento seguro
-const BIOMETRIC_ENABLED_KEY = '@UNAADEB:BiometricEnabled';
-const BIOMETRIC_CREDENTIALS_KEY = '@UNAADEB:BiometricCredentials';
+const BIOMETRIC_CONFIG_KEY = 'UNAADEB_BiometricConfig';
+const BIOMETRIC_VAULT_KEY = 'UNAADEB_BiometricVault';
+const BIOMETRIC_ATTEMPTS_KEY = 'UNAADEB_BiometricAttempts';
 
-// Função para criptografar credenciais (básica para exemplo)
-const encryptCredentials = (email: string, password: string): string => {
-    // Implementação simples - na prática, use uma criptografia forte
-    return btoa(JSON.stringify({ email, password }));
-};
+// Configurações de segurança
+const MAX_BIOMETRIC_ATTEMPTS = 3;
+const BIOMETRIC_LOCKOUT_DURATION = 30 * 60 * 1000; // 30 minutos
+const VAULT_EXPIRATION = 30 * 24 * 60 * 60 * 1000; // 30 dias
 
-// Função para descriptografar credenciais
-const decryptCredentials = (encryptedData: string): { email: string, password: string } => {
-    // Implementação simples - na prática, use uma descriptografia correspondente
-    const decodedString = atob(encryptedData);
-    return JSON.parse(decodedString);
-};
+// Tipos de biometria suportados
+export enum BiometricType {
+    FINGERPRINT = 'fingerprint',
+    FACE_ID = 'face-id',
+    IRIS = 'iris',
+    UNKNOWN = 'unknown'
+}
 
+// Interface de configuração biométrica
+interface BiometricConfig {
+    enabled: boolean;
+    type: BiometricType;
+    lastUsed: number;
+    failedAttempts: number;
+    lockedUntil: number;
+}
+
+// Interface do vault de credenciais
+interface BiometricVault {
+    credentials: string; // Criptografado
+    createdAt: number;
+    expiresAt: number;
+    checksum: string;
+}
+
+// Interface de credenciais
 interface BiometricCredentials {
     email: string;
     password: string;
 }
 
+// Hook principal de biometria melhorado
 export function useBiometricAuth() {
-    const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
-    const [isBiometricEnabled, setIsBiometricEnabled] = useState(false);
-    const [biometricType, setBiometricType] = useState<string>('Biometria');
-    const [loading, setLoading] = useState(true);
-    const [initialized, setInitialized] = useState(false);
-    const initializationAttempted = useRef(false);
+    const [isAvailable, setIsAvailable] = useState(false);
+    const [isEnabled, setIsEnabled] = useState(false);
+    const [biometricType, setBiometricType] = useState<BiometricType>(BiometricType.UNKNOWN);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isLocked, setIsLocked] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    
+    const initializationRef = useRef(false);
+    const configRef = useRef<BiometricConfig | null>(null);
+
+    // Verificar se está no Expo Go
+    const isExpoGo = Constants.appOwnership === 'expo';
 
     // Verificar disponibilidade de biometria
-    const checkBiometricAvailability = async () => {
+    const checkBiometricAvailability = useCallback(async () => {
         try {
-            // Evitar inicialização duplicada
-            if (initializationAttempted.current) return;
-            initializationAttempted.current = true;
-
-            setLoading(true);
-
-            // Verificar se o hardware suporta biometria
-            const compatible = await LocalAuthentication.hasHardwareAsync();
-
-            // Verificar se há biometria registrada no dispositivo
-            const enrolled = compatible ? await LocalAuthentication.isEnrolledAsync() : false;
-
-            // Verificar se o usuário habilitou biometria no app
-            let enabled = false;
-            try {
-                // Tentar ler do SecureStore primeiro
-                let storedValue = await SecureStore.getItemAsync(BIOMETRIC_ENABLED_KEY);
-
-                // Se não encontrou, tentar ler do AsyncStorage
-                if (!storedValue) {
-                    storedValue = await AsyncStorage.getItem(BIOMETRIC_ENABLED_KEY);
-                }
-
-                enabled = storedValue === 'true';
-            } catch (e) {
-                console.warn('Erro ao verificar status da biometria:', e);
+            // Se estiver no Expo Go, simular biometria disponível
+            if (isExpoGo) {
+                console.log('🔐 Executando no Expo Go - Simulando biometria disponível');
+                setBiometricType(BiometricType.FACE_ID);
+                setIsAvailable(true);
+                await loadBiometricConfig();
+                return;
             }
 
-            // Determinar o tipo de biometria
-            let biometricTypeLabel = 'Biometria';
-            if (compatible) {
-                try {
-                    const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
-
-                    // Mapear tipos de autenticação para nomes legíveis
-                    if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
-                        biometricTypeLabel = Platform.OS === 'ios' ? 'Face ID' : 'Reconhecimento Facial';
-                    } else if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
-                        biometricTypeLabel = Platform.OS === 'ios' ? 'Touch ID' : 'Impressão Digital';
-                    } else if (types.includes(LocalAuthentication.AuthenticationType.IRIS)) {
-                        biometricTypeLabel = 'Reconhecimento de Íris';
-                    }
-                } catch (e) {
-                    console.warn('Erro ao verificar tipos de biometria:', e);
-                }
+            // Verificar hardware
+            const hasHardware = await LocalAuthentication.hasHardwareAsync();
+            if (!hasHardware) {
+                setIsAvailable(false);
+                return;
             }
 
-            // Atualizar estados
-            setIsBiometricAvailable(compatible && enrolled);
-            setIsBiometricEnabled(compatible && enrolled && enabled);
-            setBiometricType(biometricTypeLabel);
-            setInitialized(true);
+            // Verificar se há biometria registrada
+            const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+            if (!isEnrolled) {
+                setIsAvailable(false);
+                return;
+            }
 
+            // Identificar tipo de biometria
+            const supportedTypes = await LocalAuthentication.supportedAuthenticationTypesAsync();
+            let type = BiometricType.UNKNOWN;
+
+            if (supportedTypes.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
+                type = BiometricType.FACE_ID;
+            } else if (supportedTypes.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
+                type = BiometricType.FINGERPRINT;
+            } else if (supportedTypes.includes(LocalAuthentication.AuthenticationType.IRIS)) {
+                type = BiometricType.IRIS;
+            }
+
+            setBiometricType(type);
+            setIsAvailable(true);
+
+            // Carregar configuração
+            await loadBiometricConfig();
         } catch (error) {
             console.error('Erro ao verificar biometria:', error);
-            setIsBiometricAvailable(false);
-            setIsBiometricEnabled(false);
-            setBiometricType('Biometria');
-            setInitialized(true);
-        } finally {
-            setLoading(false);
+            setIsAvailable(false);
+            setError('Erro ao verificar biometria');
         }
-    };
+    }, [isExpoGo]);
 
-    // Salvar credenciais para autenticação biométrica
-    const saveBiometricCredentials = async (email: string, password: string): Promise<boolean> => {
+    // Carregar configuração biométrica
+    const loadBiometricConfig = async () => {
         try {
-            // Verificar se biometria está disponível
-            if (!isBiometricAvailable) {
-                console.warn('Biometria não disponível para salvar credenciais');
-                return false;
+            const configData = await SecureStore.getItemAsync(BIOMETRIC_CONFIG_KEY);
+            if (configData) {
+                const config: BiometricConfig = JSON.parse(configData);
+                configRef.current = config;
+                
+                // Verificar se está bloqueado
+                if (config.lockedUntil > Date.now()) {
+                    setIsLocked(true);
+                    setIsEnabled(false);
+                } else {
+                    setIsEnabled(config.enabled);
+                    setIsLocked(false);
+                    
+                    // Resetar tentativas se o bloqueio expirou
+                    if (config.failedAttempts > 0) {
+                        config.failedAttempts = 0;
+                        config.lockedUntil = 0;
+                        await saveBiometricConfig(config);
+                    }
+                }
             }
-
-            // Solicitar autenticação biométrica antes de salvar
-            const result = await LocalAuthentication.authenticateAsync({
-                promptMessage: 'Autentique para configurar login biométrico',
-                fallbackLabel: 'Use senha',
-                disableDeviceFallback: false,
-            });
-
-            if (!result.success) {
-                console.log('Autenticação biométrica cancelada ou falhou');
-                return false;
-            }
-
-            // Criptografar credenciais
-            const encryptedData = encryptCredentials(email, password);
-
-            // Salvar credenciais criptografadas
-            try {
-                // Tentar salvar no SecureStore primeiro (mais seguro)
-                await SecureStore.setItemAsync(BIOMETRIC_CREDENTIALS_KEY, encryptedData);
-            } catch (secureError) {
-                console.warn('Erro ao salvar no SecureStore, usando AsyncStorage:', secureError);
-                // Fallback para AsyncStorage
-                await AsyncStorage.setItem(BIOMETRIC_CREDENTIALS_KEY, encryptedData);
-            }
-
-            // Marcar biometria como habilitada
-            try {
-                await SecureStore.setItemAsync(BIOMETRIC_ENABLED_KEY, 'true');
-            } catch (secureError) {
-                console.warn('Erro ao salvar status no SecureStore, usando AsyncStorage:', secureError);
-                await AsyncStorage.setItem(BIOMETRIC_ENABLED_KEY, 'true');
-            }
-
-            setIsBiometricEnabled(true);
-            console.log('Credenciais biométricas salvas com sucesso');
-            return true;
-
         } catch (error) {
-            console.error('Erro ao salvar credenciais biométricas:', error);
-            return false;
+            console.error('Erro ao carregar configuração biométrica:', error);
         }
     };
 
-    // Autenticar usando biometria
-    const authenticateWithBiometrics = async (): Promise<BiometricCredentials | null> => {
+    // Salvar configuração biométrica
+    const saveBiometricConfig = async (config: BiometricConfig) => {
         try {
-            // Verificar se biometria está habilitada
-            if (!isBiometricEnabled) {
-                console.warn('Biometria não está habilitada');
-                return null;
+            configRef.current = config;
+            await SecureStore.setItemAsync(BIOMETRIC_CONFIG_KEY, JSON.stringify(config));
+        } catch (error) {
+            console.error('Erro ao salvar configuração biométrica:', error);
+            throw error;
+        }
+    };
+
+    // Configurar biometria
+    const setupBiometric = async (email: string, password: string): Promise<boolean> => {
+        try {
+            if (!isAvailable) {
+                setError('Biometria não disponível neste dispositivo');
+                return false;
             }
 
             // Solicitar autenticação biométrica
             const result = await LocalAuthentication.authenticateAsync({
-                promptMessage: 'Faça login com ' + biometricType,
-                fallbackLabel: 'Use sua senha',
+                promptMessage: `Configurar ${getBiometricName()}`,
+                fallbackLabel: 'Usar senha',
                 disableDeviceFallback: false,
+                cancelLabel: 'Cancelar',
             });
 
-            // Se autenticação falhou, retornar null
             if (!result.success) {
-                console.log('Autenticação biométrica falhou ou foi cancelada');
-                return null;
+                setError('Autenticação cancelada');
+                return false;
             }
 
-            // Recuperar credenciais criptografadas
-            let encryptedData;
+            // Criar vault de credenciais
+            const credentials: BiometricCredentials = { email, password };
+            const encryptedCredentials = await encrypt(JSON.stringify(credentials));
+            
+            const vault: BiometricVault = {
+                credentials: encryptedCredentials,
+                createdAt: Date.now(),
+                expiresAt: Date.now() + VAULT_EXPIRATION,
+                checksum: await generateVaultChecksum(encryptedCredentials)
+            };
 
-            try {
-                // Tentar recuperar do SecureStore primeiro
-                encryptedData = await SecureStore.getItemAsync(BIOMETRIC_CREDENTIALS_KEY);
-            } catch (secureError) {
-                console.warn('Erro ao ler do SecureStore, tentando AsyncStorage:', secureError);
-            }
+            // Salvar vault
+            await SecureStore.setItemAsync(BIOMETRIC_VAULT_KEY, JSON.stringify(vault));
 
-            // Se não encontrou no SecureStore, tentar AsyncStorage
-            if (!encryptedData) {
-                encryptedData = await AsyncStorage.getItem(BIOMETRIC_CREDENTIALS_KEY);
-            }
+            // Atualizar configuração
+            const config: BiometricConfig = {
+                enabled: true,
+                type: biometricType,
+                lastUsed: Date.now(),
+                failedAttempts: 0,
+                lockedUntil: 0
+            };
+            
+            await saveBiometricConfig(config);
+            setIsEnabled(true);
+            setError(null);
 
-            // Se não encontrou credenciais
-            if (!encryptedData) {
-                console.warn('Credenciais biométricas não encontradas');
-                return null;
-            }
-
-            // Descriptografar e retornar credenciais
-            return decryptCredentials(encryptedData);
-
-        } catch (error) {
-            console.error('Erro ao autenticar com biometria:', error);
-            return null;
-        }
-    };
-
-    // Desabilitar autenticação biométrica
-    const disableBiometricAuth = async (): Promise<boolean> => {
-        try {
-            // Remover credenciais e marcar como desabilitado
-            await SecureStore.deleteItemAsync(BIOMETRIC_CREDENTIALS_KEY);
-            await AsyncStorage.removeItem(BIOMETRIC_CREDENTIALS_KEY);
-
-            await SecureStore.setItemAsync(BIOMETRIC_ENABLED_KEY, 'false');
-            await AsyncStorage.setItem(BIOMETRIC_ENABLED_KEY, 'false');
-
-            setIsBiometricEnabled(false);
-            console.log('Autenticação biométrica desabilitada com sucesso');
             return true;
         } catch (error) {
-            console.error('Erro ao desabilitar autenticação biométrica:', error);
+            console.error('Erro ao configurar biometria:', error);
+            setError('Erro ao configurar biometria');
             return false;
         }
     };
 
-    // Verificar biometria na inicialização
+    // Autenticar com biometria
+    const authenticate = async (): Promise<BiometricCredentials | null> => {
+        try {
+            if (!isEnabled) {
+                setError('Biometria não está habilitada');
+                return null;
+            }
+
+            if (isLocked) {
+                setError('Biometria bloqueada temporariamente');
+                return null;
+            }
+
+            // Verificar vault
+            const vaultData = await SecureStore.getItemAsync(BIOMETRIC_VAULT_KEY);
+            if (!vaultData) {
+                setError('Credenciais biométricas não encontradas');
+                await disableBiometric();
+                return null;
+            }
+
+            const vault: BiometricVault = JSON.parse(vaultData);
+
+            // Verificar expiração
+            if (vault.expiresAt < Date.now()) {
+                setError('Credenciais biométricas expiraram');
+                await disableBiometric();
+                return null;
+            }
+
+            // Se estiver no Expo Go, simular autenticação
+            if (isExpoGo) {
+                console.log('🔐 Simulando autenticação biométrica no Expo Go');
+                
+                // Mostrar alerta informativo e aguardar resposta
+                const confirmed = await new Promise<boolean>((resolve) => {
+                    const Alert = require('react-native').Alert;
+                    Alert.alert(
+                        '🔐 Simulação de Face ID',
+                        'No Expo Go, a biometria é simulada. Em um build de produção, o Face ID/Touch ID real será usado.',
+                        [
+                            {
+                                text: 'Cancelar',
+                                onPress: () => resolve(false),
+                                style: 'cancel'
+                            },
+                            {
+                                text: 'Simular Autenticação',
+                                onPress: () => resolve(true)
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                });
+                
+                if (!confirmed) {
+                    await handleFailedAttempt();
+                    return null;
+                }
+                
+                // Simular delay da autenticação
+                await new Promise(resolve => setTimeout(resolve, 500));
+            } else {
+                // Solicitar autenticação real
+                const result = await LocalAuthentication.authenticateAsync({
+                    promptMessage: `Entrar com ${getBiometricName()}`,
+                    fallbackLabel: 'Usar senha',
+                    disableDeviceFallback: true,
+                    cancelLabel: 'Cancelar',
+                });
+
+                if (!result.success) {
+                    await handleFailedAttempt();
+                    return null;
+                }
+            }
+
+            // Verificar integridade do vault
+            const currentChecksum = await generateVaultChecksum(vault.credentials);
+            if (currentChecksum !== vault.checksum) {
+                setError('Credenciais comprometidas');
+                await disableBiometric();
+                return null;
+            }
+
+            // Descriptografar credenciais
+            const decryptedData = await decrypt(vault.credentials);
+            const credentials: BiometricCredentials = JSON.parse(decryptedData);
+
+            // Atualizar último uso
+            if (configRef.current) {
+                configRef.current.lastUsed = Date.now();
+                configRef.current.failedAttempts = 0;
+                await saveBiometricConfig(configRef.current);
+            }
+
+            setError(null);
+            return credentials;
+        } catch (error) {
+            console.error('Erro na autenticação biométrica:', error);
+            setError('Erro na autenticação');
+            await handleFailedAttempt();
+            return null;
+        }
+    };
+
+    // Lidar com tentativa falha
+    const handleFailedAttempt = async () => {
+        try {
+            if (!configRef.current) return;
+
+            configRef.current.failedAttempts++;
+
+            if (configRef.current.failedAttempts >= MAX_BIOMETRIC_ATTEMPTS) {
+                // Bloquear biometria temporariamente
+                configRef.current.lockedUntil = Date.now() + BIOMETRIC_LOCKOUT_DURATION;
+                setIsLocked(true);
+                setError(`Muitas tentativas. Bloqueado por 30 minutos.`);
+            } else {
+                const remaining = MAX_BIOMETRIC_ATTEMPTS - configRef.current.failedAttempts;
+                setError(`Tentativa falhou. ${remaining} tentativas restantes.`);
+            }
+
+            await saveBiometricConfig(configRef.current);
+        } catch (error) {
+            console.error('Erro ao registrar tentativa falha:', error);
+        }
+    };
+
+    // Desabilitar biometria
+    const disableBiometric = async (): Promise<boolean> => {
+        try {
+            // Limpar vault
+            await SecureStore.deleteItemAsync(BIOMETRIC_VAULT_KEY);
+
+            // Atualizar configuração
+            const config: BiometricConfig = {
+                enabled: false,
+                type: biometricType,
+                lastUsed: 0,
+                failedAttempts: 0,
+                lockedUntil: 0
+            };
+
+            await saveBiometricConfig(config);
+            setIsEnabled(false);
+            setIsLocked(false);
+            setError(null);
+
+            return true;
+        } catch (error) {
+            console.error('Erro ao desabilitar biometria:', error);
+            setError('Erro ao desabilitar biometria');
+            return false;
+        }
+    };
+
+    // Gerar checksum do vault
+    const generateVaultChecksum = async (data: string): Promise<string> => {
+        // Implementação simples - você pode usar uma biblioteca de hash mais robusta
+        return btoa(data.slice(0, 20) + data.slice(-20));
+    };
+
+    // Obter nome da biometria
+    const getBiometricName = (): string => {
+        switch (biometricType) {
+            case BiometricType.FACE_ID:
+                return Platform.OS === 'ios' ? 'Face ID' : 'Reconhecimento Facial';
+            case BiometricType.FINGERPRINT:
+                return Platform.OS === 'ios' ? 'Touch ID' : 'Impressão Digital';
+            case BiometricType.IRIS:
+                return 'Reconhecimento de Íris';
+            default:
+                return 'Biometria';
+        }
+    };
+
+    // Verificar se credenciais precisam ser renovadas
+    const shouldRenewCredentials = async (): Promise<boolean> => {
+        try {
+            const vaultData = await SecureStore.getItemAsync(BIOMETRIC_VAULT_KEY);
+            if (!vaultData) return true;
+
+            const vault: BiometricVault = JSON.parse(vaultData);
+            const daysUntilExpiration = (vault.expiresAt - Date.now()) / (24 * 60 * 60 * 1000);
+            
+            // Renovar se faltar menos de 7 dias para expirar
+            return daysUntilExpiration < 7;
+        } catch (error) {
+            return true;
+        }
+    };
+
+    // Resetar bloqueio (para uso administrativo)
+    const resetLockout = async () => {
+        if (configRef.current) {
+            configRef.current.failedAttempts = 0;
+            configRef.current.lockedUntil = 0;
+            await saveBiometricConfig(configRef.current);
+            setIsLocked(false);
+            setError(null);
+        }
+    };
+
+    // Inicialização
     useEffect(() => {
-        checkBiometricAvailability();
-    }, []);
+        if (!initializationRef.current) {
+            initializationRef.current = true;
+            checkBiometricAvailability().finally(() => {
+                setIsLoading(false);
+            });
+        }
+    }, [checkBiometricAvailability]);
+
+    // Verificar expiração do bloqueio periodicamente
+    useEffect(() => {
+        if (isLocked && configRef.current) {
+            const checkInterval = setInterval(() => {
+                if (configRef.current && configRef.current.lockedUntil <= Date.now()) {
+                    setIsLocked(false);
+                    configRef.current.failedAttempts = 0;
+                    configRef.current.lockedUntil = 0;
+                    saveBiometricConfig(configRef.current);
+                    clearInterval(checkInterval);
+                }
+            }, 5000); // Verificar a cada 5 segundos
+
+            return () => clearInterval(checkInterval);
+        }
+    }, [isLocked]);
 
     return {
-        isBiometricAvailable,
-        isBiometricEnabled,
+        // Estados
+        isAvailable,
+        isEnabled,
+        isLoading,
+        isLocked,
         biometricType,
-        loading,
-        initialized,
-        saveBiometricCredentials,
-        authenticateWithBiometrics,
-        disableBiometricAuth,
-        checkBiometricAvailability
+        biometricName: getBiometricName(),
+        error,
+        
+        // Métodos
+        setupBiometric,
+        authenticate,
+        disableBiometric,
+        shouldRenewCredentials,
+        resetLockout,
+        
+        // Informações adicionais
+        config: configRef.current,
+        remainingAttempts: configRef.current 
+            ? Math.max(0, MAX_BIOMETRIC_ATTEMPTS - configRef.current.failedAttempts)
+            : MAX_BIOMETRIC_ATTEMPTS,
+        lockoutRemaining: configRef.current && configRef.current.lockedUntil > Date.now()
+            ? Math.ceil((configRef.current.lockedUntil - Date.now()) / 60000)
+            : 0
     };
 }

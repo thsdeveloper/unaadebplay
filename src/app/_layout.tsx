@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from "react";
 import "../../global.css";
+import "@/utils/setupCrypto"; // Importar configuração de crypto ANTES de outros imports
 import {GluestackUIProvider} from "@/components/ui/gluestack-ui-provider";
 import {AuthProvider} from '@/contexts/AuthContext';
 import {AlertProvider} from "@/contexts/AlertContext";
@@ -16,6 +17,26 @@ import {useApiErrorHandler} from "@/utils/apiErrorHandler";
 import {NotificationProvider} from "@/contexts/NotificationContext";
 import {NotificationToast} from "@/components/NotificationToast";
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
+// import {FeedbackToast, useFeedbackToast} from '@/components/FeedbackToast';
+import {View} from 'react-native';
+
+// Wrapper para gerenciar o Toast globalmente
+const ToastWrapper = ({ children }: { children: React.ReactNode }) => {
+    // const { toastConfig, hideToast } = useFeedbackToast();
+    
+    return (
+        <>
+            {children}
+            {/* <FeedbackToast
+                visible={toastConfig.visible}
+                message={toastConfig.message}
+                type={toastConfig.type}
+                onHide={hideToast}
+                position="top"
+            /> */}
+        </>
+    );
+};
 
 export default function RootLayout() {
     const [appIsReady, setAppIsReady] = useState(false);
@@ -63,10 +84,12 @@ export default function RootLayout() {
                             <NotificationProvider>
                                 <TranslationProvider>
                                     <AudioPlayerProvider>
-                                        <NotificationToast/>
-                                        <FlashMessage position="top"/>
-                                        <AppUpdateManager/>
-                                        <Slot/>
+                                        <ToastWrapper>
+                                            <NotificationToast/>
+                                            <FlashMessage position="top"/>
+                                            <AppUpdateManager/>
+                                            <Slot/>
+                                        </ToastWrapper>
                                     </AudioPlayerProvider>
                                 </TranslationProvider>
                             </NotificationProvider>

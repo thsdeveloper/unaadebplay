@@ -29,7 +29,7 @@ const CheckboxCustom: React.FC<CheckboxCustomProps> = ({
                     colorScheme={colorScheme}
                     aria-label={label}
                 />
-                <Text fontSize={fontSize} ml={2}>{label}</Text>
+                <Checkbox.Label>{label}</Checkbox.Label>
             </HStack>
             {error && <FormControl.ErrorMessage>{error}</FormControl.ErrorMessage>}
         </FormControl>

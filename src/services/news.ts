@@ -79,7 +79,7 @@ class NewsService implements INewsService {
       }
 
       const response = await directusClient.request(
-        readItems('news', {
+        readItems('news' as any, {
           fields: this.DEFAULT_FIELDS,
           filter: queryFilter,
           sort,
@@ -147,7 +147,7 @@ class NewsService implements INewsService {
   async getNewsById(id: string): Promise<NewsTypes> {
     try {
       const response = await directusClient.request(
-        readItem('news', id, {
+        readItem('news' as any, id, {
           fields: this.DEFAULT_FIELDS
         })
       );
@@ -177,7 +177,7 @@ class NewsService implements INewsService {
   async getNewsBySlug(slug: string): Promise<NewsTypes> {
     try {
       const response = await directusClient.request(
-        readItems('news', {
+        readItems('news' as any, {
           fields: this.DEFAULT_FIELDS,
           filter: {
             slug: { _eq: slug },
@@ -233,7 +233,7 @@ class NewsService implements INewsService {
   async getTags(): Promise<NewsTag[]> {
     try {
       const response = await directusClient.request(
-        readItems('news_tags', {
+        readItems('news_tags' as any, {
           fields: ['*'],
           sort: ['name']
         })
@@ -296,7 +296,7 @@ class NewsService implements INewsService {
       }
 
       const response = await directusClient.request(
-        readItems('news', {
+        readItems('news' as any, {
           fields: this.DEFAULT_FIELDS,
           filter,
           sort: ['-publish_date'],

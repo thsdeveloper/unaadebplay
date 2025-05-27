@@ -1,18 +1,25 @@
-import {Stack} from 'expo-router';
+import { Stack } from 'expo-router';
 import React from "react";
-import colors from "@/constants/colors";
 
 export default function EventLayout() {
     return (
         <Stack screenOptions={{
-            headerBackTitle: 'Voltar',
-            headerTintColor: colors.light,
-            headerStyle: {
-                backgroundColor: colors.primary,
-            }
+            headerShown: false,
+            animation: 'fade_from_bottom',
         }}>
-            <Stack.Screen name={'index'} options={{title: 'Eventos UNAADEB'}} />
-            <Stack.Screen name={'event/[id]'} options={{title: 'event detail>'}} />
+            <Stack.Screen 
+                name="index" 
+                options={{
+                    headerShown: false,
+                }} 
+            />
+            <Stack.Screen 
+                name="event/[id]" 
+                options={{
+                    headerShown: true,
+                    animation: 'slide_from_right',
+                }} 
+            />
         </Stack>
     );
 }
