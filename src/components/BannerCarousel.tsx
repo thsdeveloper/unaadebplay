@@ -9,15 +9,14 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BannerTypes } from '@/types/BannerTypes';
-import { Image } from '@/components/Image';
 import { getItems } from "@/services/items";
 import { useRouter } from "expo-router";
 import { Box } from "@/components/ui/box";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
 import { Feather } from '@expo/vector-icons';
-import { Motion } from "@legendapp/motion";
 import {cn} from "@gluestack-ui/nativewind-utils/cn";
+import { DirectusCard } from "@/components/DirectusImage/DirectusCard";
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -71,7 +70,7 @@ const BannerItem = memo(({
 
     const handlePress = () => {
         if (item.page_route) {
-            router.push(item.page_route);
+            router.push(item.page_route as any);
         } else {
             router.push('/(tabs)/(events)');
         }
@@ -87,60 +86,56 @@ const BannerItem = memo(({
                 justifyContent: 'center'
             }}
         >
-            <TouchableOpacity
-                activeOpacity={0.9}
+            <DirectusCard
+                assetId={item.image}
+                width={width - 16} // Margin compensation
+                height={height}
+                borderRadius={16}
+                quality={90}
+                priority="high"
                 onPress={handlePress}
-                className="rounded-2xl shadow-md shadow-black/10"
+                pressable={true}
+                shadow={true}
+                className="bg-neutral-800/30"
             >
-                <Box className="relative rounded-2xl overflow-hidden bg-neutral-800/30" style={{ height }}>
-                    <Image
-                        borderRadius={16}
-                        assetId={item.image}
-                        width={String(width - 16)} // Margin compensation
-                        height={String(height)}
-                        resizeMode="cover"
-                        className="absolute inset-0"
-                    />
+                {/* Gradiente para melhorar a legibilidade do texto */}
+                <LinearGradient
+                    colors={['transparent', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.8)']}
+                    locations={[0.4, 0.7, 1]}
+                    className="absolute bottom-0 left-0 right-0 h-[70%] rounded-b-2xl"
+                />
 
-                    {/* Gradiente para melhorar a legibilidade do texto */}
-                    <LinearGradient
-                        colors={['transparent', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.8)']}
-                        locations={[0.4, 0.7, 1]}
-                        className="absolute bottom-0 left-0 right-0 h-[70%] rounded-b-2xl z-[1]"
-                    />
+                {/* Conteúdo do Banner */}
+                <Box className="absolute bottom-0 left-0 right-0 p-4">
+                    {item.title && (
+                        <Text
+                            className="text-white text-lg font-bold shadow-sm shadow-black/50 mb-1"
+                            numberOfLines={2}
+                        >
+                            {item.title}
+                        </Text>
+                    )}
 
-                    {/* Conteúdo do Banner */}
-                    <Box className="absolute bottom-0 left-0 right-0 p-4 z-[2]">
-                        {item.title && (
-                            <Text
-                                className="text-white text-lg font-bold shadow-sm shadow-black/50 mb-1"
-                                numberOfLines={2}
-                            >
-                                {item.title}
+                    {item.description && (
+                        <Text
+                            className="text-white text-sm shadow-sm shadow-black/50 opacity-90"
+                            numberOfLines={3}
+                        >
+                            {item.description}
+                        </Text>
+                    )}
+
+                    {/* Botão "Saiba mais" optativo */}
+                    {(item.action_label || item.page_route) && (
+                        <View className="flex-row items-center self-start bg-white/20 py-1.5 px-3 rounded-full mt-2.5">
+                            <Text className="text-white text-xs font-medium">
+                                {item.action_label || "Saiba mais"}
                             </Text>
-                        )}
-
-                        {item.description && (
-                            <Text
-                                className="text-white text-sm shadow-sm shadow-black/50 opacity-90"
-                                numberOfLines={3}
-                            >
-                                {item.description}
-                            </Text>
-                        )}
-
-                        {/* Botão "Saiba mais" optativo */}
-                        {(item.action_label || item.page_route) && (
-                            <View className="flex-row items-center self-start bg-white/20 py-1.5 px-3 rounded-full mt-2.5">
-                                <Text className="text-white text-xs font-medium">
-                                    {item.action_label || "Saiba mais"}
-                                </Text>
-                                <Feather name="chevron-right" size={14} color="#FFF" className="ml-1" />
-                            </View>
-                        )}
-                    </Box>
+                            <Feather name="chevron-right" size={14} color="#FFF" className="ml-1" />
+                        </View>
+                    )}
                 </Box>
-            </TouchableOpacity>
+            </DirectusCard>
         </Animated.View>
     );
 }, (prevProps, nextProps) => {
@@ -223,7 +218,7 @@ const BannerCarousel = ({
     // Referências
     const flatListRef = useRef<FlatList>(null);
     const scrollX = useRef(new Animated.Value(0)).current;
-    const autoplayTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const autoplayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     // Função para carregar banners
     const loadBanners = useCallback(async () => {
@@ -235,7 +230,13 @@ const BannerCarousel = ({
             setError(null);
 
             const response = await getItems<BannerTypes>('banners');
-            setBanners(response);
+            if (Array.isArray(response)) {
+                setBanners(response);
+            } else if (response && 'data' in response && Array.isArray(response.data)) {
+                setBanners(response.data);
+            } else {
+                setBanners([]);
+            }
         } catch (err) {
             console.error('Erro ao carregar banners:', err);
             setError('Não foi possível carregar os banners');
@@ -328,7 +329,7 @@ const BannerCarousel = ({
     // Renderiza os skeletons durante o carregamento inicial
     const renderLoader = useMemo(() => (
         <Box className="items-center justify-center mt-2.5 mb-5">
-            <Skeleton width={cardWidth} height={cardHeight} borderRadius={16} className="shadow-sm shadow-black/5" />
+            <Skeleton className="shadow-sm shadow-black/5" style={{ width: cardWidth, height: cardHeight, borderRadius: 16 }} />
             <View className="flex-row justify-center mt-3">
                 {[...Array(3)].map((_, i) => (
                     <View
@@ -423,15 +424,8 @@ const BannerCarousel = ({
 
     // Usando Motion do @legendapp para animações de entrada
     return (
-        <Motion.View
+        <View
             className={cn("mb-5", className)}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-                type: "spring",
-                damping: 18,
-                stiffness: 100
-            }}
         >
             {loading && banners.length === 0 ? (
                 renderLoader
@@ -467,7 +461,7 @@ const BannerCarousel = ({
                     {renderNavigationArrows()}
                 </View>
             )}
-        </Motion.View>
+        </View>
     );
 };
 

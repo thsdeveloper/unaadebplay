@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { AppState, AppStateStatus } from 'react-native';
 import * as Ably from 'ably';
+import { mergeWithDefaultTranslations } from '@/constants/defaultTranslations';
 
 // Constantes para armazenamento
 const TRANSLATIONS_STORAGE_KEY = '@UNAADEB:Translations';
@@ -87,10 +88,13 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
                 const translates = await getTranslation();
                 const fetchedTranslations: Translation[] = translates;
 
-                const translationsMap = fetchedTranslations.reduce((acc, { key, value }) => {
+                const apiTranslationsMap = fetchedTranslations.reduce((acc, { key, value }) => {
                     acc[key] = value;
                     return acc;
                 }, {} as { [key: string]: string });
+
+                // Mesclar com traduções padrão
+                const translationsMap = mergeWithDefaultTranslations(apiTranslationsMap);
 
                 // Atualizar cache local
                 await AsyncStorage.setItem(TRANSLATIONS_STORAGE_KEY, JSON.stringify(translationsMap));
@@ -137,7 +141,10 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({
             const cachedTimestamp = await AsyncStorage.getItem(TRANSLATIONS_TIMESTAMP_KEY);
 
             if (cachedTranslations) {
-                setTranslations(JSON.parse(cachedTranslations));
+                const cachedData = JSON.parse(cachedTranslations);
+                // Mesclar com traduções padrão ao carregar do cache
+                const mergedTranslations = mergeWithDefaultTranslations(cachedData);
+                setTranslations(mergedTranslations);
                 console.log('Traduções carregadas do cache');
 
                 if (cachedVersion) {

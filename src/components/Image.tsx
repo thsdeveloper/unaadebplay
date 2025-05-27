@@ -1,67 +1,86 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { Image as ImageRN, ImageProps } from "react-native";
-import ConfigContext from "../contexts/ConfigContext";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Box } from "@/components/ui/box";
+import React, { memo, useContext, useMemo } from 'react';
+import { ViewStyle, ImageStyle, StyleProp } from 'react-native';
+import DirectusImage from './DirectusImage';
+import ConfigContext from '../contexts/ConfigContext';
+import { useDirectusImage } from '@/hooks/useDirectusImage';
 
-type Props = Omit<ImageProps, 'source'> & {
-    assetId: string | undefined;
-    width?: string | number;
-    height?: string | number;
-    borderRadius?: number;
-};
-
-export function Image({assetId, width, height, borderRadius, ...props}: Props) {
-    const { url_api, avatar_default } = useContext(ConfigContext);
-    const [loading, setLoading] = useState(true);
-
-    // Use uma variável para armazenar o avatar padrão fora do useEffect
-    const defaultImageUrl = `${url_api}/assets/${avatar_default}?fit=cover&timestamp=${new Date().getTime()}`;
-
-    // Apenas definir o estado inicial
-    const [imageSrc, setImageSrc] = useState(defaultImageUrl);
-
-    // Corrigir o useEffect com dependências adequadas
-    useEffect(() => {
-        if (assetId) {
-            const userImage = `${url_api}/assets/${assetId}?fit=cover&timestamp=${new Date().getTime()}`;
-            setImageSrc(userImage);
-        } else {
-            setImageSrc(defaultImageUrl);
-        }
-    }, [assetId, url_api, avatar_default]); // Dependências específicas e estáveis
-
-    const handleImageLoaded = () => {
-        setLoading(false);
-    };
-
-    // Componente de carregamento
-    const loadingSkeleton = (
-        <Box position={"absolute"} zIndex={9998} width={"100%"} height={height}>
-            <Skeleton
-                borderColor="coolGray.400"
-                endColor="text.400"
-                width={width}
-                height={height}
-                speed={2}
-                rounded={borderRadius}
-            />
-        </Box>
-    );
-
-    return (
-        <Box position={"relative"}>
-            {loading && loadingSkeleton}
-            <Box width={width} height={height} borderRadius={"md"}>
-                <ImageRN
-                    borderRadius={borderRadius}
-                    source={{uri: imageSrc}}
-                    style={{width: "100%", height: "100%"}}
-                    resizeMode="cover"
-                    onLoadEnd={handleImageLoaded}
-                    {...props}
-                />
-            </Box>
-        </Box>
-    );
+interface ImageProps {
+  /** Asset ID no Directus */
+  assetId?: string;
+  /** Largura da imagem */
+  width?: string | number;
+  /** Altura da imagem */
+  height?: string | number;
+  /** Raio da borda */
+  borderRadius?: number;
+  /** Classes CSS customizadas */
+  className?: string;
+  /** Estilos customizados */
+  style?: StyleProp<ImageStyle> | StyleProp<ViewStyle>;
+  /** Modo de redimensionamento */
+  resizeMode?: 'cover' | 'contain' | 'fill';
+  /** Qualidade da imagem */
+  quality?: number;
+  /** Alt text para acessibilidade */
+  alt?: string;
+  /** Callback quando carrega */
+  onLoad?: () => void;
+  /** Callback quando há erro */
+  onError?: (error: any) => void;
 }
+
+/**
+ * Componente Image refatorado para usar DirectusImage
+ * Mantém compatibilidade com a API anterior enquanto usa a nova implementação
+ * Inclui fallback para avatar padrão via ConfigContext
+ */
+export const Image = memo<ImageProps>(({
+  assetId,
+  width = '100%',
+  height = '100%',
+  borderRadius = 0,
+  className,
+  style,
+  resizeMode = 'cover',
+  quality = 80,
+  alt,
+  onLoad,
+  onError
+}) => {
+  const config = useContext(ConfigContext);
+  
+  // Determinar o asset ID final (usar padrão se não fornecido)
+  const finalAssetId = useMemo(() => {
+    if (assetId) return assetId;
+    return config?.avatar_default || '';
+  }, [assetId, config?.avatar_default]);
+
+  // Usar hook para validação
+  const { isValidAssetId } = useDirectusImage(finalAssetId);
+
+  // Se não há asset ID válido, não renderizar
+  if (!finalAssetId || !isValidAssetId) {
+    return null;
+  }
+
+  return (
+    <DirectusImage
+      assetId={finalAssetId}
+      width={width}
+      height={height}
+      borderRadius={borderRadius}
+      className={className}
+      style={style as any}
+      resizeMode={resizeMode}
+      quality={quality}
+      accessibilityLabel={alt}
+      onLoad={onLoad}
+      onError={onError}
+    />
+  );
+});
+
+Image.displayName = 'Image';
+
+// Manter export padrão para compatibilidade
+export default Image;

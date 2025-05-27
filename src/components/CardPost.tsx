@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {formatTime} from "@/utils/directus";
-import {Image} from "@/components/Image";
+import Image from "@/components/Image";
 import {getUser} from "@/services/user";
 import {PostsTypes} from "@/types/PostsTypes";
 import {UserTypes} from "@/types/UserTypes";

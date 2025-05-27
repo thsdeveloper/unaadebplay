@@ -1179,7 +1179,7 @@
   resolved "https://registry.yarnpkg.com/@expo/sudo-prompt/-/sudo-prompt-9.3.2.tgz#0fd2813402a42988e49145cab220e25bea74b308"
   integrity sha512-HHQigo3rQWKMDzYDLkubN5WQOYXJJE2eNqIQC2axC2iO3mHdwnIR7FgZVvHWtBwAdzBgAP0ECp8KqS8TiMKvgw==
 
-"@expo/vector-icons@^14.0.0":
+"@expo/vector-icons@^14.0.0", "@expo/vector-icons@^14.1.0":
   version "14.1.0"
   resolved "https://registry.yarnpkg.com/@expo/vector-icons/-/vector-icons-14.1.0.tgz#d3dddad8b6ea60502e0fe5485b86751827606ce4"
   integrity sha512-7T09UE9h8QDTsUeMGymB4i+iqvtEeaO5VvUjryFB4tugDTG/bkzViWA74hm5pfjjDEhYMXWaX112mcvhccmIwQ==
@@ -1403,6 +1403,17 @@
   version "0.1.15"
   resolved "https://registry.yarnpkg.com/@gluestack-ui/spinner/-/spinner-0.1.15.tgz#712276227568476f55672b7bbe0082478c0c0a65"
   integrity sha512-jkXOGhna05HM2tcPKbA+t+vqcVRgRowwC6ES0A9kY5fcuURH1V41UFx/YWyHdSsHwmWlIoCCdWycF78UbNVdPg==
+
+"@gluestack-ui/switch@^0.1.29":
+  version "0.1.29"
+  resolved "https://registry.yarnpkg.com/@gluestack-ui/switch/-/switch-0.1.29.tgz#d2a26f66cfc3065f27ea4af0206f4cb0ef34f5ca"
+  integrity sha512-swx0J20ULpN+pkHg8KioWibZETWE/6XvCBckmApNZf9RO2MiHHkNMw4Txne4u1z0OyLKGzBW1dbmkhLIOObaXg==
+  dependencies:
+    "@gluestack-ui/form-control" "^0.1.19"
+    "@gluestack-ui/utils" "^0.1.15"
+    "@react-native-aria/focus" "^0.2.9"
+    "@react-native-aria/interactions" "0.2.16"
+    "@react-stately/toggle" "^3.4.4"
 
 "@gluestack-ui/toast@^1.0.9":
   version "1.0.9"
@@ -2206,6 +2217,16 @@
     "@react-types/shared" "^3.29.0"
     "@swc/helpers" "^0.5.0"
 
+"@react-stately/toggle@^3.4.4":
+  version "3.8.4"
+  resolved "https://registry.yarnpkg.com/@react-stately/toggle/-/toggle-3.8.4.tgz#b591536ae1e20e429b21fca805efda559dafe134"
+  integrity sha512-JbKoXhkJ5P5nCrNXChMos3yNqkIeGXPDEMS/dfkHlsjQYxJfylRm4j/nWoDXxxkUmfkvXcNEMofMn9iO1+H0DQ==
+  dependencies:
+    "@react-stately/utils" "^3.10.6"
+    "@react-types/checkbox" "^3.9.4"
+    "@react-types/shared" "^3.29.1"
+    "@swc/helpers" "^0.5.0"
+
 "@react-stately/utils@^3.10.6":
   version "3.10.6"
   resolved "https://registry.yarnpkg.com/@react-stately/utils/-/utils-3.10.6.tgz#2ae25c2773e53a4ebdaf39264aa27145b758dc1b"
@@ -2226,6 +2247,13 @@
   integrity sha512-h6wmK7CraKHKE6L13Ut+CtnjRktbMRhkCSorv7eg82M6p4PDhZ7mfDSh13IlGR4sryT8Ka+aOjOU+EvMrKiduA==
   dependencies:
     "@react-types/shared" "^3.29.0"
+
+"@react-types/checkbox@^3.9.4":
+  version "3.9.4"
+  resolved "https://registry.yarnpkg.com/@react-types/checkbox/-/checkbox-3.9.4.tgz#5dd5d0289acf964b8cc5f4730878d6774da5894e"
+  integrity sha512-fU3Q1Nw+zbXKm68ba8V7cQzpiX0rIiAUKrBTl2BK97QiTlGBDvMCf4TfEuaNoGbJq+gx+X3n/3yr6c3IAb0ZIg==
+  dependencies:
+    "@react-types/shared" "^3.29.1"
 
 "@react-types/dialog@*", "@react-types/dialog@^3.5.17":
   version "3.5.17"
@@ -2253,6 +2281,11 @@
   version "3.29.0"
   resolved "https://registry.yarnpkg.com/@react-types/shared/-/shared-3.29.0.tgz#f29bdad3bff1336aaa754d7abc420da2f014d931"
   integrity sha512-IDQYu/AHgZimObzCFdNl1LpZvQW/xcfLt3v20sorl5qRucDVj4S9os98sVTZ4IRIBjmS+MkjqpR5E70xan7ooA==
+
+"@react-types/shared@^3.29.1":
+  version "3.29.1"
+  resolved "https://registry.yarnpkg.com/@react-types/shared/-/shared-3.29.1.tgz#81c685e54aab7abe890b2a93e6758d0163b04c54"
+  integrity sha512-KtM+cDf2CXoUX439rfEhbnEdAgFZX20UP2A35ypNIawR7/PFFPjQDWyA2EnClCcW/dLWJDEPX2U8+EJff8xqmQ==
 
 "@sinclair/typebox@^0.27.8":
   version "0.27.8"
@@ -2394,6 +2427,11 @@
   integrity sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==
   dependencies:
     "@types/node" "*"
+
+"@types/lodash@^4.17.17":
+  version "4.17.17"
+  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.17.17.tgz#fb85a04f47e9e4da888384feead0de05f7070355"
+  integrity sha512-RRVJ+J3J+WmyOTqnz3PiBLA501eKwXl2noseKOrNo/6+XEHjTAxO4xHvxQB6QuNm+s4WRbn6rSiap8+EA+ykFQ==
 
 "@types/node@*":
   version "22.15.5"

@@ -10,4 +10,5 @@ export interface BannerTypes extends GenericItem {
     page_route: string;
     screen: string;
     params_id: string | null;
+    action_label?: string | null;
 }

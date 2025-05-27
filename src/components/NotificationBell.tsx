@@ -126,7 +126,7 @@ export const NotificationBell = memo(function NotificationBell({
     useEffect(() => {
         // Removido refresh automático ao montar para evitar loops
         // O NotificationContext já faz isso quando o usuário loga
-        
+
         // Setup do intervalo para atualizações periódicas
         refreshIntervalRef.current = setInterval(refreshIfNeeded, refreshInterval);
 
