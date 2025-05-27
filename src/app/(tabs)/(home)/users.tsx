@@ -1,163 +1,205 @@
-import React, {useState, useEffect, useRef} from 'react';
-import {FlatList, TouchableOpacity, Text, View, ActivityIndicator} from 'react-native';
-import {Box} from '@/components/ui/box';
-import {Input} from '@/components/ui/input';
-import {HStack} from '@/components/ui/hstack';
+import React, { useState, useCallback, useMemo } from 'react';
+import { FlatList, RefreshControl, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Filter, Users } from 'lucide-react-native';
+import { Box } from '@/components/ui/box';
+import { VStack } from '@/components/ui/vstack';
+import { HStack } from '@/components/ui/hstack';
+import { Text } from '@/components/ui/text';
+import { Button } from '@/components/Button';
+import { Badge } from '@/components/ui/badge';
+import { Center } from '@/components/ui/center';
+import { UserItem, UserSearchBar, UserFilters } from '@/components/users';
+import UserListSkeletons from '@/components/Skeletons/UserListSkeletons';
+import { useUserList } from '@/hooks/useUserList';
+import type { User } from '@/types/UserTypes';
+import Lottie from 'lottie-react-native';
 
-import {Feather} from '@expo/vector-icons';
-import {getUsers} from "@/services/user";
-import UserItem from "@/components/UserItem";
-import UserSkeleton from '@/components/Skeletons/UserListSkeletons'
-import {UserTypes} from "@/types/UserTypes";
-import {useNavigation, useRouter} from 'expo-router'
-import colors from "@/constants/colors";
-
-const PAGE_SIZE = 20;
+const EmptyState = ({ hasSearch }: { hasSearch: boolean }) => (
+  <Center className="flex-1 px-8">
+    <VStack className="items-center space-y-4">
+      <Lottie
+        source={require('@/assets/empty-notifications.json')}
+        autoPlay
+        loop
+        style={{ width: 200, height: 200 }}
+      />
+      <Text className="text-xl font-semibold text-gray-800 dark:text-gray-200">
+        {hasSearch ? 'Nenhum usuário encontrado' : 'Nenhum usuário cadastrado'}
+      </Text>
+      <Text className="text-center text-gray-500 dark:text-gray-400">
+        {hasSearch 
+          ? 'Tente ajustar os filtros ou termo de busca' 
+          : 'Novos usuários aparecerão aqui'}
+      </Text>
+    </VStack>
+  </Center>
+);
 
 const UserListPage = () => {
-    const [users, setUsers] = useState<UserTypes[]>([]);
-    const [search, setSearch] = useState('');
-    const [inputText, setInputText] = useState('');
-    const [page, setPage] = useState(1);
-    const [showSearchInput, setShowSearchInput] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const inputRef = useRef(null);
-    const navigation = useNavigation();
-    const [isInitialLoading, setIsInitialLoading] = useState(true);
-    const [isSearching, setIsSearching] = useState(false);
-    const [isMoreLoading, setIsMoreLoading] = useState(false);
-    const router = useRouter();
+  const router = useRouter();
+  const [showFilters, setShowFilters] = useState(false);
+  
+  const {
+    users,
+    isLoading,
+    isRefreshing,
+    isLoadingMore,
+    error,
+    hasMore,
+    searchQuery,
+    filters,
+    loadMore,
+    refresh,
+    search,
+    updateFilters,
+    clearFilters,
+    activeFiltersCount
+  } = useUserList();
 
-    useEffect(() => {
-        navigation.setOptions({
-            headerRight: () => (
-                <TouchableOpacity onPress={handlePressSearch} activeOpacity={0.7}
-                                  hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-                    <Feather name="search" size={24} color={colors.white}/>
-                </TouchableOpacity>
-            ),
-        });
-    }, [showSearchInput]);
+  const handleUserPress = useCallback((user: User) => {
+    router.push(`/(tabs)/(home)/(profile)/${user.id}`);
+  }, [router]);
 
-    const handlePressSearch = () => {
-        setShowSearchInput(!showSearchInput);
-        if (!showSearchInput) {
-            setTimeout(() => {
-                inputRef.current?.focus();
-            }, 100);
-        }
-    };
+  const renderItem = useCallback(({ item, index }: { item: User; index: number }) => (
+    <UserItem 
+      user={item} 
+      onPress={handleUserPress}
+      showDivider={index < users.length - 1}
+    />
+  ), [handleUserPress, users.length]);
 
-    const handleUserPress = async (user: UserTypes) => {
-        router.push(`/(tabs)/(home)/(profile)/${user.id}`);
-    };
+  const keyExtractor = useCallback((item: User) => item.id.toString(), []);
 
-    const handleLoadMore = () => {
-        if (isMoreLoading) return; // Evita chamadas adicionais se já estiver carregando mais usuários
-        setIsMoreLoading(true); // Define que está carregando mais usuários
-        setPage(prevPage => prevPage + 1);
-    };
-
-    useEffect(() => {
-        if (inputText.length >= 3) {
-            setSearch(inputText);
-            setPage(1);
-            setIsSearching(true); // Inicia o loading da busca
-        }
-    }, [inputText]);
-
-    useEffect(() => {
-        const loadUsers = async () => {
-            setIsLoading(true);
-            const filters = search ? {
-                filter: {
-                    first_name: {
-                        _contains: search,
-                    },
-                },
-            } : {};
-
-            const responseUsers = await getUsers({
-                ...filters,
-                sort: 'first_name',
-                limit: PAGE_SIZE,
-                offset: (page - 1) * PAGE_SIZE,
-            });
-
-            setIsLoading(true);
-            setUsers(page === 1 ? responseUsers : [...users, ...responseUsers]);
-            setIsLoading(false);
-            setIsSearching(false); // Finaliza o loading da busca
-            if (page === 1) {
-                setIsInitialLoading(false);
-            }
-            setIsMoreLoading(false); // Indica que o carregamento de mais usuários foi concluído
-        };
-
-        loadUsers();
-    }, [search, page]);
-
-    const clearSearch = () => {
-        setInputText('');
-        setSearch(''); // Redefine o estado de busca
-        setPage(1); // Opcional: Redefine a página para 1
-        setShowSearchInput(false);
-        setIsSearching(false); // Opcional: Indica que a busca foi encerrada
-    };
-
-    const renderItem = ({item, index}: any) => (
-        <UserItem key={`${item.id}-${index}`} item={item} handleUserPress={handleUserPress}/>
-    );
-
-    const inputIconRigth = () => {
-        return  inputText.length > 0 ? (
-            <TouchableOpacity onPress={clearSearch}>
-                <Feather name="x" size={24} color={colors.text} />
-            </TouchableOpacity>
-        ) : null
-    }
-
+  const ListFooterComponent = useMemo(() => {
+    if (!isLoadingMore) return null;
+    
     return (
-        <Box flex={1} bg="white">
-            {showSearchInput && (
-                <HStack width="100%" py={2} px={3} background={colors.primary}>
-                    <Input
-                        ref={inputRef}
-                        flex={1}
-                        size={'2xl'}
-                        variant={'underlined'}
-                        color={colors.light}
-                        placeholderTextColor={colors.text}
-                        placeholder="Digite o nome do usuário"
-                        onChangeText={setInputText}
-                        value={inputText}
-                        returnKeyType="search"
-                        InputRightElement={inputIconRigth()}
-                    />
-                </HStack>
-            )}
-
-            {isSearching ? (
-                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                    <ActivityIndicator size="large" color={colors.primary} />
-                </View>
-            ) : isInitialLoading ? (
-                <UserSkeleton />
-            ) : users.length === 0 ? (
-                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                    <Text>Nenhum usuário {search ? `"${search}"` : ''} encontrado.</Text>
-                </View>
-            ) : (
-                <FlatList
-                    data={users}
-                    renderItem={renderItem}
-                    keyExtractor={(item) => item.id.toString()}
-                    onEndReached={handleLoadMore}
-                    onEndReachedThreshold={0.2}
-                />
-            )}
-        </Box>
+      <Center className="py-4">
+        <Text className="text-sm text-gray-500">Carregando mais...</Text>
+      </Center>
     );
+  }, [isLoadingMore]);
+
+  const ListHeaderComponent = useMemo(() => (
+    <VStack className="px-4 pt-4 pb-2 space-y-4 bg-white dark:bg-gray-900">
+      {/* Search Bar */}
+      <UserSearchBar
+        value={searchQuery}
+        onChangeText={search}
+        placeholder="Buscar por nome ou email..."
+      />
+
+      {/* Filter Button */}
+      <HStack className="justify-between items-center">
+        <HStack className="items-center space-x-2">
+          <Users size={20} className="text-gray-600 dark:text-gray-400" />
+          <Text className="text-sm font-medium text-gray-600 dark:text-gray-400">
+            {users.length} {users.length === 1 ? 'usuário' : 'usuários'}
+          </Text>
+        </HStack>
+
+        <Button
+          variant="secondary"
+          onPress={() => setShowFilters(true)}
+          className="flex-row items-center space-x-2 px-3 py-2"
+        >
+          <Filter size={16} />
+          <Text className="text-sm font-medium">Filtros</Text>
+          {activeFiltersCount > 0 && (
+            <Badge className="ml-1 bg-primary-500">
+              <Text className="text-xs text-white font-bold">
+                {activeFiltersCount}
+              </Text>
+            </Badge>
+          )}
+        </Button>
+      </HStack>
+
+      {/* Active Filters Tags */}
+      {activeFiltersCount > 0 && (
+        <HStack className="flex-wrap gap-2">
+          {filters.sector && (
+            <Badge className="bg-blue-100 dark:bg-blue-900/30">
+              <Text className="text-xs text-blue-700 dark:text-blue-300">
+                Setor: {filters.sector}
+              </Text>
+            </Badge>
+          )}
+          {filters.role && (
+            <Badge className="bg-purple-100 dark:bg-purple-900/30">
+              <Text className="text-xs text-purple-700 dark:text-purple-300">
+                Função: {filters.role}
+              </Text>
+            </Badge>
+          )}
+          {filters.isActive && (
+            <Badge className="bg-green-100 dark:bg-green-900/30">
+              <Text className="text-xs text-green-700 dark:text-green-300">
+                Apenas ativos
+              </Text>
+            </Badge>
+          )}
+        </HStack>
+      )}
+    </VStack>
+  ), [searchQuery, search, users.length, activeFiltersCount, filters]);
+
+  if (isLoading && users.length === 0) {
+    return <UserListSkeletons />;
+  }
+
+  if (error && users.length === 0) {
+    return (
+      <Center className="flex-1">
+        <VStack className="items-center space-y-4">
+          <Text className="text-lg text-red-500">Erro ao carregar usuários</Text>
+          <Button onPress={refresh}>
+            Tentar novamente
+          </Button>
+        </VStack>
+      </Center>
+    );
+  }
+
+  return (
+    <Box className="flex-1 bg-gray-50 dark:bg-gray-950">
+      <FlatList
+        data={users}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        ListHeaderComponent={ListHeaderComponent}
+        ListFooterComponent={ListFooterComponent}
+        ListEmptyComponent={
+          <EmptyState hasSearch={!!searchQuery || activeFiltersCount > 0} />
+        }
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.3}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={refresh}
+            colors={['#3b82f6']}
+            tintColor="#3b82f6"
+          />
+        }
+        contentContainerStyle={users.length === 0 ? { flex: 1 } : undefined}
+        showsVerticalScrollIndicator={false}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+        initialNumToRender={10}
+      />
+
+      <UserFilters
+        isOpen={showFilters}
+        onClose={() => setShowFilters(false)}
+        filters={filters}
+        onApplyFilters={updateFilters}
+        onClearFilters={clearFilters}
+      />
+    </Box>
+  );
 };
 
 export default UserListPage;
