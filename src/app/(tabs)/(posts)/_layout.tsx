@@ -1,8 +1,10 @@
 import {Stack} from 'expo-router';
 import React from "react";
-import colors from "@/constants/colors";
+import { useThemedColors } from "@/hooks/useThemedColors";
 
 export default function PostsLayout() {
+    const colors = useThemedColors();
+
     return (
         <Stack screenOptions={{
             headerBackTitle: 'Voltar',

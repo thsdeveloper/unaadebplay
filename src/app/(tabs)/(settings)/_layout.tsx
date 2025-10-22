@@ -1,12 +1,14 @@
 import {Stack} from 'expo-router';
 import React from "react";
-import colors from "@/constants/colors";
+import {useThemedColors} from "@/hooks/useThemedColors";
 
 export default function SettingsLayout() {
+    const colors = useThemedColors();
+
     return (
         <Stack screenOptions={{
             headerBackTitle: 'Voltar',
-            headerTintColor: colors.light,
+            headerTintColor: colors.textInverse,
             headerStyle: {
                 backgroundColor: colors.primary,
             }

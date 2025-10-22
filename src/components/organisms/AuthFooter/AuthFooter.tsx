@@ -1,8 +1,11 @@
 import React from 'react';
-import { View } from 'react-native';
-import { Text } from '@/components/atoms/Text';
-import { Button } from '@/components/atoms/Button';
-import { Divider } from '@/components/atoms/Divider';
+import { VStack } from '@/components/ui/vstack';
+import { HStack } from '@/components/ui/hstack';
+import { Text } from '@/components/ui/text';
+import { Button, ButtonText } from '@/components/ui/button';
+import { Divider } from '@/components/ui/divider';
+import { Center } from '@/components/ui/center';
+import { Link, LinkText } from '@/components/ui/link';
 
 interface AuthFooterProps {
   showSignUp?: boolean;
@@ -22,49 +25,55 @@ export const AuthFooter: React.FC<AuthFooterProps> = React.memo(({
   const showDivider = showSignUp || showSignIn;
 
   return (
-    <View>
-      {showDivider && <Divider text="ou" />}
+    <VStack space="lg" className="mt-6">
+      {showDivider && (
+        <HStack space="md" className="items-center">
+          <Divider className="flex-1" />
+          <Text size="sm" className="text-typography-400">
+            ou
+          </Text>
+          <Divider className="flex-1" />
+        </HStack>
+      )}
 
       {showSignUp && onSignUpPress && (
         <Button
+          action="secondary"
           variant="outline"
-          size="large"
+          size="lg"
           onPress={onSignUpPress}
-          fullWidth
-          style={{ marginBottom: 16 }}
+          className="w-full"
         >
-          Criar Conta
+          <ButtonText>Criar Conta</ButtonText>
         </Button>
       )}
 
       {showSignIn && onSignInPress && (
-        <View style={{ alignItems: 'center', marginBottom: 16 }}>
-          <Text variant="body">
-            Já tem uma conta?{' '}
-            <Text
-              variant="body"
-              color="#60a5fa"
-              weight="semibold"
-              onPress={onSignInPress}
-            >
-              Entrar
+        <Center className="mb-4">
+          <HStack space="xs" className="items-center">
+            <Text size="sm" className="text-typography-400">
+              Já tem uma conta?
             </Text>
-          </Text>
-        </View>
+            <Link onPress={onSignInPress}>
+              <LinkText size="sm" className="font-semibold">
+                Entrar
+              </LinkText>
+            </Link>
+          </HStack>
+        </Center>
       )}
 
       {copyrightText && (
-        <View style={{ alignItems: 'center', marginTop: 40 }}>
+        <Center className="mt-10">
           <Text
-            variant="caption"
-            align="center"
-            color="rgba(255,255,255,0.4)"
+            size="xs"
+            className="text-center text-typography-300 opacity-40"
           >
             {copyrightText}
           </Text>
-        </View>
+        </Center>
       )}
-    </View>
+    </VStack>
   );
 });
 

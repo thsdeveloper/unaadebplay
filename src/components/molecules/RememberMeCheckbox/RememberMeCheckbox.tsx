@@ -1,7 +1,14 @@
 import React from 'react';
-import { View } from 'react-native';
-import { Checkbox } from '@/components/atoms/Checkbox';
-import { Link } from '@/components/atoms/Link';
+import {
+  Checkbox,
+  CheckboxIndicator,
+  CheckboxLabel,
+  CheckboxIcon,
+} from '@/components/ui/checkbox';
+import { CheckIcon } from '@/components/ui/icon';
+import { HStack } from '@/components/ui/hstack';
+import { Link, LinkText } from '@/components/ui/link';
+import { useRouter } from 'expo-router';
 
 interface RememberMeCheckboxProps {
   checked: boolean;
@@ -14,25 +21,36 @@ export const RememberMeCheckbox: React.FC<RememberMeCheckboxProps> = React.memo(
   onChange,
   showForgotPassword = true,
 }) => {
+  const router = useRouter();
+
+  const handleForgotPasswordPress = () => {
+    router.push('/(auth)/forget-password');
+  };
+
   return (
-    <View style={{
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginVertical: 16,
-    }}>
+    <HStack className="justify-between items-center my-4">
       <Checkbox
-        checked={checked}
+        size="sm"
+        value="remember"
+        isChecked={checked}
         onChange={onChange}
-        label="Lembrar-me"
-      />
-      
+      >
+        <CheckboxIndicator>
+          <CheckboxIcon as={CheckIcon} />
+        </CheckboxIndicator>
+        <CheckboxLabel size="sm">
+          Lembrar-me
+        </CheckboxLabel>
+      </Checkbox>
+
       {showForgotPassword && (
-        <Link href="/(auth)/forget-password">
-          Esqueceu a senha?
+        <Link onPress={handleForgotPasswordPress}>
+          <LinkText size="sm">
+            Esqueceu a senha?
+          </LinkText>
         </Link>
       )}
-    </View>
+    </HStack>
   );
 });
 

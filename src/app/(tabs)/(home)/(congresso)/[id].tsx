@@ -2,7 +2,7 @@ import React, {useContext, useEffect, useLayoutEffect, useState} from "react";
 import {Link, useGlobalSearchParams, useNavigation} from "expo-router";
 import {getItem, getItems} from "@/services/items";
 import {BlurView} from "expo-blur";
-import colors from "@/constants/colors";
+import { useThemedColors } from "@/hooks/useThemedColors";
 import {Feather} from "@expo/vector-icons";
 import CongressItemSkeletons from "@/components/Skeletons/CongressItemSkeletons";
 import {CongressType} from "@/types/CongressType";
@@ -24,6 +24,8 @@ import {Button} from "@/components/ui/button";
 import {Text} from "@/components/ui/text";
 
 export default function CongressoPage() {
+    const colors = useThemedColors();
+
     const [congress, setCongress] = useState<CongressType | null>(null);
     const [convidados, setConvidados] = useState<any[] | null>(null);
     const [loading, setLoading] = useState<boolean>(true);

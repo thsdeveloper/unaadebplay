@@ -4,7 +4,7 @@ import {getItems} from "@/services/items";
 import {RepertoriesTypes} from "@/types/RepertoriesTypes";
 import {Image} from "@/components/Image";
 import {GlobalQueryParams} from "@/types/GlobalQueryParamsTypes";
-import colors from "@/constants/colors";
+import { useThemedColors } from "@/hooks/useThemedColors";
 import {useRepertorieContext} from "@/contexts/AudioPlayerContext";
 import {Box} from "@/components/ui/box";
 
@@ -19,6 +19,8 @@ interface CarouselItemRepertoriesProps{
 }
 
 export default function CarouselItemRepertories({idCongresso}: CarouselItemRepertoriesProps) {
+    const colors = useThemedColors();
+
     const [repertoires, setRepertoires] = useState<RepertoriesTypes[]>([]);
     const {setRepertorieID} = useRepertorieContext();
 

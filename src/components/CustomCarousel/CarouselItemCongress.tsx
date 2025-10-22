@@ -1,6 +1,6 @@
 import {Dimensions, StyleSheet} from 'react-native';
 import {Link} from "expo-router";
-import colors from "@/constants/colors";
+import { useThemedColors } from "@/hooks/useThemedColors";
 import {Feather} from "@expo/vector-icons";
 import {Box} from "@/components/ui/box";
 import {Button} from "@/components/ui/button";
@@ -25,6 +25,8 @@ const CarouselItem = ({title, icon, router}: PropsButtonsCongress) => (
 
 
 export default function CarouselItemCongress() {
+    const colors = useThemedColors();
+
     const congressButtons: any[] = [
         {
             title: 'Localização',

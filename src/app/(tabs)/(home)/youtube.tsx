@@ -6,9 +6,11 @@ import * as Linking from 'expo-linking';
 import { getItemSingleton } from "@/services/items";
 import { Text } from "@/components/ui/text";
 import { Stack, useRouter } from "expo-router";
-import colors from "@/constants/colors";
+import { useThemedColors } from "@/hooks/useThemedColors";
 
 const YoutubePage = () => {
+    const colors = useThemedColors();
+
     const [youtube, setYoutube] = useState<any>();
     const [loading, setLoading] = useState(true);
     const buttonScale = useRef(new Animated.Value(1)).current;

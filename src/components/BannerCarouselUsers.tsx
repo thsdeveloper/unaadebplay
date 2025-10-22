@@ -3,7 +3,7 @@ import { Dimensions, FlatList, StyleSheet, Animated, TouchableOpacity, View } fr
 import { UserTypes } from "@/types/UserTypes";
 import { Avatar } from "@/components/Avatar";
 import { getUsers } from "@/services/user";
-import colors from "@/constants/colors";
+import { useThemedColors } from "@/hooks/useThemedColors";
 import { Link, useRouter } from "expo-router";
 import { Box } from "@/components/ui/box";
 import { Text } from "@/components/ui/text";
@@ -30,6 +30,8 @@ const BannerCarouselUsers = ({
                                  title,
                                  showNames = true
                              }: PropsBanners) => {
+    const colors = useThemedColors();
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activeIndex, setActiveIndex] = useState(0);

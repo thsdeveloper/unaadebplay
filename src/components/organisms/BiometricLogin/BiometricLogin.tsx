@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Alert } from 'react-native';
+import { Alert } from 'react-native';
+import { VStack } from '@/components/ui/vstack';
+import { Text } from '@/components/ui/text';
 import { BiometricButton } from '@/components/molecules/BiometricButton';
-import { Text } from '@/components/atoms/Text';
 
 interface BiometricLoginProps {
   isAvailable: boolean;
@@ -41,7 +42,7 @@ export const BiometricLogin: React.FC<BiometricLoginProps> = React.memo(({
   };
 
   return (
-    <View style={{ marginTop: 16 }}>
+    <VStack space="sm" className="mt-4">
       <BiometricButton
         biometricType={biometricName}
         isEnabled={isEnabled}
@@ -50,17 +51,16 @@ export const BiometricLogin: React.FC<BiometricLoginProps> = React.memo(({
         lockoutTime={lockoutRemaining}
         onPress={handlePress}
       />
-      
+
       {!isEnabled && !isLocked && (
         <Text
-          variant="caption"
-          align="center"
-          style={{ marginTop: 8 }}
+          size="xs"
+          className="text-center text-typography-400"
         >
           Use {biometricName} para login rápido e seguro
         </Text>
       )}
-    </View>
+    </VStack>
   );
 });
 

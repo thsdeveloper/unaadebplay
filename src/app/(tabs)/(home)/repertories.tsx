@@ -5,7 +5,7 @@ import {RepertoriesTypes} from '@/types/RepertoriesTypes';
 import {Image} from "@/components/Image";
 import TranslationContext from "@/contexts/TranslationContext";
 import { FontAwesome } from '@expo/vector-icons';
-import colors from "@/constants/colors";
+import { useThemedColors } from "@/hooks/useThemedColors";
 import {useRepertorieContext} from "@/contexts/AudioPlayerContext";
 import SkeletonItem from "@/components/SkeletonItem";
 import {Box} from "@/components/ui/box";
@@ -14,6 +14,8 @@ import {Divider} from "@/components/ui/divider";
 import {Stack} from "expo-router";
 
 const Repertories = () => {
+    const colors = useThemedColors();
+
     const [repertoires, setRepertoires] = useState<RepertoriesTypes[]>();
     const [isLoadingItemList, setIsLoadingItemList] = useState(false);
     const [isLoadingList, setIsLoadingList] = useState(false);

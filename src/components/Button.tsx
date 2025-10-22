@@ -1,8 +1,8 @@
-import {Button as NativeBaseButton} from '@/components/ui/button'
-import {IButtonProps} from "@gluestack-ui/button/lib/types";
-import {Text} from "@/components/ui/text"
+import { Button as NativeBaseButton } from '@/components/ui/button';
+import { Text } from '@/components/ui/text';
+import type { ComponentProps } from 'react';
 
-type Props = IButtonProps & {
+type Props = ComponentProps<typeof NativeBaseButton> & {
     title: string;
 }
 

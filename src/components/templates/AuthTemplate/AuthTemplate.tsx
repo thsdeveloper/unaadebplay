@@ -3,12 +3,14 @@ import {
   Platform,
   Dimensions,
   Keyboard,
-  KeyboardAvoidingView,
-  ScrollView,
   StatusBar,
   Animated,
-  ViewStyle,
 } from 'react-native';
+import { Box } from '@/components/ui/box';
+import { Center } from '@/components/ui/center';
+import { VStack } from '@/components/ui/vstack';
+import { ScrollView } from '@/components/ui/scroll-view';
+import { KeyboardAvoidingView } from '@/components/ui/keyboard-avoiding-view';
 import { GradientBackground } from '@/components/atoms/GradientBackground';
 import { LoadingSpinner } from '@/components/atoms/LoadingSpinner';
 
@@ -17,19 +19,25 @@ const { height } = Dimensions.get('window');
 interface AuthTemplateProps {
   children: React.ReactNode;
   loading?: boolean;
+  isLoading?: boolean;
+  title?: string;
+  subtitle?: string;
   gradientColors?: readonly [string, string, ...string[]];
-  contentContainerStyle?: ViewStyle;
 }
 
 export const AuthTemplate: React.FC<AuthTemplateProps> = ({
   children,
   loading = false,
+  isLoading = false,
+  title,
+  subtitle,
   gradientColors = ['#0f172a', '#1e293b', '#334155'],
-  contentContainerStyle,
 }) => {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
+
+  const isLoadingState = loading || isLoading;
 
   // Keyboard detection
   useEffect(() => {
@@ -61,30 +69,32 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
         useNativeDriver: true,
       }),
     ]).start();
-  }, []);
+  }, [fadeAnim, slideAnim]);
 
-  if (loading) {
+  if (isLoadingState) {
     return (
       <GradientBackground colors={gradientColors}>
-        <LoadingSpinner
-          type="lottie"
-          size="large"
-          containerStyle={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        />
+        <Center className="flex-1">
+          <LoadingSpinner
+            type="lottie"
+            size="large"
+            containerStyle={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          />
+        </Center>
       </GradientBackground>
     );
   }
 
   return (
-    <>
+    <Box className="flex-1">
       <StatusBar barStyle="light-content" />
       <GradientBackground colors={gradientColors}>
         <KeyboardAvoidingView
-          style={{ flex: 1 }}
+          className="flex-1"
           behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
           <ScrollView
@@ -93,22 +103,23 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
             showsVerticalScrollIndicator={false}
           >
             <Animated.View
-              style={[{
+              style={{
                 flex: 1,
                 opacity: fadeAnim,
                 transform: [{ translateY: slideAnim }],
-                paddingHorizontal: 24,
-                paddingVertical: 40,
-                justifyContent: 'center',
                 minHeight: height,
-              }, contentContainerStyle]}
+              }}
             >
-              {children}
+              <Center className="flex-1 px-6 py-10">
+                <VStack space="2xl" className="w-full max-w-md">
+                  {children}
+                </VStack>
+              </Center>
             </Animated.View>
           </ScrollView>
         </KeyboardAvoidingView>
       </GradientBackground>
-    </>
+    </Box>
   );
 };
 

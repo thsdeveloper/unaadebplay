@@ -2,18 +2,19 @@ import {Link, Stack} from 'expo-router';
 import React from "react";
 import {Avatar} from "@/components/Avatar";
 import {useAuth} from "@/contexts/AuthContext";
-import colors from "@/constants/colors";
+import {useThemedColors} from "@/hooks/useThemedColors";
 import {Box} from "@/components/ui/box";
-import {NotificationBell} from "@/components/NotificationBell"; // Importamos o novo componente
+import {NotificationBell} from "@/components/NotificationBell";
 
 export default function HomeLayout() {
-    const {user} = useAuth()
-    console.log('user', user)
+    const {user} = useAuth();
+    const colors = useThemedColors();
+
     return (
         <>
             <Stack screenOptions={{
                 headerTransparent: false,
-                headerTintColor: colors.dark,
+                headerTintColor: colors.text,
             }}>
                 <Stack.Screen name={'index'} options={{
                     headerTransparent: true,
@@ -46,7 +47,7 @@ export default function HomeLayout() {
                             backgroundColor: colors.primary,
                         },
                         headerBackTitle: 'Voltar',
-                        headerTintColor: colors.white,
+                        headerTintColor: colors.textInverse,
                     }}
                 />
 
@@ -74,7 +75,7 @@ export default function HomeLayout() {
                             backgroundColor: colors.primary,
                         },
                         headerBackTitle: 'Voltar',
-                        headerTintColor: colors.white,
+                        headerTintColor: colors.textInverse,
                     }}
                 />
                 <Stack.Screen
@@ -85,7 +86,7 @@ export default function HomeLayout() {
                             backgroundColor: colors.primary,
                         },
                         headerBackTitle: 'Voltar',
-                        headerTintColor: colors.white,
+                        headerTintColor: colors.textInverse,
                     }}
                 />
                 <Stack.Screen
@@ -96,7 +97,7 @@ export default function HomeLayout() {
                             backgroundColor: colors.primary,
                         },
                         headerBackTitle: 'Voltar',
-                        headerTintColor: colors.white,
+                        headerTintColor: colors.textInverse,
                     }}
                 />
                 <Stack.Screen
@@ -107,7 +108,7 @@ export default function HomeLayout() {
                     options={{
                         title: 'Usuários',
                         headerBackTitle: 'Voltar',
-                        headerTintColor: colors.light,
+                        headerTintColor: colors.textInverse,
                         headerStyle: {
                             backgroundColor: colors.primary,
                         }
@@ -118,17 +119,17 @@ export default function HomeLayout() {
                     options={{
                         title: 'Perfil',
                         headerBackTitle: 'Voltar',
-                        headerTintColor: colors.white,
+                        headerTintColor: colors.textInverse,
                         headerStyle: {
                             backgroundColor: colors.primary,
                         }
-                    }
-                    }/>
+                    }}
+                />
                 <Stack.Screen
                     name={'modal'}
                     options={{
                         title: 'Minhas informações',
-                        headerTintColor: colors.light,
+                        headerTintColor: colors.textInverse,
                         presentation: 'modal',
                         headerStyle: {
                             backgroundColor: colors.primary,

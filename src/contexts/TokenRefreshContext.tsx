@@ -1,6 +1,6 @@
 // src/contexts/TokenRefreshContext.tsx
 import React, { createContext, useState, useContext } from 'react';
-import { Toast } from '@gluestack-ui/toast';
+import { useToast } from '@/components/ui/toast';
 
 const TokenRefreshContext = createContext({
     isRefreshing: false,
@@ -10,7 +10,7 @@ const TokenRefreshContext = createContext({
 
 export const TokenRefreshProvider = ({ children }) => {
     const [isRefreshing, setIsRefreshing] = useState(false);
-    const toast = Toast.useToast();
+    const toast = useToast();
 
     const showRefreshIndicator = () => {
         setIsRefreshing(true);

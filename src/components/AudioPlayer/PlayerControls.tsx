@@ -1,11 +1,13 @@
 import React from 'react';
 import {FontAwesome5, MaterialIcons} from '@expo/vector-icons';
-import colors from "@/constants/colors";
+import { useThemedColors } from "@/hooks/useThemedColors";
 import {Box} from "@/components/ui/box";
 import {HStack} from "@/components/ui/hstack";
 import {Slider} from "react-native";
 
 const PlayerControls = ({isPlaying, duration, position, onPlayPausePress, stopSound, onPositionChange }) => {
+    const colors = useThemedColors();
+
     const formattedDuration = Math.round(duration / 1000);
     const formattedPosition = Math.round(position / 1000);
 

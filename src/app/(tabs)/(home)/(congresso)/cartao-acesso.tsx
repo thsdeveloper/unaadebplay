@@ -1,5 +1,5 @@
 import * as Clipboard from "expo-clipboard";
-import colors from "@/constants/colors";
+import { useThemedColors } from "@/hooks/useThemedColors";
 import React, {useContext, useEffect, useState} from "react";
 import {getItems, getItemSingleton, setUpdateItem} from "@/services/items";
 import {HospedagemTypes} from "@/types/HospedagemTypes";
@@ -18,6 +18,8 @@ import {Heading} from "@/components/ui/heading";
 import {Button} from "@/components/ui/button";
 
 export default function CartaoAcesso() {
+    const colors = useThemedColors();
+
     const [loading, setLoading] = useState<boolean>(true);
     const [hospedagem, setHospedagem] = useState<HospedagemTypes>();
     const [subscribedHos, setSubscribedHos] = useState<SubscribedHosTypes[]>();

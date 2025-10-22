@@ -3,7 +3,7 @@ import { RefreshControl, SectionList, Dimensions, SectionListData, ScrollView } 
 import TranslationContext from "@/contexts/TranslationContext";
 import AuthContext from "@/contexts/AuthContext";
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
-import colors from "@/constants/colors";
+import { useThemedColors } from "@/hooks/useThemedColors";
 import { EventsTypes } from "@/types/EventsTypes";
 import { HStack } from "@/components/ui/hstack";
 import { Box } from "@/components/ui/box";

@@ -2,7 +2,7 @@ import React, {useContext, useState, useEffect, useCallback, useMemo} from "reac
 import {Alert, Animated, RefreshControl, TouchableOpacity} from "react-native";
 import BannerCarousel from "@/components/BannerCarousel";
 import TranslationContext from "@/contexts/TranslationContext";
-import colors from "@/constants/colors";
+import { useThemedColors } from "@/hooks/useThemedColors";
 import BannerCarouselUsers from "@/components/BannerCarouselUsers";
 import AvatarGroup from "@/components/AvatarGroup";
 import InfoCongressCarousel from "@/components/InfoCongressCarousel";
@@ -17,6 +17,7 @@ import {VStack} from "@/components/ui/vstack";
 import SectionContainer from "@/components/SectionContainer";
 
 const HomeTabs = React.memo(() => {
+    const colors = useThemedColors();
     const [refreshing, setRefreshing] = useState(false);
     const {t} = useContext(TranslationContext);
     const navigation = useNavigation()

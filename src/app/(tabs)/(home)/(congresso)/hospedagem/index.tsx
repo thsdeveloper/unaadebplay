@@ -8,7 +8,7 @@ import {RadioInput} from "@/components/Forms/Radio";
 import {getItems, getItemSingleton, setCreateItem, setUpdateItem} from "@/services/items";
 import {KeyboardAvoidingView, Platform, ScrollView} from "react-native";
 import {Switch} from "@/components/Forms/Switch";
-import colors from "@/constants/colors";
+import { useThemedColors } from "@/hooks/useThemedColors";
 import {CustomInput } from "@/components/Forms/Input";
 import {HospedagemTypes} from "@/types/HospedagemTypes";
 import {HospedagemSkeleton} from "@/components/Skeletons/HospedagemSkeletons";
@@ -46,6 +46,8 @@ const schema = Yup.object({
 });
 
 const RegistrationFormHospedagem = () => {
+    const colors = useThemedColors();
+
     const {user} = useAuth();
     const [hos, setHos] = useState<HospedagemTypes>();
     const [dataForms, setDataForms] = useState<FormDataProps>();

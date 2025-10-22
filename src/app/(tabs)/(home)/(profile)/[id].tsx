@@ -6,7 +6,7 @@ import {ScrollView, TouchableOpacity} from "react-native";
 import {LoadingLottier} from "@/components/LoadingLottier";
 import {Link, useGlobalSearchParams} from "expo-router";
 import LikedIcon from "@/components/LikedIcon";
-import colors from "@/constants/colors";
+import { useThemedColors } from "@/hooks/useThemedColors";
 import SectionInfo from "@/components/SectionInfo";
 import {Feather} from "@expo/vector-icons";
 import {Box} from "@/components/ui/box";
@@ -16,6 +16,8 @@ import {Center} from "@/components/ui/center";
 
 
 export default function UserProfile({route}: any) {
+    const colors = useThemedColors();
+
     const [user, setUser] = useState<UserTypes | null>(null);
     const {id} = useGlobalSearchParams();
 

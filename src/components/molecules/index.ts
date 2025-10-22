@@ -9,3 +9,5 @@ export * from './EmailValidator';
 export * from './DatePicker';
 export * from './TermsCheckbox';
 export * from './SectorSelect';
+export * from './UserProfileCard';
+export * from './ActionMenuItem';

@@ -1,7 +1,15 @@
 import React from 'react';
-import { View, ViewStyle } from 'react-native';
-import { Input } from '@/components/atoms/Input';
-import { Text } from '@/components/atoms/Text';
+import { ViewStyle, TextInput } from 'react-native';
+import {
+  FormControl,
+  FormControlLabel,
+  FormControlLabelText,
+  FormControlError,
+  FormControlErrorText,
+  FormControlErrorIcon,
+} from '@/components/ui/form-control';
+import { Input, InputField, InputSlot, InputIcon } from '@/components/ui/input';
+import { Icon, EyeIcon, EyeOffIcon, AlertCircleIcon } from '@/components/ui/icon';
 import { MaterialIcons } from '@expo/vector-icons';
 
 interface FormFieldProps {
@@ -22,7 +30,7 @@ interface FormFieldProps {
   returnKeyType?: 'done' | 'go' | 'next' | 'search' | 'send';
   onSubmitEditing?: () => void;
   editable?: boolean;
-  inputRef?: React.RefObject<any>;
+  inputRef?: React.Ref<TextInput>;
 }
 
 export const FormField: React.FC<FormFieldProps> = React.memo(({
@@ -31,34 +39,63 @@ export const FormField: React.FC<FormFieldProps> = React.memo(({
   required,
   containerStyle,
   inputRef,
+  icon,
+  secureTextEntry,
   ...inputProps
 }) => {
+  const [showPassword, setShowPassword] = React.useState(false);
+
+  const handleTogglePassword = React.useCallback(() => {
+    setShowPassword(prev => !prev);
+  }, []);
+
   return (
-    <View style={[{ marginBottom: 16 }, containerStyle]}>
+    <FormControl
+      isInvalid={!!error}
+      isRequired={required}
+      className="mb-4"
+    >
       {label && (
-        <View style={{ flexDirection: 'row', marginBottom: 8 }}>
-          <Text variant="label">
+        <FormControlLabel className="mb-2">
+          <FormControlLabelText size="sm">
             {label}
-          </Text>
-          {required && (
-            <Text variant="label" color="#ef4444" style={{ marginLeft: 4 }}>
-              *
-            </Text>
-          )}
-        </View>
+          </FormControlLabelText>
+        </FormControlLabel>
       )}
+
       <Input
-        ref={inputRef}
-        {...inputProps}
-        error={error}
-        showPasswordToggle={inputProps.secureTextEntry}
-      />
+        variant="outline"
+        size="lg"
+        isInvalid={!!error}
+      >
+        {icon && (
+          <InputSlot className="pl-3">
+            <MaterialIcons name={icon} size={20} color="#6B7280" />
+          </InputSlot>
+        )}
+
+        <InputField
+          ref={inputRef as any}
+          type={secureTextEntry && !showPassword ? 'password' : 'text'}
+          {...inputProps}
+        />
+
+        {secureTextEntry && (
+          <InputSlot className="pr-3" onPress={handleTogglePassword}>
+            <InputIcon as={showPassword ? EyeIcon : EyeOffIcon} />
+          </InputSlot>
+        )}
+      </Input>
+
       {error && (
-        <Text variant="error" style={{ marginTop: 4, marginLeft: 16 }}>
-          {error}
-        </Text>
+        <FormControlError className="mt-1">
+          <FormControlErrorIcon as={AlertCircleIcon} size="sm" />
+          <FormControlErrorText size="xs">
+            {error}
+          </FormControlErrorText>
+        </FormControlError>
       )}
-    </View>
+    </FormControl>
   );
 });
 

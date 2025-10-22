@@ -1,10 +1,13 @@
 import React, { useRef, useCallback } from 'react';
-import { View, TextInput } from 'react-native';
+import { TextInput } from 'react-native';
 import { Control, Controller, FieldErrors } from 'react-hook-form';
 import { FormField } from '@/components/molecules/FormField';
 import { RememberMeCheckbox } from '@/components/molecules/RememberMeCheckbox';
-import { Button } from '@/components/atoms/Button';
-import { Icon } from '@/components/atoms/Icon';
+import { VStack } from '@/components/ui/vstack';
+import { Button, ButtonText, ButtonIcon, ButtonSpinner } from '@/components/ui/button';
+import { Icon } from '@/components/ui/icon';
+import { LogIn } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 
 export interface LoginFormData {
   email: string;
@@ -36,8 +39,15 @@ export const LoginForm: React.FC<LoginFormProps> = React.memo(({
     passwordInputRef.current?.focus();
   }, []);
 
+  const handleSubmit = useCallback(() => {
+    if (!loading && isValid) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      onSubmit();
+    }
+  }, [loading, isValid, onSubmit]);
+
   return (
-    <View>
+    <VStack space="md" className="w-full">
       {/* Email Field */}
       <Controller
         control={control}
@@ -74,7 +84,7 @@ export const LoginForm: React.FC<LoginFormProps> = React.memo(({
             secureTextEntry={true}
             autoCapitalize="none"
             returnKeyType="done"
-            onSubmitEditing={onSubmit}
+            onSubmitEditing={handleSubmit}
           />
         )}
       />
@@ -87,26 +97,23 @@ export const LoginForm: React.FC<LoginFormProps> = React.memo(({
 
       {/* Submit Button */}
       <Button
-        variant="primary"
-        size="large"
-        loading={loading}
-        disabled={!isValid || loading}
-        onPress={onSubmit}
-        fullWidth
-        leftIcon={
-          !loading && (
-            <Icon
-              family="Ionicons"
-              name="log-in"
-              size={24}
-              color="white"
-            />
-          )
-        }
+        action="primary"
+        variant="solid"
+        size="lg"
+        isDisabled={!isValid || loading}
+        onPress={handleSubmit}
+        className="w-full mt-2"
       >
-        Entrar
+        {loading ? (
+          <ButtonSpinner />
+        ) : (
+          <>
+            <ButtonIcon as={LogIn} />
+            <ButtonText>Entrar</ButtonText>
+          </>
+        )}
       </Button>
-    </View>
+    </VStack>
   );
 });
 

@@ -144,3 +144,5 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
     </>
   );
 };
+
+export * from './UserInfoTemplate';

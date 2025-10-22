@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {Dimensions, FlatList} from 'react-native';
 import {GlobalQueryParams} from "@/types/GlobalQueryParamsTypes";
-import colors from "@/constants/colors";
+import { useThemedColors } from "@/hooks/useThemedColors";
 import {Avatar} from "@/components/Avatar";
 import {UserTypes} from "@/types/UserTypes";
 import {getUsers} from "@/services/user";
@@ -27,6 +27,8 @@ const CarouselItem = ({id, avatar, first_name}: UserTypes) => (
 
 
 export default function CarouselItemUsers({convidados}: PropsCarrousseu) {
+    const colors = useThemedColors();
+
     const [users, setUsers] = useState<UserTypes[] | []>([]);
 
     useEffect(() => {

@@ -10,11 +10,13 @@ import UserItem from "@/components/UserItem";
 import UserSkeleton from '@/components/Skeletons/UserListSkeletons'
 import {UserTypes} from "@/types/UserTypes";
 import {useNavigation, useRouter} from 'expo-router'
-import colors from "@/constants/colors";
+import { useThemedColors } from "@/hooks/useThemedColors";
 
 const PAGE_SIZE = 20;
 
 const UserListPage = () => {
+    const colors = useThemedColors();
+
     const [users, setUsers] = useState<UserTypes[]>([]);
     const [search, setSearch] = useState('');
     const [inputText, setInputText] = useState('');

@@ -8,9 +8,11 @@ import QRCode from 'react-native-qrcode-svg';
 import { Text } from "@/components/ui/text";
 import { Stack, useRouter } from "expo-router";
 import { Feather } from '@expo/vector-icons';
-import colors from "@/constants/colors";
+import { useThemedColors } from "@/hooks/useThemedColors";
 
 export default function Contribua() {
+    const colors = useThemedColors();
+
     const animation = useRef(null);
     const [showQRCode, setShowQRCode] = useState(false);
     const alert = useContext(AlertContext);

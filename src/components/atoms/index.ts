@@ -12,3 +12,6 @@ export * from './GradientBackground';
 export * from './AvatarUpload';
 export * from './ProgressIndicator';
 export * from './DatePickerTrigger';
+export * from './SectionHeader';
+export * from './InfoRow';
+export * from './ThemeToggle';

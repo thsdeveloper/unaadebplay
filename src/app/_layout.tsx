@@ -1,13 +1,14 @@
 import React, {useEffect, useState} from "react";
 import "../../global.css";
 import "@/utils/setupCrypto"; // Importar configuração de crypto ANTES de outros imports
-import {GluestackUIProvider} from "@/components/ui/gluestack-ui-provider";
 import {AuthProvider} from '@/contexts/AuthContext';
 import {AlertProvider} from "@/contexts/AlertContext";
 import 'react-native-gesture-handler';
 import {ConfigProvider} from "@/contexts/ConfigContext";
 import {TranslationProvider} from "@/contexts/TranslationContext";
 import {AudioPlayerProvider} from "@/contexts/AudioPlayerContext";
+import {ThemeProvider} from "@/contexts/ThemeContext";
+import {ThemedGluestackProvider} from "@/components/ThemedGluestackProvider";
 import * as SplashScreen from 'expo-splash-screen';
 import {getSettings} from "@/services/settings";
 import FlashMessage from "react-native-flash-message";
@@ -17,6 +18,7 @@ import {useApiErrorHandler} from "@/utils/apiErrorHandler";
 import {NotificationProvider} from "@/contexts/NotificationContext";
 import {NotificationToast} from "@/components/NotificationToast";
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {ToastProvider} from '@/components/ui/toast';
 // import {FeedbackToast, useFeedbackToast} from '@/components/FeedbackToast';
 import {View} from 'react-native';
 
@@ -84,26 +86,30 @@ export default function RootLayout() {
 
     return (
         <GestureHandlerRootView style={{flex: 1}}>
-            <GluestackUIProvider mode="light">
-                <AlertProvider>
-                    <AuthProvider>
-                        <ConfigProvider value={config}>
-                            <NotificationProvider>
-                                <TranslationProvider>
-                                    <AudioPlayerProvider>
-                                        <ToastWrapper>
-                                            <NotificationToast/>
-                                            <FlashMessage position="top"/>
-                                            <AppUpdateManager/>
-                                            <Slot/>
-                                        </ToastWrapper>
-                                    </AudioPlayerProvider>
-                                </TranslationProvider>
-                            </NotificationProvider>
-                        </ConfigProvider>
-                    </AuthProvider>
-                </AlertProvider>
-            </GluestackUIProvider>
+            <ThemeProvider>
+                <ThemedGluestackProvider>
+                    <ToastProvider>
+                        <AlertProvider>
+                            <AuthProvider>
+                                <ConfigProvider value={config}>
+                                    <NotificationProvider>
+                                        <TranslationProvider>
+                                            <AudioPlayerProvider>
+                                                <ToastWrapper>
+                                                    <NotificationToast/>
+                                                    <FlashMessage position="top"/>
+                                                    <AppUpdateManager/>
+                                                    <Slot/>
+                                                </ToastWrapper>
+                                            </AudioPlayerProvider>
+                                        </TranslationProvider>
+                                    </NotificationProvider>
+                                </ConfigProvider>
+                            </AuthProvider>
+                        </AlertProvider>
+                    </ToastProvider>
+                </ThemedGluestackProvider>
+            </ThemeProvider>
         </GestureHandlerRootView>
     );
 }

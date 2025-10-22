@@ -6,7 +6,7 @@ import * as Application from 'expo-application';
 import React, {useContext} from 'react';
 import {ScrollView, Alert} from 'react-native';
 import {TouchableOpacity} from 'react-native';
-import colors from "@/constants/colors";
+import { useThemedColors } from "@/hooks/useThemedColors";
 import AlertContext from "@/contexts/AlertContext";
 import {updateUserMe} from "@/services/user";
 import {Href, Link, useNavigation} from "expo-router";
@@ -19,6 +19,8 @@ import {Divider} from "@/components/ui/divider";
 import {Text} from "@/components/ui/text";
 
 export function HeaderDrawer() {
+    const colors = useThemedColors();
+
     const {logout, user} = useAuth()
     const alert = useContext(AlertContext)
     const navigation = useNavigation();
