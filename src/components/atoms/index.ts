@@ -4,6 +4,7 @@ export * from './Input';
 export * from './Text';
 export * from './Icon';
 export * from './Logo';
+export * from './LogoXpe';
 export * from './Divider';
 export * from './Checkbox';
 export * from './Link';

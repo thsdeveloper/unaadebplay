@@ -1,8 +1,6 @@
-import React, { useEffect } from 'react';
 import { Redirect } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { View, ActivityIndicator } from 'react-native';
-import { Center } from '@/components/ui/center';
 import { Text } from '@/components/ui/text';
 
 export default function Index() {
