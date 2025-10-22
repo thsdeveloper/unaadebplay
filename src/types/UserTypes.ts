@@ -22,3 +22,6 @@ export interface UserTypes extends GenericItem{
     gender: string
     phone: string
 }
+
+// Export type alias for consistency
+export type User = UserTypes;
