@@ -27,6 +27,7 @@ interface AuthContextData {
     
     // Métodos principais
     login(email: string, password: string, rememberMe?: boolean): Promise<void>;
+    register(userData: any): Promise<void>;
     logout(): Promise<void>;
     
     // Gerenciamento de usuário
@@ -238,6 +239,68 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             } else {
                 toast.error('Erro ao fazer login. Verifique sua conexão.');
             }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Registro de novo usuário
+    const register = async (userData: any) => {
+        setLoading(true);
+        
+        try {
+            // Verificar conectividade
+            if (!isOnline) {
+                toast.error('Sem conexão com a internet');
+                return;
+            }
+            
+            // Fazer registro
+            const newUser = await authService.register(userData);
+            
+            // Salvar usuário
+            await setUser(newUser);
+            
+            // Salvar como lembrar-me por padrão
+            await AsyncStorage.setItem(REMEMBER_ME_KEY, 'true');
+            
+            // Salvar credenciais
+            const encryptedCreds = await encrypt(JSON.stringify({ 
+                email: userData.email, 
+                password: userData.password 
+            }));
+            await AsyncStorage.setItem(ENCRYPTED_CREDS_KEY, encryptedCreds);
+            
+            // Atualizar informações da sessão
+            const session = authService.getCurrentSession();
+            if (session) {
+                setSessionInfo({
+                    id: session.id,
+                    createdAt: new Date(session.createdAt),
+                    lastActivity: new Date(session.lastActivity),
+                    refreshCount: session.refreshCount,
+                });
+            }
+            
+            toast.success('Conta criada com sucesso!');
+            
+            // Navegar para home
+            router.replace('/(tabs)/(home)/');
+            
+        } catch (error: any) {
+            console.error('Erro no registro:', error);
+            
+            // Tratamento de erros específicos
+            if (error.message?.includes('já está cadastrado')) {
+                toast.error(error.message);
+            } else if (error.response?.status === 400) {
+                toast.error('Dados inválidos. Verifique as informações.');
+            } else if (error.response?.status === 500) {
+                toast.error('Erro no servidor. Tente novamente mais tarde.');
+            } else {
+                toast.error('Erro ao criar conta. Verifique sua conexão.');
+            }
+            throw error;
         } finally {
             setLoading(false);
         }
@@ -476,6 +539,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                 
                 // Métodos
                 login,
+                register,
                 logout,
                 setUser,
                 updateUser,

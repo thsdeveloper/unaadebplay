@@ -1,20 +1,17 @@
 import React from 'react';
 import {
-  TouchableOpacity,
-  Text,
-  ActivityIndicator,
-  ViewStyle,
-  TextStyle,
-  TouchableOpacityProps,
-  View,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+  Button as GluestackButton,
+  ButtonText,
+  ButtonSpinner,
+  ButtonIcon
+} from '@/components/ui/button';
 import * as Haptics from 'expo-haptics';
+import type { PressableProps } from 'react-native';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'outline';
 export type ButtonSize = 'small' | 'medium' | 'large';
 
-interface ButtonProps extends TouchableOpacityProps {
+interface ButtonProps extends Omit<PressableProps, 'children'> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   loading?: boolean;
@@ -22,51 +19,40 @@ interface ButtonProps extends TouchableOpacityProps {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   fullWidth?: boolean;
+  className?: string;
 }
 
-const sizeStyles: Record<ButtonSize, { container: ViewStyle; text: TextStyle }> = {
-  small: {
-    container: { paddingVertical: 8, paddingHorizontal: 16 },
-    text: { fontSize: 14 },
-  },
-  medium: {
-    container: { paddingVertical: 12, paddingHorizontal: 20 },
-    text: { fontSize: 16 },
-  },
-  large: {
-    container: { paddingVertical: 16, paddingHorizontal: 24 },
-    text: { fontSize: 18 },
-  },
+// Map our custom variants to Gluestack UI variants
+const mapVariantToGluestack = (variant: ButtonVariant) => {
+  switch (variant) {
+    case 'primary':
+      return { variant: 'solid' as const, action: 'primary' as const };
+    case 'secondary':
+      return { variant: 'solid' as const, action: 'secondary' as const };
+    case 'ghost':
+      return { variant: 'link' as const, action: 'primary' as const };
+    case 'outline':
+      return { variant: 'outline' as const, action: 'primary' as const };
+    default:
+      return { variant: 'solid' as const, action: 'primary' as const };
+  }
 };
 
-const variantStyles: Record<ButtonVariant, { 
-  container?: ViewStyle; 
-  text: TextStyle;
-  gradient?: readonly [string, string, ...string[]];
-}> = {
-  primary: {
-    text: { color: 'white', fontWeight: '600' },
-    gradient: ['#3b82f6', '#2563eb'],
-  },
-  secondary: {
-    container: { backgroundColor: 'rgba(255,255,255,0.1)' },
-    text: { color: 'white', fontWeight: '500' },
-  },
-  ghost: {
-    container: { backgroundColor: 'transparent' },
-    text: { color: 'rgba(255,255,255,0.8)', fontWeight: '500' },
-  },
-  outline: {
-    container: { 
-      backgroundColor: 'transparent',
-      borderWidth: 2,
-      borderColor: 'rgba(255,255,255,0.2)',
-    },
-    text: { color: 'rgba(255,255,255,0.8)', fontWeight: '500' },
-  },
+// Map our custom sizes to Gluestack UI sizes
+const mapSizeToGluestack = (size: ButtonSize) => {
+  switch (size) {
+    case 'small':
+      return 'sm' as const;
+    case 'medium':
+      return 'md' as const;
+    case 'large':
+      return 'lg' as const;
+    default:
+      return 'md' as const;
+  }
 };
 
-export const Button: React.FC<ButtonProps> = React.memo(({
+export const Button = React.memo<ButtonProps>(({
   variant = 'primary',
   size = 'medium',
   loading = false,
@@ -76,7 +62,7 @@ export const Button: React.FC<ButtonProps> = React.memo(({
   fullWidth = false,
   disabled,
   onPress,
-  style,
+  className,
   ...props
 }) => {
   const handlePress = (event: any) => {
@@ -86,65 +72,39 @@ export const Button: React.FC<ButtonProps> = React.memo(({
     }
   };
 
-  const sizeStyle = sizeStyles[size];
-  const variantStyle = variantStyles[variant];
+  const gluestackVariant = mapVariantToGluestack(variant);
+  const gluestackSize = mapSizeToGluestack(size);
   const isDisabled = disabled || loading;
 
-  const containerStyle: ViewStyle = {
-    borderRadius: 16,
-    overflow: 'hidden',
-    opacity: isDisabled ? 0.6 : 1,
-    width: fullWidth ? '100%' : undefined,
-    ...variantStyle.container,
-  };
-
-  const contentStyle: ViewStyle = {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...sizeStyle.container,
-  };
-
-  const textStyle: TextStyle = {
-    ...sizeStyle.text,
-    ...variantStyle.text,
-    marginHorizontal: leftIcon || rightIcon ? 8 : 0,
-  };
-
-  const content = (
-    <>
-      {loading ? (
-        <ActivityIndicator color={variantStyle.text.color} />
-      ) : (
-        <>
-          {leftIcon}
-          <Text style={textStyle}>{children}</Text>
-          {rightIcon}
-        </>
-      )}
-    </>
-  );
+  const finalClassName = `
+    ${fullWidth ? 'w-full' : ''}
+    ${className || ''}
+  `.trim();
 
   return (
-    <TouchableOpacity
+    <GluestackButton
       {...props}
+      variant={gluestackVariant.variant}
+      action={gluestackVariant.action}
+      size={gluestackSize}
       disabled={isDisabled}
       onPress={handlePress}
-      style={[containerStyle, style]}
+      className={finalClassName}
     >
-      {variantStyle.gradient ? (
-        <LinearGradient
-          colors={variantStyle.gradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={contentStyle}
-        >
-          {content}
-        </LinearGradient>
-      ) : (
-        <View style={contentStyle}>{content}</View>
+      {leftIcon && (
+        <ButtonIcon>{leftIcon}</ButtonIcon>
       )}
-    </TouchableOpacity>
+      
+      {loading ? (
+        <ButtonSpinner />
+      ) : (
+        <ButtonText>{children}</ButtonText>
+      )}
+      
+      {rightIcon && (
+        <ButtonIcon>{rightIcon}</ButtonIcon>
+      )}
+    </GluestackButton>
   );
 });
 

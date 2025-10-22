@@ -20,9 +20,7 @@ export default function AuthLayout() {
                <Stack.Screen name="sign-in" options={{headerShown: false}}/>
                <Stack.Screen name="sign-up"
                              options={{
-                                 headerShown: true,
-                                 headerBackTitle: 'Login',
-                                 title: 'Cadastre-se'
+                                 headerShown: false,
                              }}/>
                <Stack.Screen name="forget-password" options={{
                    headerShown: true,

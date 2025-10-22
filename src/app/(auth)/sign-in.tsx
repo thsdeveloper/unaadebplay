@@ -15,7 +15,7 @@ import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 
 // Temporary components (will be replaced with atomic design)
 import { AuthTemplate } from "@/components/templates";
-import {LoginForm} from "@/components/organisms/LoginForm";
+import {LoginForm, type LoginFormData} from "@/components/organisms/LoginForm";
 import {BiometricLogin} from "@/components/organisms/BiometricLogin";
 import {AuthFooter} from "@/components/organisms/AuthFooter";
 import { Text } from "@/components/atoms";
@@ -30,7 +30,7 @@ const signInSchema = Yup.object({
         .required("Senha é obrigatória"),
 });
 
-type FormDataProps = Yup.InferType<typeof signInSchema>;
+type FormDataProps = LoginFormData;
 
 export default function SignIn() {
     const { login, loadSavedCredentials } = useAuth();
@@ -185,7 +185,7 @@ export default function SignIn() {
             {biometricAvailable && (
                 <>
                     {isExpoGo && (
-                        <Text variant="caption" color="warning" align="center" className="mb-2">
+                        <Text variant="caption" align="center" className={'mt-2 text-center'}>
                             ⚠️ Biometria simulada (Expo Go)
                         </Text>
                     )}
@@ -194,7 +194,8 @@ export default function SignIn() {
                         isEnabled={biometricEnabled}
                         isLocked={biometricLocked}
                         lockoutRemaining={lockoutRemaining}
-                        loading={loading}
+                        isLoading={loading}
+                        isAvailable={biometricAvailable}
                         onBiometricLogin={handleBiometricLogin}
                         onSetupBiometric={handleSetupBiometric}
                     />
@@ -204,6 +205,7 @@ export default function SignIn() {
             <AuthFooter
                 showSignUp={(config as any)?.allow_signup !== false}
                 copyrightText={(config as any)?.copyright_text}
+                onSignUpPress={() => router.push('/sign-up')}
             />
         </AuthTemplate>
     );

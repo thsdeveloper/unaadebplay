@@ -70,23 +70,26 @@ The app uses nested context providers in this order:
 - `eas.json` - Expo build profiles
 - `app.json` - Expo app configuration
 
-## Atomic Design Architecture
+## Atomic Design Architecture with Gluestack UI
 
 ### Component Organization
-**ALWAYS follow Atomic Design methodology when creating or refactoring components:**
+**ALWAYS follow Atomic Design methodology when creating or refactoring components. All atoms MUST be wrappers around Gluestack UI components from `/components/ui/`:**
 
 #### 1. Atoms (src/components/atoms/)
-The smallest, indivisible components that serve as the foundation:
-- **Button** - Primary, Secondary, Ghost, Icon, Loading variants
-- **Input** - Text, Password, Email with validation states
-- **Text** - Heading, Body, Label, Error with typography system
-- **Icon** - Centralized icon management wrapper
-- **Logo** - Animated brand logo component
-- **Divider** - Visual separators with variants
-- **Checkbox** - With haptic feedback and animations
-- **Link** - Navigation links with consistent styling
-- **LoadingSpinner** - Multiple loading indicators
-- **GradientBackground** - Reusable gradient patterns
+**The smallest, indivisible components that serve as wrappers around Gluestack UI components:**
+
+**IMPORTANT: ALL atoms MUST be built as wrappers around `/components/ui/` Gluestack UI components. Never create atoms from scratch - always use the corresponding Gluestack UI component as the foundation.**
+
+- **Button** - Wraps `@/components/ui/button` with custom variants (primary, secondary, ghost, outline)
+- **Input** - Wraps `@/components/ui/input` with enhanced validation and error display  
+- **Text** - Wraps `@/components/ui/text` with custom typography variants
+- **Icon** - Wraps `@/components/ui/icon` for centralized icon management
+- **Logo** - Custom animated brand logo component (no Gluestack equivalent)
+- **Divider** - Wraps `@/components/ui/divider` with variants
+- **Checkbox** - Wraps `@/components/ui/checkbox` with haptic feedback
+- **Link** - Wraps `@/components/ui/link` for navigation
+- **LoadingSpinner** - Wraps `@/components/ui/spinner` with variants
+- **GradientBackground** - Custom gradient component (no Gluestack equivalent)
 
 #### 2. Molecules (src/components/molecules/)
 Simple combinations of atoms working together:
@@ -144,49 +147,97 @@ Page-level layout structures without specific content:
            └── Button.test.tsx // Tests
    ```
 
-#### Component Structure
+#### Component Structure (Gluestack UI Wrapper Pattern)
 ```typescript
 // atoms/Button/index.tsx
-import React, { memo } from 'react';
-import { TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Text } from '../Text';
-import { ButtonProps } from './types';
-import { getButtonStyles } from './styles';
+import React from 'react';
+import {
+  Button as GluestackButton,
+  ButtonText,
+  ButtonSpinner,
+  ButtonIcon
+} from '@/components/ui/button';
+import * as Haptics from 'expo-haptics';
 
-export const Button = memo<ButtonProps>(({ 
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'outline';
+export type ButtonSize = 'small' | 'medium' | 'large';
+
+interface ButtonProps extends Omit<PressableProps, 'children'> {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  loading?: boolean;
+  children: React.ReactNode;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
+  fullWidth?: boolean;
+  className?: string;
+}
+
+// Map our custom variants to Gluestack UI variants
+const mapVariantToGluestack = (variant: ButtonVariant) => {
+  switch (variant) {
+    case 'primary':
+      return { variant: 'solid' as const, action: 'primary' as const };
+    case 'secondary':
+      return { variant: 'solid' as const, action: 'secondary' as const };
+    case 'ghost':
+      return { variant: 'link' as const, action: 'primary' as const };
+    case 'outline':
+      return { variant: 'outline' as const, action: 'primary' as const };
+    default:
+      return { variant: 'solid' as const, action: 'primary' as const };
+  }
+};
+
+export const Button = React.memo<ButtonProps>(({
   variant = 'primary',
-  size = 'md',
+  size = 'medium',
   loading = false,
-  disabled = false,
   children,
+  leftIcon,
+  rightIcon,
+  fullWidth = false,
+  disabled,
   onPress,
   className,
-  ...props 
+  ...props
 }) => {
-  const styles = getButtonStyles({ variant, size, disabled });
-  
+  const handlePress = (event: any) => {
+    if (onPress && !loading && !disabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      onPress(event);
+    }
+  };
+
+  const gluestackVariant = mapVariantToGluestack(variant);
+  const gluestackSize = mapSizeToGluestack(size);
+
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      disabled={disabled || loading}
-      className={styles.container}
-      activeOpacity={0.8}
+    <GluestackButton
       {...props}
+      variant={gluestackVariant.variant}
+      action={gluestackVariant.action}
+      size={gluestackSize}
+      disabled={disabled || loading}
+      onPress={handlePress}
+      className={`${fullWidth ? 'w-full' : ''} ${className || ''}`}
     >
-      {loading ? (
-        <ActivityIndicator color={styles.loaderColor} />
-      ) : (
-        <Text className={styles.text}>{children}</Text>
-      )}
-    </TouchableOpacity>
+      {leftIcon && <ButtonIcon>{leftIcon}</ButtonIcon>}
+      {loading ? <ButtonSpinner /> : <ButtonText>{children}</ButtonText>}
+      {rightIcon && <ButtonIcon>{rightIcon}</ButtonIcon>}
+    </GluestackButton>
   );
 });
 
 Button.displayName = 'Button';
-
-// Export variants for easy access
-export { ButtonVariants } from './types';
 ```
+
+**Key Principles for Gluestack UI Wrappers:**
+1. **Always import from `/components/ui/`** - Never from `@gluestack-ui` packages directly
+2. **Map custom variants** - Convert your design system variants to Gluestack equivalents
+3. **Preserve existing APIs** - Keep the same props interface for backward compatibility
+4. **Add custom functionality** - Layer your enhancements (haptics, analytics, etc.) on top
+5. **Use compound components** - Leverage ButtonText, ButtonIcon, ButtonSpinner sub-components
 
 #### Styling with NativeWind
 ```typescript
@@ -467,10 +518,13 @@ Before implementing any feature, ensure:
 - [ ] Code is self-documenting and readable
 - [ ] DRY principle is followed
 - [ ] **Atomic Design hierarchy is respected**
-- [ ] **Existing atoms/molecules are reused**
+- [ ] **ALL atoms are wrappers around Gluestack UI components**
+- [ ] **Imports use `/components/ui/` not direct Gluestack packages**
+- [ ] **Existing atoms/molecules are reused before creating new ones**
 - [ ] **Components are in the correct atomic level**
 - [ ] **Proper memoization is implemented**
 - [ ] **Consistent styling approach is used**
+- [ ] **Custom variants are mapped to Gluestack equivalents**
 
 ## Development Notes
 

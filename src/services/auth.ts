@@ -43,8 +43,8 @@ interface FailedAttempts {
 export class AuthService {
     private static instance: AuthService;
     private currentSession: AuthSession | null = null;
-    private tokenRefreshTimer: NodeJS.Timeout | null = null;
-    private sessionRotationTimer: NodeJS.Timeout | null = null;
+    private tokenRefreshTimer: ReturnType<typeof setInterval> | null = null;
+    private sessionRotationTimer: ReturnType<typeof setInterval> | null = null;
 
     private constructor() {
         this.initializeService();
@@ -113,6 +113,52 @@ export class AuthService {
                 if (remainingAttempts > 0) {
                     throw new Error(`Credenciais inválidas. ${remainingAttempts} tentativas restantes.`);
                 }
+            }
+            
+            throw error;
+        }
+    }
+
+    // Registro de novo usuário
+    async register(userData: any): Promise<UserTypes> {
+        // Verificar conectividade
+        const netInfo = await NetInfo.fetch();
+        if (!netInfo.isConnected) {
+            throw new Error('Sem conexão com a internet. Verifique sua conexão e tente novamente.');
+        }
+
+        try {
+            // Importar função de criação de usuário
+            const { createUser } = await import('@directus/sdk');
+            
+            // Criar usuário no Directus
+            const newUser = await directusClient.request<UserTypes>(createUser({
+                ...userData,
+                status: 'active',
+                role: 'f7d1dc2f-9caf-47c5-b3e9-b2e4c3d3e4f5' // Role padrão para usuários do app
+            }));
+            
+            // Fazer login automático após registro
+            await directusClient.login(userData.email, userData.password);
+            
+            // Obter dados completos do usuário
+            const user = await directusClient.request<UserTypes>(readMe());
+            
+            // Criar nova sessão
+            const session = await this.createAuthSession(user);
+            
+            // Configurar renovação automática de token
+            this.setupTokenRefreshTimer();
+            
+            return user;
+        } catch (error: any) {
+            // Tratar erros específicos
+            if (error.response?.status === 400) {
+                const errorData = error.response.data;
+                if (errorData?.errors?.[0]?.extensions?.code === 'RECORD_NOT_UNIQUE') {
+                    throw new Error('Este email já está cadastrado.');
+                }
+                throw new Error('Dados inválidos. Verifique as informações e tente novamente.');
             }
             
             throw error;

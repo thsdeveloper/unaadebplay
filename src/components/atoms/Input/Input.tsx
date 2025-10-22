@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { MaterialIcons, Feather } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import { Text } from '../Text';
 
 export type InputState = 'default' | 'focused' | 'error' | 'disabled';
 
@@ -100,7 +101,7 @@ export const Input = forwardRef<TextInput, InputProps>(({
   } : null;
 
   return (
-    <View style={[{ marginBottom: error ? 24 : 0 }, containerStyle]}>
+    <View style={[containerStyle]}>
       <View 
         style={{
           borderRadius: 16,
@@ -162,6 +163,11 @@ export const Input = forwardRef<TextInput, InputProps>(({
           </View>
         </BlurView>
       </View>
+      {error && (
+        <Text variant="error" style={{ marginTop: 4, marginLeft: 4 }}>
+          {error}
+        </Text>
+      )}
     </View>
   );
 });

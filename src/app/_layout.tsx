@@ -48,14 +48,21 @@ export default function RootLayout() {
     useEffect(() => {
         async function prepare() {
             try {
+                console.log('🚀 [App] Iniciando app...');
+                console.log('🔗 [App] API URL:', process.env.EXPO_PUBLIC_API_URL);
+
                 // Mantém a tela de splash enquanto estamos preparando os recursos
                 await SplashScreen.preventAutoHideAsync();
 
                 // Carrega todas as configurações
+                console.log('⚙️  [App] Carregando configurações...');
                 const configData = await getSettings();
+                console.log('✅ [App] Configurações carregadas:', configData);
                 setConfig(configData);
             } catch (e) {
-                console.warn(e);
+                console.error('❌ [App] Erro ao preparar app:', e);
+                // Mesmo com erro, marcar como pronto com config vazio
+                setConfig({});
             } finally {
                 setAppIsReady(true);
             }

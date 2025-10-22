@@ -1,0 +1,1 @@
+export { TermsCheckbox } from './TermsCheckbox';

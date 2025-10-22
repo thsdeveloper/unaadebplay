@@ -1,0 +1,1 @@
+export { EmailValidator } from './EmailValidator';

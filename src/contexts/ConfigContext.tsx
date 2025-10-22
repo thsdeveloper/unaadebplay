@@ -23,18 +23,31 @@ interface ConfigProviderProps {
 }
 
 export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children, value }) => {
-    const [config, setConfig] = useState<ConfigContextData>(value || initialState);
+    const [config, setConfig] = useState<ConfigContextData>(
+        value
+            ? { ...value, isLoading: false, hasError: false }
+            : initialState
+    );
     const alert = useContext(AlertContext);
 
     useEffect(() => {
+        // Se já recebeu valor como prop, não precisa buscar
+        if (value) {
+            console.log('⚙️  [ConfigProvider] Usando configurações passadas como prop');
+            setConfig({ ...value, isLoading: false, hasError: false });
+            return;
+        }
+
         let isMounted = true;
 
         async function fetchConfig() {
             try {
+                console.log('⚙️  [ConfigProvider] Buscando configurações do Directus...');
                 setConfig(prev => ({ ...prev, isLoading: true, hasError: false }));
                 const configData = await getSettings();
 
                 if (isMounted) {
+                    console.log('✅ [ConfigProvider] Configurações obtidas:', configData);
                     setConfig({
                         ...configData,
                         isLoading: false,
@@ -52,12 +65,20 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children, value 
                         message = error.message;
                     }
 
-                    alert.error(message);
-                    setConfig(prev => ({
-                        ...prev,
+                    // Log silencioso apenas em modo debug
+                    if (__DEV__) {
+                        console.warn('⚠️  [ConfigProvider]', message);
+                        console.warn('⚠️  Usando configurações padrão devido ao erro');
+                    }
+
+                    // Usar configurações padrão sem interromper o app
+                    setConfig({
+                        project_name: 'Unaadeb Play',
+                        primary_color: '#E51C44',
+                        secondary_color: '#1E293B',
                         isLoading: false,
                         hasError: true
-                    }));
+                    });
                 }
             }
         }
@@ -68,7 +89,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children, value 
         return () => {
             isMounted = false;
         };
-    }, [alert]); // Inclui alert como dependência
+    }, [value, alert]); // Inclui value e alert como dependências
 
     return (
         <ConfigContext.Provider value={config}>

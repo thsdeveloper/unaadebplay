@@ -38,12 +38,15 @@
         {
           "icon": "./assets/notification-icon.png",
           "color": "#E51C44",
-          "sounds": ["./assets/notification-sound.wav"]
+          "sounds": [
+            "./assets/notification-sound.wav"
+          ]
         }
       ],
       "expo-router",
       "expo-asset",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-font"
     ],
     "assetBundlePatterns": [
       "**/*"

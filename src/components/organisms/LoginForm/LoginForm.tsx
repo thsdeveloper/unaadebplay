@@ -6,7 +6,7 @@ import { RememberMeCheckbox } from '@/components/molecules/RememberMeCheckbox';
 import { Button } from '@/components/atoms/Button';
 import { Icon } from '@/components/atoms/Icon';
 
-interface LoginFormData {
+export interface LoginFormData {
   email: string;
   password: string;
 }

@@ -9,3 +9,6 @@ export * from './Checkbox';
 export * from './Link';
 export * from './LoadingSpinner';
 export * from './GradientBackground';
+export * from './AvatarUpload';
+export * from './ProgressIndicator';
+export * from './DatePickerTrigger';

@@ -1,21 +1,26 @@
 // Temporary exports until full implementation
 import React from 'react';
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform, StatusBar, Image } from 'react-native';
+import { View, Text, ScrollView, KeyboardAvoidingView, Platform, StatusBar, Image, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import LottieView from 'lottie-react-native';
+import { ChevronLeft } from 'lucide-react-native';
 
 interface AuthTemplateProps {
   isLoading?: boolean;
   title?: string;
   subtitle?: string;
   children: React.ReactNode;
+  showHeader?: boolean;
+  onBack?: () => void;
 }
 
 export const AuthTemplate: React.FC<AuthTemplateProps> = ({ 
   isLoading, 
   title, 
   subtitle, 
-  children 
+  children,
+  showHeader = true,
+  onBack
 }) => {
   if (isLoading) {
     return (
@@ -64,8 +69,26 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
               justifyContent: 'center',
               minHeight: '100%'
             }}>
+              {/* Botão de voltar */}
+              {onBack && (
+                <TouchableOpacity
+                  onPress={onBack}
+                  style={{
+                    position: 'absolute',
+                    top: Platform.OS === 'ios' ? 50 : 30,
+                    left: 20,
+                    zIndex: 10,
+                    padding: 10,
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                    borderRadius: 25,
+                  }}
+                >
+                  <ChevronLeft size={24} color="white" />
+                </TouchableOpacity>
+              )}
+
               {/* Logo e Título */}
-              {title && (
+              {title && showHeader && (
                 <View style={{ alignItems: 'center', marginBottom: 40 }}>
                   {/* Logo */}
                   <View style={{

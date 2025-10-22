@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text as RNText, TextProps as RNTextProps, TextStyle } from 'react-native';
 
-export type TextVariant = 'heading' | 'subheading' | 'body' | 'label' | 'caption' | 'error';
+export type TextVariant = 'heading' | 'subheading' | 'body' | 'label' | 'caption' | 'error' | 'button' | 'h1' | 'h2' | 'h3';
 export type TextSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
 export type TextWeight = 'normal' | 'medium' | 'semibold' | 'bold';
 
@@ -59,6 +59,26 @@ const variantStyles: Record<TextVariant, {
     weight: 'normal',
     color: '#ef4444',
   },
+  button: {
+    size: 'md',
+    weight: 'medium',
+    color: 'white',
+  },
+  h1: {
+    size: '3xl',
+    weight: 'bold',
+    color: 'white',
+  },
+  h2: {
+    size: '2xl',
+    weight: 'bold',
+    color: 'white',
+  },
+  h3: {
+    size: 'xl',
+    weight: 'semibold',
+    color: 'white',
+  },
 };
 
 const weightMap: Record<TextWeight, string> = {
@@ -78,7 +98,7 @@ export const Text: React.FC<TextProps> = React.memo(({
   children,
   ...props
 }) => {
-  const variantStyle = variantStyles[variant];
+  const variantStyle = variantStyles[variant] || variantStyles.body;
   
   const textStyle: TextStyle = {
     fontSize: sizeMap[size || variantStyle.size],

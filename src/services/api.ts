@@ -169,8 +169,33 @@ class EnhancedLocalStorage {
 // Instanciar o storage aprimorado
 const storage = new EnhancedLocalStorage();
 
-// Criar o cliente Directus com autenticação
-const directusClient = createDirectus(apiUrl)
+// Configurar fetch com timeout personalizado
+const customFetch = async (url: RequestInfo | URL, options?: RequestInit): Promise<Response> => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos de timeout
+
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        return response;
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error instanceof Error && error.name === 'AbortError') {
+            throw new Error('Request timeout - verifique sua conexão de internet');
+        }
+        throw error;
+    }
+};
+
+// Criar o cliente Directus com autenticação e fetch customizado
+const directusClient = createDirectus(apiUrl, {
+    globals: {
+        fetch: customFetch,
+    },
+})
     .with(authentication('json', { storage }))
     .with(rest());
 

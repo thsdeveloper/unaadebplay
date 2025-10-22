@@ -52,3 +52,23 @@ export const emailExists = async (email: string): Promise<boolean> => {
         return false;
     }
 };
+
+export const checkEmailAvailability = async (email: string): Promise<boolean> => {
+    try {
+        const exists = await emailExists(email);
+        return !exists; // Retorna true se o email está disponível (não existe)
+    } catch (error) {
+        console.error('Erro ao verificar disponibilidade do email:', error);
+        throw error;
+    }
+};
+
+// Exportar como objeto para facilitar o uso
+export const userService = {
+    getUsers,
+    getUser,
+    setUser,
+    updateUserMe,
+    emailExists,
+    checkEmailAvailability,
+};

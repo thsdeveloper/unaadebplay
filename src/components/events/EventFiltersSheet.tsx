@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useContext } from 'react';
-import { View, ScrollView, Platform } from 'react-native';
+import { View, ScrollView } from 'react-native';
 import { Box } from '@/components/ui/box';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
@@ -12,7 +12,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { Select, SelectTrigger, SelectInput, SelectPortal, SelectBackdrop, SelectContent, SelectDragIndicatorWrapper, SelectDragIndicator, SelectItem } from '@/components/ui/select';
 import { Actionsheet, ActionsheetBackdrop, ActionsheetContent, ActionsheetDragIndicatorWrapper, ActionsheetDragIndicator } from '@/components/ui/actionsheet';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { DatePicker } from '@/components/molecules/DatePicker';
 import { EventFilters } from '@/services/events';
 import { useEventFilters } from '@/hooks/useEvents';
 import TranslationContext from '@/contexts/TranslationContext';
@@ -46,7 +46,6 @@ export const EventFiltersSheet: React.FC<EventFiltersSheetProps> = ({
   onClearFilters,
 }) => {
   const [tempFilters, setTempFilters] = useState<EventFilters>(activeFilters);
-  const [showDatePicker, setShowDatePicker] = useState<'from' | 'to' | null>(null);
   
   const { eventTypes, locations, organizers, loading } = useEventFilters();
   const { t } = useContext(TranslationContext);
@@ -69,18 +68,19 @@ export const EventFiltersSheet: React.FC<EventFiltersSheetProps> = ({
     onClose();
   }, [onClearFilters, onClose]);
 
-  const handleDateChange = useCallback((event: any, selectedDate?: Date) => {
-    if (Platform.OS === 'android') {
-      setShowDatePicker(null);
-    }
-    
-    if (selectedDate && showDatePicker) {
-      setTempFilters(prev => ({
-        ...prev,
-        [showDatePicker === 'from' ? 'dateFrom' : 'dateTo']: selectedDate,
-      }));
-    }
-  }, [showDatePicker]);
+  const handleDateFromChange = useCallback((selectedDate: Date) => {
+    setTempFilters(prev => ({
+      ...prev,
+      dateFrom: selectedDate,
+    }));
+  }, []);
+
+  const handleDateToChange = useCallback((selectedDate: Date) => {
+    setTempFilters(prev => ({
+      ...prev,
+      dateTo: selectedDate,
+    }));
+  }, []);
 
   const activeFiltersCount = Object.keys(tempFilters).filter(key => tempFilters[key as keyof EventFilters]).length;
 
@@ -187,37 +187,27 @@ export const EventFiltersSheet: React.FC<EventFiltersSheetProps> = ({
                   </HStack>
                 </VStack>
 
-                <VStack className="space-y-2">
+                <VStack className="space-y-4">
                   <Text className="font-semibold text-gray-700">
                     {t('date_range') || 'Período'}
                   </Text>
-                  <HStack className="space-x-2">
-                    <Pressable
-                      onPress={() => setShowDatePicker('from')}
-                      className="flex-1 bg-gray-100 rounded-lg p-3"
-                    >
-                      <HStack className="items-center space-x-2">
-                        <Icon as={MaterialIcons} name="date-range" size="sm" className="text-gray-600" />
-                        <Text className="text-gray-700">
-                          {tempFilters.dateFrom
-                            ? new Date(tempFilters.dateFrom).toLocaleDateString()
-                            : t('from_date') || 'Data inicial'}
-                        </Text>
-                      </HStack>
-                    </Pressable>
-                    <Pressable
-                      onPress={() => setShowDatePicker('to')}
-                      className="flex-1 bg-gray-100 rounded-lg p-3"
-                    >
-                      <HStack className="items-center space-x-2">
-                        <Icon as={MaterialIcons} name="date-range" size="sm" className="text-gray-600" />
-                        <Text className="text-gray-700">
-                          {tempFilters.dateTo
-                            ? new Date(tempFilters.dateTo).toLocaleDateString()
-                            : t('to_date') || 'Data final'}
-                        </Text>
-                      </HStack>
-                    </Pressable>
+                  <HStack className="space-x-4">
+                    <View className="flex-1">
+                      <DatePicker
+                        value={tempFilters.dateFrom}
+                        onChange={handleDateFromChange}
+                        placeholder={t('from_date') || 'Data inicial'}
+                        maximumDate={tempFilters.dateTo || undefined}
+                      />
+                    </View>
+                    <View className="flex-1">
+                      <DatePicker
+                        value={tempFilters.dateTo}
+                        onChange={handleDateToChange}
+                        placeholder={t('to_date') || 'Data final'}
+                        minimumDate={tempFilters.dateFrom || undefined}
+                      />
+                    </View>
                   </HStack>
                 </VStack>
 
@@ -298,31 +288,6 @@ export const EventFiltersSheet: React.FC<EventFiltersSheetProps> = ({
         </ActionsheetContent>
       </Actionsheet>
 
-      {showDatePicker && Platform.OS === 'ios' && (
-        <DateTimePicker
-          value={
-            showDatePicker === 'from'
-              ? tempFilters.dateFrom || new Date()
-              : tempFilters.dateTo || new Date()
-          }
-          mode="date"
-          display="spinner"
-          onChange={handleDateChange}
-        />
-      )}
-
-      {showDatePicker && Platform.OS === 'android' && (
-        <DateTimePicker
-          value={
-            showDatePicker === 'from'
-              ? tempFilters.dateFrom || new Date()
-              : tempFilters.dateTo || new Date()
-          }
-          mode="date"
-          display="default"
-          onChange={handleDateChange}
-        />
-      )}
     </>
   );
 };

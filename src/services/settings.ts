@@ -19,6 +19,11 @@ export async function getSettings(): Promise<Settings> {
         return settings || {};
     } catch (error) {
         console.error("Erro ao buscar configurações:", error);
-        throw error;
+        // Retorna configurações padrão em vez de lançar erro
+        return {
+            project_name: 'Unaadeb Play',
+            primary_color: '#E51C44',
+            secondary_color: '#1E293B'
+        };
     }
 }
