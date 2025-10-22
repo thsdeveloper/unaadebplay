@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -152,8 +152,8 @@ export function useBiometricAuth() {
         }
     };
 
-    // Configurar biometria
-    const setupBiometric = async (email: string, password: string): Promise<boolean> => {
+    // Configurar biometria (memoizado para evitar re-criação)
+    const setupBiometric = useCallback(async (email: string, password: string): Promise<boolean> => {
         try {
             if (!isAvailable) {
                 setError('Biometria não disponível neste dispositivo');
@@ -162,7 +162,7 @@ export function useBiometricAuth() {
 
             // Solicitar autenticação biométrica
             const result = await LocalAuthentication.authenticateAsync({
-                promptMessage: `Configurar ${getBiometricName()}`,
+                promptMessage: `Configurar ${biometricName}`,
                 fallbackLabel: 'Usar senha',
                 disableDeviceFallback: false,
                 cancelLabel: 'Cancelar',
@@ -176,7 +176,7 @@ export function useBiometricAuth() {
             // Criar vault de credenciais
             const credentials: BiometricCredentials = { email, password };
             const encryptedCredentials = await encrypt(JSON.stringify(credentials));
-            
+
             const vault: BiometricVault = {
                 credentials: encryptedCredentials,
                 createdAt: Date.now(),
@@ -195,7 +195,7 @@ export function useBiometricAuth() {
                 failedAttempts: 0,
                 lockedUntil: 0
             };
-            
+
             await saveBiometricConfig(config);
             setIsEnabled(true);
             setError(null);
@@ -206,10 +206,10 @@ export function useBiometricAuth() {
             setError('Erro ao configurar biometria');
             return false;
         }
-    };
+    }, [isAvailable, biometricName, biometricType]);
 
-    // Autenticar com biometria
-    const authenticate = async (): Promise<BiometricCredentials | null> => {
+    // Autenticar com biometria (memoizado para performance)
+    const authenticate = useCallback(async (): Promise<BiometricCredentials | null> => {
         try {
             if (!isEnabled) {
                 setError('Biometria não está habilitada');
@@ -241,7 +241,7 @@ export function useBiometricAuth() {
             // Se estiver no Expo Go, simular autenticação
             if (isExpoGo) {
                 console.log('🔐 Simulando autenticação biométrica no Expo Go');
-                
+
                 // Mostrar alerta informativo e aguardar resposta
                 const confirmed = await new Promise<boolean>((resolve) => {
                     const Alert = require('react-native').Alert;
@@ -262,18 +262,18 @@ export function useBiometricAuth() {
                         { cancelable: false }
                     );
                 });
-                
+
                 if (!confirmed) {
                     await handleFailedAttempt();
                     return null;
                 }
-                
+
                 // Simular delay da autenticação
                 await new Promise(resolve => setTimeout(resolve, 500));
             } else {
                 // Solicitar autenticação real
                 const result = await LocalAuthentication.authenticateAsync({
-                    promptMessage: `Entrar com ${getBiometricName()}`,
+                    promptMessage: `Entrar com ${biometricName}`,
                     fallbackLabel: 'Usar senha',
                     disableDeviceFallback: true,
                     cancelLabel: 'Cancelar',
@@ -312,7 +312,7 @@ export function useBiometricAuth() {
             await handleFailedAttempt();
             return null;
         }
-    };
+    }, [isEnabled, isLocked, isExpoGo, biometricName]);
 
     // Lidar com tentativa falha
     const handleFailedAttempt = async () => {
@@ -371,8 +371,8 @@ export function useBiometricAuth() {
         return btoa(data.slice(0, 20) + data.slice(-20));
     };
 
-    // Obter nome da biometria
-    const getBiometricName = (): string => {
+    // Obter nome da biometria (memoizado para performance)
+    const biometricName = useMemo((): string => {
         switch (biometricType) {
             case BiometricType.FACE_ID:
                 return Platform.OS === 'ios' ? 'Face ID' : 'Reconhecimento Facial';
@@ -383,7 +383,7 @@ export function useBiometricAuth() {
             default:
                 return 'Biometria';
         }
-    };
+    }, [biometricType]);
 
     // Verificar se credenciais precisam ser renovadas
     const shouldRenewCredentials = async (): Promise<boolean> => {
@@ -439,6 +439,19 @@ export function useBiometricAuth() {
         }
     }, [isLocked]);
 
+    // Memoizar valores calculados para melhor performance
+    const remainingAttempts = useMemo(() => {
+        return configRef.current
+            ? Math.max(0, MAX_BIOMETRIC_ATTEMPTS - configRef.current.failedAttempts)
+            : MAX_BIOMETRIC_ATTEMPTS;
+    }, [configRef.current?.failedAttempts]);
+
+    const lockoutRemaining = useMemo(() => {
+        return configRef.current && configRef.current.lockedUntil > Date.now()
+            ? Math.ceil((configRef.current.lockedUntil - Date.now()) / 60000)
+            : 0;
+    }, [configRef.current?.lockedUntil, isLocked]);
+
     return {
         // Estados
         isAvailable,
@@ -446,23 +459,19 @@ export function useBiometricAuth() {
         isLoading,
         isLocked,
         biometricType,
-        biometricName: getBiometricName(),
+        biometricName,
         error,
-        
+
         // Métodos
         setupBiometric,
         authenticate,
         disableBiometric,
         shouldRenewCredentials,
         resetLockout,
-        
+
         // Informações adicionais
         config: configRef.current,
-        remainingAttempts: configRef.current 
-            ? Math.max(0, MAX_BIOMETRIC_ATTEMPTS - configRef.current.failedAttempts)
-            : MAX_BIOMETRIC_ATTEMPTS,
-        lockoutRemaining: configRef.current && configRef.current.lockedUntil > Date.now()
-            ? Math.ceil((configRef.current.lockedUntil - Date.now()) / 60000)
-            : 0
+        remainingAttempts,
+        lockoutRemaining
     };
 }

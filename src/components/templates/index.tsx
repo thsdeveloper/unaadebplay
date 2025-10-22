@@ -14,10 +14,10 @@ interface AuthTemplateProps {
   onBack?: () => void;
 }
 
-export const AuthTemplate: React.FC<AuthTemplateProps> = ({ 
-  isLoading, 
-  title, 
-  subtitle, 
+export const AuthTemplate: React.FC<AuthTemplateProps> = ({
+  isLoading,
+  title,
+  subtitle,
   children,
   showHeader = true,
   onBack
@@ -62,9 +62,9 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <View style={{ 
-              flex: 1, 
-              padding: 24, 
+            <View style={{
+              flex: 1,
+              padding: 24,
               paddingTop: Platform.OS === 'ios' ? 60 : 40,
               justifyContent: 'center',
               minHeight: '100%'
@@ -90,30 +90,12 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
               {/* Logo e Título */}
               {title && showHeader && (
                 <View style={{ alignItems: 'center', marginBottom: 40 }}>
-                  {/* Logo */}
-                  <View style={{
-                    width: 120,
-                    height: 120,
-                    borderRadius: 60,
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginBottom: 24,
-                    borderWidth: 2,
-                    borderColor: 'rgba(96, 165, 250, 0.3)',
-                  }}>
-                    <Image
-                      source={require("@/assets/unaadeb-login.png")}
-                      style={{ width: 100, height: 100, borderRadius: 50 }}
-                    />
-                  </View>
-
                   {/* Título */}
-                  <Text style={{ 
-                    fontSize: 32, 
-                    fontWeight: 'bold', 
-                    color: 'white', 
-                    textAlign: 'center', 
+                  <Text style={{
+                    fontSize: 32,
+                    fontWeight: 'bold',
+                    color: 'white',
+                    textAlign: 'center',
                     marginBottom: 8,
                     textShadowColor: 'rgba(0, 0, 0, 0.3)',
                     textShadowOffset: { width: 0, height: 2 },
@@ -124,10 +106,10 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
 
                   {/* Subtitle */}
                   {subtitle && (
-                    <Text style={{ 
-                      fontSize: 16, 
-                      color: 'rgba(255,255,255,0.7)', 
-                      textAlign: 'center' 
+                    <Text style={{
+                      fontSize: 16,
+                      color: 'rgba(255,255,255,0.7)',
+                      textAlign: 'center'
                     }}>
                       {subtitle}
                     </Text>
