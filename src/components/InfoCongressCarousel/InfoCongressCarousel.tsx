@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, memo } from 'react';
-import { View, ActivityIndicator, Platform } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import Carousel from 'react-native-snap-carousel';
+import Carousel from 'react-native-reanimated-carousel';
 import ConfigContext from '@/contexts/ConfigContext';
 import { CongressType } from '@/types/CongressType';
 import { CongressItem } from './components/CongressItem';
@@ -88,18 +88,12 @@ const InfoCongressCarousel: React.FC<InfoCongressCarouselProps> = ({
         ref={carouselRef}
         data={congress}
         renderItem={renderCarouselItem}
-        sliderWidth={SCREEN_DIMENSIONS.width}
-        itemWidth={SCREEN_DIMENSIONS.width}
-        firstItem={activeIndex}
+        width={SCREEN_DIMENSIONS.width}
+        height={SCREEN_DIMENSIONS.height * CAROUSEL_CONFIG.ITEM_HEIGHT_RATIO}
+        defaultIndex={activeIndex}
         onSnapToItem={handleSnapToItem}
-        inactiveSlideOpacity={CAROUSEL_CONFIG.INACTIVE_SLIDE_OPACITY}
-        inactiveSlideScale={CAROUSEL_CONFIG.INACTIVE_SLIDE_SCALE}
         loop={CAROUSEL_CONFIG.ENABLE_LOOP}
-        autoplay={CAROUSEL_CONFIG.ENABLE_AUTOPLAY}
-        lockScrollWhileSnapping={CAROUSEL_CONFIG.LOCK_SCROLL_WHILE_SNAPPING}
-        useScrollView={CAROUSEL_CONFIG.USE_SCROLL_VIEW}
-        enableSnap={CAROUSEL_CONFIG.ENABLE_SNAP}
-        removeClippedSubviews={Platform.OS === 'android'}
+        autoPlay={CAROUSEL_CONFIG.ENABLE_AUTOPLAY}
       />
 
       {/* Refresh indicator */}

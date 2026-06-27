@@ -1,9 +1,8 @@
-import {Tabs} from 'expo-router/tabs';
+import {Tabs, BottomTabBar} from 'expo-router/js-tabs';
 import {Feather} from "@expo/vector-icons";
 import React from "react";
 import {View, ActivityIndicator} from "react-native";
 import AudioPlayer from "@/components/AudioPlayer/AudioPlayer";
-import {BottomTabBar} from "@react-navigation/bottom-tabs";
 import {Box} from "@/components/ui/box";
 import {useApiErrorHandler} from "@/utils/apiErrorHandler";
 import {useAuth} from "@/contexts/AuthContext";

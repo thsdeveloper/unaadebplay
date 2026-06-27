@@ -1,13 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
-import Carousel from 'react-native-snap-carousel';
-import { CongressType } from '@/types/CongressType';
+import { ICarouselInstance } from 'react-native-reanimated-carousel';
 import { UseCarouselNavigationReturn } from '../types';
 
 export const useCarouselNavigation = (
   itemsCount: number
 ): UseCarouselNavigationReturn => {
   const [activeIndex, setActiveIndex] = useState<number>(0);
-  const carouselRef = useRef<Carousel<CongressType>>(null);
+  const carouselRef = useRef<ICarouselInstance>(null);
 
   // Reset active index when items count changes
   useEffect(() => {
@@ -21,7 +20,7 @@ export const useCarouselNavigation = (
     if (carouselRef.current && itemsCount > 0 && activeIndex < itemsCount) {
       // Use setTimeout to ensure carousel is fully rendered
       setTimeout(() => {
-        carouselRef.current?.snapToItem(activeIndex, false, false);
+        carouselRef.current?.scrollTo({ index: activeIndex, animated: false });
       }, 100);
     }
   }, [activeIndex, itemsCount]);

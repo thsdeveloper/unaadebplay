@@ -6,6 +6,7 @@ import AlertContext from "@/contexts/AlertContext";
 import {VStack} from "@/components/ui/vstack";
 import {Pressable} from "react-native";
 import {Icon} from "@/components/ui/icon";
+import {Text} from "@/components/ui/text";
 
 interface PropsLikedIcon{
     color: string

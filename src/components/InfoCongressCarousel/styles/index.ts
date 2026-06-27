@@ -4,7 +4,7 @@ import { SCREEN_DIMENSIONS, CAROUSEL_CONFIG, COLORS, SIZES, Z_INDEX } from '../c
 export const styles = StyleSheet.create({
   // Container styles
   container: {
-    height: SCREEN_DIMENSIONS.height * CAROUSEL_CONFIG.CONTAINER_HEIGHT_RATIO,
+    height: SCREEN_DIMENSIONS.height * CAROUSEL_CONFIG.ITEM_HEIGHT_RATIO,
     width: SCREEN_DIMENSIONS.width,
     backgroundColor: COLORS.BACKGROUND,
   },
