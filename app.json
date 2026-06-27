@@ -61,9 +61,7 @@
         "projectId": "7a5a2114-b085-4afe-b2c7-a3cfec041131"
       }
     },
-    "runtimeVersion": {
-      "policy": "sdkVersion"
-    },
+    "runtimeVersion": "exposdk:54.0.0",
     "updates": {
       "url": "https://u.expo.dev/7a5a2114-b085-4afe-b2c7-a3cfec041131"
     },
