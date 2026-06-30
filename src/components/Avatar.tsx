@@ -2,6 +2,7 @@ import React, { memo, useContext, useMemo } from "react";
 import ConfigContext from "@/contexts/ConfigContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { DirectusAvatar } from "./DirectusImage/DirectusAvatar";
+import { getStorageUrl } from "@/services/storage";
 import {
     Avatar as GluestackAvatar,
     AvatarBadge,
@@ -80,11 +81,8 @@ export const Avatar = memo<AvatarProps>(({
         );
     }
 
-    // Comportamento original com Gluestack UI
-    const avatarUrl = useMemo(() => {
-        if (!userAvatarID || !config.url_api) return null;
-        return `${config.url_api}/assets/${userAvatarID}?fit=cover&timestamp=${Date.now()}`;
-    }, [userAvatarID, config.url_api]);
+    // Comportamento original com Gluestack UI — avatar via Supabase Storage
+    const avatarUrl = useMemo(() => getStorageUrl(userAvatarID, 'avatars'), [userAvatarID]);
 
     return (
         <GluestackAvatar

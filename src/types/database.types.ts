@@ -997,6 +997,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      deactivate_my_account: { Args: Record<PropertyKey, never>; Returns: undefined }
+      get_public_profiles: {
+        Args: {
+          p_ids?: string[] | null
+          p_role?: string | null
+          p_sector?: string | null
+          p_search?: string | null
+          p_status?: string | null
+          p_limit?: number | null
+          p_offset?: number | null
+        }
+        Returns: {
+          id: string
+          first_name: string | null
+          last_name: string | null
+          avatar: string | null
+          role: string | null
+          sector: string | null
+          status: string
+          title: string | null
+        }[]
+      }
       increment_news_views: { Args: { p_id: string }; Returns: undefined }
     }
     Enums: {

@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Text } from '@/components/ui/text';
 import { cn } from "@gluestack-ui/nativewind-utils/cn";
 import NetInfo from '@react-native-community/netinfo';
+import { getStorageUrl, type StorageBucket } from '@/services/storage';
 
 // Constants
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://unaadebplay-api.up.railway.app';
@@ -75,46 +76,22 @@ class DirectusImageService {
             quality?: number;
             fit?: string;
             format?: string;
+            bucket?: StorageBucket;
         } = {}
     ): string {
         if (!assetId || !this.isValidAssetId(assetId)) {
-            console.warn('[DirectusImage] Invalid asset ID:', assetId);
             return '';
         }
-
-        const baseUrl = `${API_URL}/assets/${assetId}`;
-        const params: Record<string, string> = {};
-
-        if (options.width && options.width > 0) {
-            params.width = options.width.toString();
-        }
-
-        if (options.height && options.height > 0) {
-            params.height = options.height.toString();
-        }
-
-        if (options.quality) {
-            params.quality = options.quality.toString();
-        }
-
-        if (options.fit) {
-            params.fit = options.fit;
-        }
-
-        // Add format for better performance
-        if (Platform.OS === 'web') {
-            params.format = 'webp';
-        }
-
-        return baseUrl + buildQueryString(params);
+        // Supabase Storage: URL pública (ou passthrough de URL http completa).
+        // Os parâmetros de transform do Directus (width/height/quality/fit) não têm
+        // equivalente em URL pública do Storage e são ignorados.
+        return getStorageUrl(assetId, options.bucket ?? 'images') ?? '';
     }
 
-    buildPlaceholderUrl(assetId: string): string {
-        return this.buildImageUrl(assetId, {
-            width: BLURHASH_WIDTH,
-            quality: BLURHASH_QUALITY,
-            format: 'jpg'
-        });
+    buildPlaceholderUrl(_assetId: string): string {
+        // Sem equivalente de placeholder/blurhash no Storage público — o LoadingState
+        // (skeleton) cuida do estado de carregamento.
+        return '';
     }
 
     private isValidAssetId(assetId: string): boolean {
@@ -194,8 +171,9 @@ const DirectusImage = memo(({
     onError,
     priority = 'normal',
     accessibilityLabel,
-    testID
-}: DirectusImageProps) => {
+    testID,
+    bucket = 'images',
+}: DirectusImageProps & { bucket?: StorageBucket }) => {
     const [loadingState, setLoadingState] = useState<'loading' | 'loaded' | 'error'>('loading');
     const imageService = useMemo(() => DirectusImageService.getInstance(), []);
 
@@ -229,16 +207,15 @@ const DirectusImage = memo(({
     // Build image URLs
     const imageUrl = useMemo(
         () => {
-            const url = imageService.buildImageUrl(assetId, {
+            return imageService.buildImageUrl(assetId, {
                 width: dimensions.width,
                 height: dimensions.height,
                 quality,
-                fit: resizeMode
+                fit: resizeMode,
+                bucket,
             });
-            console.log('[DirectusImage] Built URL:', url, 'for assetId:', assetId);
-            return url;
         },
-        [assetId, dimensions.width, dimensions.height, quality, resizeMode, imageService]
+        [assetId, dimensions.width, dimensions.height, quality, resizeMode, imageService, bucket]
     );
 
     const placeholderUrl = useMemo(

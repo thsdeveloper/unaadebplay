@@ -1,68 +1,60 @@
-import directusClient from "./api";
-import {DirectusFile, readFile, uploadFiles, updateFile, deleteFile} from "@directus/sdk";
-import {GlobalQueryParams} from "@/types/GlobalQueryParamsTypes";
+import { supabase } from "./supabase";
 
+const KNOWN_BUCKETS = ['images', 'avatars', 'audio'] as const;
+type KnownBucket = typeof KNOWN_BUCKETS[number];
 
-export async function getAssetURI(fileId: string, params?: GlobalQueryParams): Promise<any> {
-    try {
-        return await directusClient.request(readFile(fileId, params));
-    } catch (error) {
-        throw error;
-    }
+function isKnownBucket(v?: string): v is KnownBucket {
+    return !!v && (KNOWN_BUCKETS as readonly string[]).includes(v);
 }
 
-export async function uploadFile(uri: any): Promise<DirectusFile<any>> {
-    let formData = new FormData();
-    let name = uri.split("/").pop();
-    let match = /\.(\w+)$/.exec(name);
-    let type = match ? `image/${match[1]}` : `image`;
+/**
+ * Faz upload de um arquivo local (uri) para o Supabase Storage e retorna o PATH do objeto
+ * em `.id` (compatível com os callers que liam `response.id` do Directus e o gravavam, p.ex.,
+ * em profiles.avatar). A resolução para URL pública é feita por `getStorageUrl`.
+ */
+async function uploadToStorage(uri: string, folderOrBucket?: string): Promise<{ id: string; bucket: string }> {
+    const fileName = uri.split('/').pop() || 'file';
+    const ext = (/\.(\w+)$/.exec(fileName)?.[1] || 'jpg').toLowerCase();
+    const contentType = ext === 'mp3' ? 'audio/mpeg' : `image/${ext}`;
 
-    // Usar 'any' para evitar erro de tipo no FormData
-    formData.append('file', {uri: uri, name: name, type} as any);
+    // Se `folder` for um bucket conhecido ('avatars'/'images'/'audio') usa-o; senão usa 'images'
+    // e trata `folder` como prefixo de caminho.
+    const bucket: KnownBucket = isKnownBucket(folderOrBucket) ? folderOrBucket : 'images';
+    const prefix = folderOrBucket && !isKnownBucket(folderOrBucket) ? `${folderOrBucket}/` : '';
+    const path = `${prefix}${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-    try {
-        return await directusClient.request<DirectusFile<any>>(uploadFiles(formData));
-    } catch (error) {
-        throw error;
-    }
+    const arraybuffer = await fetch(uri).then((res) => res.arrayBuffer());
+
+    const { error } = await supabase.storage.from(bucket).upload(path, arraybuffer, {
+        contentType,
+        upsert: true,
+    });
+    if (error) throw error;
+
+    return { id: path, bucket };
 }
 
-export async function setUpdateFile(id: string, fileObject: FormData | Partial<DirectusFile<any>>): Promise<DirectusFile<any>> {
-    try {
-        return await directusClient.request<DirectusFile<any>>(updateFile(id, fileObject));
-    } catch (error) {
-        throw error;
-    }
+export async function uploadImage(uri: string, folder?: string): Promise<{ id: string; bucket: string }> {
+    return uploadToStorage(uri, folder);
 }
 
-export async function setDeleteFile(id: string): Promise<void> {
-    try {
-        return await directusClient.request(deleteFile(id));
-    } catch (error) {
-        throw error;
-    }
+export async function uploadFile(uri: string): Promise<{ id: string; bucket: string }> {
+    return uploadToStorage(uri);
 }
 
-export async function uploadImage(uri: string, folder?: string): Promise<DirectusFile<any>> {
-    let formData = new FormData();
-    let name = uri.split("/").pop();
-    let match = /\.(\w+)$/.exec(name);
-    let type = match ? `image/${match[1]}` : `image`;
-
-    formData.append('file', {uri: uri, name: name, type} as any);
-    
-    if (folder) {
-        formData.append('folder', folder);
-    }
-
-    try {
-        return await directusClient.request<DirectusFile<any>>(uploadFiles(formData));
-    } catch (error) {
-        throw error;
-    }
+// No Storage não há "metadata de asset" como no Directus; o próprio path identifica o arquivo.
+export async function getAssetURI(fileId: string): Promise<{ id: string }> {
+    return { id: fileId };
 }
 
-// Exportar como objeto para facilitar o uso
+export async function setUpdateFile(id: string, _fileObject?: any): Promise<{ id: string }> {
+    return { id };
+}
+
+export async function setDeleteFile(id: string, bucket: KnownBucket = 'images'): Promise<void> {
+    await supabase.storage.from(bucket).remove([id]).catch(() => {});
+}
+
 export const filesService = {
     getAssetURI,
     uploadFile,

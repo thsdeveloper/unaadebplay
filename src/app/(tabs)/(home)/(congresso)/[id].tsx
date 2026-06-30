@@ -1,6 +1,7 @@
 import React, {useContext, useEffect, useLayoutEffect, useState} from "react";
 import {Link, useGlobalSearchParams, useNavigation} from "expo-router";
 import {getItem, getItems} from "@/services/items";
+import {supabase} from "@/services/supabase";
 import {BlurView} from "expo-blur";
 import { useThemedColors } from "@/hooks/useThemedColors";
 import {Feather} from "@expo/vector-icons";
@@ -56,10 +57,13 @@ export default function CongressoPage() {
         const fetchCongresso = async () => {
             setLoading(true);
             try {
-                const response = await getItem<CongressType>('congresso', id, {
-                    fields: ['*', 'convidados.*'],
-                });
-                setConvidados(response.convidados)
+                // Tabela 'congressos' (plural); convidados vêm da tabela relacionada congresso_convidados.
+                const response = await getItem<any>('congressos', id as any);
+                const { data: guests } = await supabase
+                    .from('congresso_convidados')
+                    .select('*')
+                    .eq('congresso_id', id as any);
+                setConvidados(guests ?? []);
                 setCongress(response);
             } catch (error) {
                 console.error(error);
@@ -95,20 +99,12 @@ export default function CongressoPage() {
     }, [headerBackgroundColor, navigation]);
 
     const isSubscribeHospedagem = async (): Promise<boolean> => {
-        try {
-            const filter = {
-                filter: {
-                    member: {
-                        _eq: user?.id, // Utiliza o operador _eq para buscar registros com user_id igual ao userId
-                    },
-                },
-            };
-            const existingRecords = await getItems<SubscribedHosTypes[]>('subscribed_hos', filter);
-            return existingRecords?.length > 0;
-        } catch (e) {
-            alert.error(`Erro ao buscar itens: ${e}`)
-            return false;
-        }
+        if (!user?.id) return false;
+        const { data } = await supabase
+            .from('subscribed_hos')
+            .select('id')
+            .eq('member', user.id);
+        return (data?.length ?? 0) > 0;
     };
     if (loading) {
         return (

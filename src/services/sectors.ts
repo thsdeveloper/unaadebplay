@@ -1,5 +1,4 @@
-import { directusClient } from './api';
-import { GlobalQueryParams } from '@/types/GlobalQueryParamsTypes';
+import { supabase } from './supabase';
 
 export interface Sector {
   id: string;
@@ -8,65 +7,49 @@ export interface Sector {
   sort?: number;
 }
 
-// Dados estáticos enquanto não temos a collection no Directus
-const staticSectors: Sector[] = Array.from({ length: 31 }, (_, i) => ({
-  id: `sector-${i + 1}`,
-  title: `Setor ${i + 1}`,
-  status: 'active' as const,
-  sort: i + 1,
-}));
+// Mapeia uma linha da tabela `sectors` (Supabase) para a interface Sector.
+function mapSector(row: any): Sector {
+  return {
+    id: row.id,
+    title: row.name,
+    status: (row.status as Sector['status']) ?? 'active',
+    sort: row.sort ?? undefined,
+  };
+}
 
 export const sectorsService = {
   async getSectors(): Promise<Sector[]> {
     try {
-      // Primeiro tentamos buscar do Directus
-      // Se a collection existir, ela será usada
-      // Caso contrário, usamos os dados estáticos
-      
-      // Comentado até a collection ser criada no Directus
-      // const params: GlobalQueryParams = {
-      //   filter: { status: { _eq: 'active' } },
-      //   sort: ['sort', 'title']
-      // };
-      // const response = await directusClient.request(readItems('sectors', params));
-      // return response;
-      
-      // Por enquanto, simulamos delay e retornamos dados estáticos
-      await new Promise(resolve => setTimeout(resolve, 300));
-      return staticSectors.filter(s => s.status === 'active').sort((a, b) => (a.sort || 0) - (b.sort || 0));
+      const { data, error } = await supabase
+        .from('sectors')
+        .select('id,name,sort,status')
+        .eq('status', 'active')
+        .order('sort', { ascending: true });
+      if (error) throw error;
+      return (data ?? []).map(mapSector);
     } catch (error) {
       console.error('Erro ao buscar setores:', error);
-      // Em caso de erro, retorna dados estáticos
-      return staticSectors.filter(s => s.status === 'active');
-    }
-  },
-  
-  async getSectorById(id: string): Promise<Sector | null> {
-    try {
-      // Comentado até a collection ser criada
-      // const response = await directusClient.request(readItem('sectors', id));
-      // return response;
-      
-      const sector = staticSectors.find(s => s.id === id);
-      return sector || null;
-    } catch (error) {
-      console.error('Erro ao buscar setor:', error);
-      const sector = staticSectors.find(s => s.id === id);
-      return sector || null;
+      return [];
     }
   },
 
-  // Método para criar setores via API (quando implementado)
-  async createSector(data: { title: string; status: 'active' | 'inactive'; sort?: number }): Promise<Sector> {
+  async getSectorById(id: string): Promise<Sector | null> {
     try {
-      // Comentado até a collection ser criada
-      // const response = await directusClient.request(createItem('sectors', data));
-      // return response;
-      
-      throw new Error('Collection sectors não existe ainda no Directus');
+      const { data, error } = await supabase
+        .from('sectors')
+        .select('id,name,sort,status')
+        .eq('id', id)
+        .maybeSingle();
+      if (error) throw error;
+      return data ? mapSector(data) : null;
     } catch (error) {
-      console.error('Erro ao criar setor:', error);
-      throw error;
+      console.error('Erro ao buscar setor:', error);
+      return null;
     }
-  }
+  },
+
+  async createSector(_data: { title: string; status: 'active' | 'inactive'; sort?: number }): Promise<Sector> {
+    // Escrita em sectors não é exposta ao cliente (somente leitura pública).
+    throw new Error('Criação de setores não é suportada pelo cliente.');
+  },
 };

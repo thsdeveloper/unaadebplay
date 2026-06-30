@@ -48,7 +48,8 @@ const EventPage = React.memo(() => {
     const [activeTab, setActiveTab] = useState<'all' | 'upcoming' | 'favorites'>('all');
     const [favoriteEvents, setFavoriteEvents] = useState<Set<string>>(new Set());
     const [showFilters, setShowFilters] = useState(false);
-    
+    const colors = useThemedColors();
+
     const {
         events,
         loading,
@@ -381,8 +382,8 @@ const EventPage = React.memo(() => {
                         <RefreshControl
                             refreshing={refreshing}
                             onRefresh={refresh}
-                            tintColor={colors.secundary}
-                            colors={[colors.secundary]}
+                            tintColor={colors.primary}
+                            colors={[colors.primary]}
                         />
                     }
                     ListEmptyComponent={renderEmptyComponent}

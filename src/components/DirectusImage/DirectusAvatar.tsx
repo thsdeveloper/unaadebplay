@@ -123,6 +123,7 @@ export const DirectusAvatar = memo<DirectusAvatarProps>(({
     <View style={containerStyle} testID={testID}>
       <DirectusImage
         assetId={assetId}
+        bucket="avatars"
         width={numericSize}
         height={numericSize}
         className={cn("rounded-full", className)}

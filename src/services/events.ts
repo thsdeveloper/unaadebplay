@@ -1,4 +1,4 @@
-import { getItems, getItem, setCreateItem, updateItem, deleteItem } from './items';
+import { getItems, getItem, setCreateItem, setDeleteItem } from './items';
 import { EventsTypes } from '@/types/EventsTypes';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -48,7 +48,7 @@ class EventsService {
         }
       }
 
-      const events = await getItems<EventsTypes>('events', {
+      const events = await getItems<EventsTypes[]>('events', {
         sort: ['start_date_time'],
         filter: this.buildDirectusFilter(filters),
       });
@@ -108,7 +108,7 @@ class EventsService {
 
   async unsubscribeFromEvent(subscriptionId: string): Promise<void> {
     try {
-      await deleteItem('event_subscriptions', subscriptionId);
+      await setDeleteItem('event_subscriptions', subscriptionId);
     } catch (error) {
       console.error('Error unsubscribing from event:', error);
       throw error;
@@ -117,11 +117,10 @@ class EventsService {
 
   async getUserSubscriptions(userId: string): Promise<any[]> {
     try {
-      return await getItems('event_subscriptions', {
+      return await getItems<any[]>('event_subscriptions', {
         filter: {
           user_id: { _eq: userId }
         },
-        fields: ['*', 'event_id.*']
       });
     } catch (error) {
       console.error('Error fetching user subscriptions:', error);
@@ -131,7 +130,7 @@ class EventsService {
 
   async isUserSubscribed(eventId: string, userId: string): Promise<boolean> {
     try {
-      const subscriptions = await getItems('event_subscriptions', {
+      const subscriptions = await getItems<any[]>('event_subscriptions', {
         filter: {
           user_id: { _eq: userId },
           event_id: { _eq: eventId }
@@ -188,7 +187,7 @@ class EventsService {
       const favoriteIds = await this.getFavorites();
       if (favoriteIds.length === 0) return [];
       
-      return await getItems<EventsTypes>('events', {
+      return await getItems<EventsTypes[]>('events', {
         filter: {
           id: { _in: favoriteIds }
         }

@@ -256,7 +256,9 @@ const BannerCarouselUsers = ({
                             snapToAlignment="center"
                             onScroll={Animated.event(
                                 [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-                                { useNativeDriver: true }
+                                // useNativeDriver:false porque scrollX também interpola `width`
+                                // (dots de paginação) — o native animated module não suporta `width`.
+                                { useNativeDriver: false }
                             )}
                             scrollEventThrottle={16}
                         />

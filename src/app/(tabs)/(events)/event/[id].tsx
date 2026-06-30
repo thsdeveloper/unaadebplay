@@ -55,14 +55,10 @@ const EventDetailsPage = React.memo(() => {
         if (!event) return;
         
         try {
-            const [organizerData, related] = await Promise.all([
-                getUser(event.organizer),
-                eventsService.getEvents({
-                    eventType: event.event_type,
-                }).then(events => events.filter(e => e.id !== event.id).slice(0, 3))
-            ]);
-            
-            setOrganizer(organizerData);
+            // event.organizer é texto livre (nome do organizador), NÃO um id de perfil —
+            // renderizamos o texto/contato direto na UI (sem getUser, que tentaria cast p/ uuid).
+            const events = await eventsService.getEvents({ eventType: event.event_type });
+            const related = events.filter(e => e.id !== event.id).slice(0, 3);
             setRelatedEvents(related);
         } catch (error) {
             console.error('Error loading additional data:', error);

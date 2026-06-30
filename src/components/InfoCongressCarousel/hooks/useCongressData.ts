@@ -16,18 +16,14 @@ export const useCongressData = (): UseCongressDataReturn => {
       setIsLoading(true);
       setError(null);
       
-      const response = await getItems<CongressType[]>('congresso', {
+      // Tabela 'congressos' (plural) no Supabase; poster é uma coluna de texto (path do Storage).
+      const response = await getItems<CongressType[]>('congressos', {
         sort: ['-date_start'],
-        fields: ['*', 'poster.*']
       });
 
-      if (response.length > 0) {
-        setCongress(response);
-      } else {
-        setCongress([]);
-      }
+      setCongress(response ?? []);
     } catch (err: any) {
-      const message = err.errors ? handleErrors(err.errors) : 'Erro ao carregar dados';
+      const message = err?.message || 'Erro ao carregar dados';
       setError(message);
       alert.error(`Erro: ${message}`);
     } finally {

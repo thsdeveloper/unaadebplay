@@ -97,20 +97,17 @@ export function useUserList({
       }
 
       const params = buildQueryParams();
-      const response = await getUsers(params);
+      // getUsers agora retorna um array (diretório seguro via RPC), não { data }.
+      const newUsers = (await getUsers(params)) ?? [];
 
-      if (response?.data) {
-        const newUsers = response.data;
-        
-        if (reset) {
-          setUsers(newUsers);
-        } else {
-          setUsers(prev => [...prev, ...newUsers]);
-        }
-
-        setHasMore(newUsers.length === pageSize);
-        setError(null);
+      if (reset) {
+        setUsers(newUsers);
+      } else {
+        setUsers(prev => [...prev, ...newUsers]);
       }
+
+      setHasMore(newUsers.length === pageSize);
+      setError(null);
     } catch (err) {
       setError('Erro ao carregar usuários');
       console.error('Error loading users:', err);

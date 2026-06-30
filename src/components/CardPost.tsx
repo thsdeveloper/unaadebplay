@@ -14,10 +14,13 @@ type Props = {
 
 export function CardPost({post}: Props) {
     const [user, setUser] = useState<UserTypes>();
+    // posts no Supabase usa `created_by` (fallback p/ user_created legado)
+    const authorId = (post as any).created_by ?? (post as any).user_created;
     useEffect(() => {
         const fetchData = async () => {
+            if (!authorId) return;
             try {
-                const responseUser = await getUser(post.user_created);
+                const responseUser = await getUser(authorId);
                 setUser(responseUser);
             } catch (error) {
                 console.error("Error fetching user:", error);
@@ -25,7 +28,7 @@ export function CardPost({post}: Props) {
         };
 
         fetchData();
-    }, [post.user_created]);
+    }, [authorId]);
     return (
         <Link href={`post/${post.id}`} asChild>
         <Pressable>

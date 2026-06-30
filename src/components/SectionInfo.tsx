@@ -170,10 +170,12 @@ export default function SectionInfo({
                 activeOpacity={1}
                 onPressIn={handlePressIn}
                 onPressOut={handlePressOut}
-                style={[
+                // expo-router (SDK 56) não aceita `style` em array no filho de <Link asChild>
+                // (o <Slot> interno lança erro) — achatamos para um único objeto de estilo.
+                style={StyleSheet.flatten([
                     styles.touchable,
                     { marginBottom: 10 } // Espaçamento entre componentes
-                ]}
+                ])}
             >
                 {renderContent()}
             </TouchableOpacity>

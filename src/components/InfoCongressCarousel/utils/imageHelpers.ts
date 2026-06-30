@@ -1,5 +1,6 @@
 import { CongressType } from '@/types/CongressType';
 import { CAROUSEL_CONFIG, SCREEN_DIMENSIONS } from '../constants';
+import { getStorageUrl } from '@/services/storage';
 
 /**
  * Extracts the poster ID from a congress item
@@ -7,16 +8,11 @@ import { CAROUSEL_CONFIG, SCREEN_DIMENSIONS } from '../constants';
  */
 export const extractPosterId = (poster: CongressType['poster']): string | null => {
   if (!poster) return null;
-  
-  if (typeof poster === 'string') {
-    return poster;
-  }
-  
-  if (typeof poster === 'object' && 'id' in poster && poster.id) {
-    return poster.id;
-  }
-  
-  return null;
+  // poster é uma coluna de texto (path do Storage) no Supabase.
+  if (typeof poster === 'string') return poster;
+  // Compat: caso venha como objeto { id } de dados legados.
+  const maybe = poster as any;
+  return maybe?.id ?? null;
 };
 
 /**
@@ -24,13 +20,11 @@ export const extractPosterId = (poster: CongressType['poster']): string | null =
  */
 export const generateImageUrl = (
   posterId: string | null,
-  apiUrl: string,
-  width: number = SCREEN_DIMENSIONS.width,
-  quality: number = CAROUSEL_CONFIG.IMAGE_QUALITY
+  _apiUrl?: string,
+  _width: number = SCREEN_DIMENSIONS.width,
+  _quality: number = CAROUSEL_CONFIG.IMAGE_QUALITY
 ): string => {
-  if (!posterId || !apiUrl) return '';
-  
-  return `${apiUrl}/assets/${posterId}?fit=cover&width=${Math.round(width)}&quality=${quality}`;
+  return getStorageUrl(posterId, 'images') ?? '';
 };
 
 /**

@@ -2,7 +2,7 @@ import { useCallback, useContext } from 'react';
 import { Alert } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import AlertContext from '@/contexts/AlertContext';
-import { updateUserMe } from '@/services/user';
+import { deactivateMyAccount } from '@/services/user';
 
 /**
  * Hook for managing account actions (logout, delete account)
@@ -44,10 +44,7 @@ export const useAccountActions = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              const userData = {
-                status: 'suspended'
-              };
-              await updateUserMe(userData);
+              await deactivateMyAccount();
 
               alert.success('Solicitação de exclusão enviada com sucesso!');
               logout();
