@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState, useCallback, useRef } from "react";
-import { Alert, View, ActivityIndicator } from "react-native";
+import { Alert, View, ActivityIndicator, Image, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -17,6 +17,7 @@ import { useBiometricAuth } from "@/hooks/useBiometricAuth";
 import { AuthTemplate } from "@/components/templates";
 import { LoginForm, type LoginFormData } from "@/components/organisms/LoginForm";
 import { AuthFooter } from "@/components/organisms/AuthFooter";
+import { AuthBrandHeader } from "@/components/organisms/AuthBrandHeader";
 import { Text } from "@/components/atoms";
 
 // Schema de validação
@@ -32,7 +33,7 @@ const signInSchema = Yup.object({
 type FormDataProps = LoginFormData;
 
 export default function SignIn() {
-    const { login, loadSavedCredentials } = useAuth();
+    const { login, loadSavedCredentials, checkSession } = useAuth();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
@@ -115,9 +116,17 @@ export default function SignIn() {
 
             const credentials = await authenticateBiometric();
 
-            if (credentials) {
-                await login(credentials.email, credentials.password, true);
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            if (credentials?.email) {
+                // Preenche o email salvo
+                setValue('email', credentials.email);
+
+                // Se ainda há sessão válida persistida, entra direto (sem digitar senha).
+                const hasSession = await checkSession();
+                if (hasSession) {
+                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                    router.replace('/(tabs)/(home)/');
+                }
+                // Caso contrário, o usuário conclui com a senha (sessão expirada).
             }
         } catch (error) {
             console.error("Erro no login biométrico automático:", error);
@@ -132,7 +141,9 @@ export default function SignIn() {
         loading,
         authenticatingBiometric,
         authenticateBiometric,
-        login
+        checkSession,
+        setValue,
+        router
     ]);
 
     // Acionar biometria automaticamente quando tudo estiver pronto
@@ -150,13 +161,13 @@ export default function SignIn() {
 
     // Configurar biometria
     const handleSetupBiometric = useCallback(async () => {
-        if (!email || !password) {
-            Alert.alert('Atenção', 'Preencha email e senha primeiro');
+        if (!email) {
+            Alert.alert('Atenção', 'Preencha o email primeiro');
             return;
         }
 
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        const success = await setupBiometric(email, password);
+        const success = await setupBiometric(email);
 
         if (success) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -210,9 +221,13 @@ export default function SignIn() {
     return (
         <AuthTemplate
             isLoading={(config as any)?.isLoading || biometricLoading}
-            title={(t as any)?.('login_title') || 'Bem-vindo'}
-            subtitle="Entre com sua conta para continuar"
         >
+            {/* Cabeçalho: badge da marca com glow + boas-vindas */}
+            <AuthBrandHeader
+                title={(t as any)?.('login_title') || 'Bem-vindo de volta'}
+                subtitle="Acesse sua conta para continuar"
+            />
+
             {/* Indicador de autenticação biométrica */}
             {authenticatingBiometric && (
                 <View className="mb-6 items-center justify-center py-4 px-6 bg-background-50 dark:bg-background-900 rounded-2xl border border-outline-200 dark:border-outline-800">

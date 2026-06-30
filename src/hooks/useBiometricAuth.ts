@@ -41,10 +41,12 @@ interface BiometricVault {
     checksum: string;
 }
 
-// Interface de credenciais
+// Interface de credenciais.
+// SEGURANÇA: a senha NUNCA é persistida. A sessão do Supabase é mantida de forma segura
+// (refresh token cifrado em SecureStore); a biometria apenas confirma a identidade e
+// recupera o email salvo para reentrada.
 interface BiometricCredentials {
     email: string;
-    password: string;
 }
 
 // Hook principal de biometria melhorado
@@ -153,7 +155,7 @@ export function useBiometricAuth() {
     };
 
     // Configurar biometria (memoizado para evitar re-criação)
-    const setupBiometric = useCallback(async (email: string, password: string): Promise<boolean> => {
+    const setupBiometric = useCallback(async (email: string): Promise<boolean> => {
         try {
             if (!isAvailable) {
                 setError('Biometria não disponível neste dispositivo');
@@ -173,8 +175,8 @@ export function useBiometricAuth() {
                 return false;
             }
 
-            // Criar vault de credenciais
-            const credentials: BiometricCredentials = { email, password };
+            // Vault guarda apenas o email (a senha nunca é persistida)
+            const credentials: BiometricCredentials = { email };
             const encryptedCredentials = await encrypt(JSON.stringify(credentials));
 
             const vault: BiometricVault = {

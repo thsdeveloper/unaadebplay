@@ -1,558 +1,356 @@
-import React, { memo, useState, useCallback, useEffect } from 'react';
-import { View, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import { Controller, FieldError } from 'react-hook-form';
-import { 
-  AvatarUpload, 
-  ProgressIndicator, 
-  Button, 
-  Text,
-  Input,
-  Icon
-} from '@/components/atoms';
-import { 
-  FormField, 
-  EmailValidator, 
-  DatePicker, 
-  TermsCheckbox,
-  PasswordStrengthIndicator,
-  SectorSelect
-} from '@/components/molecules';
-import { UseFormReturn } from 'react-hook-form';
-import { ChevronLeft, ChevronRight } from 'lucide-react-native';
-import {HStack} from "@/components/ui/hstack";
-import {Box} from "@/components/ui/box";
+import React, { memo, useCallback, useMemo, useRef, useState, useEffect } from 'react';
+import { View, ScrollView, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Animated, Text as RNText } from 'react-native';
+import { UseFormReturn, useController } from 'react-hook-form';
+import { useRouter } from 'expo-router';
+import { ChevronLeft, Mail, Lock, Phone, User, Pencil } from 'lucide-react-native';
 
-// Helper function to extract error message safely
-const getErrorMessage = (error: any): string | undefined => {
-  if (!error) return undefined;
-  if (typeof error === 'string') return error;
-  if (error.message) return error.message;
-  return undefined;
-};
+import { Text } from '@/components/atoms';
+import { AvatarUpload } from '@/components/atoms';
+import { DatePicker, SectorSelect, TermsCheckbox, PasswordStrengthIndicator } from '@/components/molecules';
+import { GlassInput } from '@/components/molecules/GlassInput';
+import { GradientButton } from '@/components/atoms/GradientButton';
+import { ProgressThread, SegmentedGender, MinorBadge, SuccessOverlay } from '@/components/molecules/ConversationControls';
+
+const err = (e: any): string | undefined => (!e ? undefined : typeof e === 'string' ? e : e.message);
 
 interface SignUpFormProps {
-  currentStep: number;
   loading: boolean;
-  verificationLoading: boolean;
-  resendTimer: number;
   step1Form: UseFormReturn<any>;
   step2Form: UseFormReturn<any>;
-  onNextStep: () => void;
-  onPreviousStep: () => void;
-  onSubmit: (code: string) => void;
-  onResendCode: () => void;
+  onSubmit: () => Promise<boolean> | void;
   checkIfMinor: (date: Date) => boolean;
 }
 
+type Beat = 'identity' | 'about' | 'sector' | 'guardian' | 'contact' | 'security' | 'review';
+
+// Slide-in wrapper (remount per beat via key)
+const StepScreen: React.FC<{ dir: number; children: React.ReactNode }> = ({ dir, children }) => {
+  const tx = useRef(new Animated.Value(dir * 28)).current;
+  const op = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(tx, { toValue: 0, useNativeDriver: true, friction: 9, tension: 60 }),
+      Animated.timing(op, { toValue: 1, duration: 260, useNativeDriver: true }),
+    ]).start();
+  }, []);
+  return <Animated.View style={{ flex: 1, opacity: op, transform: [{ translateX: tx }] }}>{children}</Animated.View>;
+};
+
 export const SignUpForm = memo<SignUpFormProps>(({
-  currentStep,
   loading,
-  verificationLoading,
-  resendTimer,
   step1Form,
   step2Form,
-  onNextStep,
-  onPreviousStep,
   onSubmit,
-  onResendCode,
   checkIfMinor,
 }) => {
-  const [verificationCode, setVerificationCode] = useState('');
-  const [isStep1Valid, setIsStep1Valid] = useState(false);
-  const isMinor = step2Form.watch('isMinor');
-  
-  // Watch valores críticos para forçar revalidação
-  const watchedValues = step1Form.watch(['birthdate', 'gender', 'first_name', 'last_name', 'sector']);
-  
-  // Force revalidation when critical values change
-  useEffect(() => {
-    console.log('🔍 [SignUpForm] useEffect triggered');
-    console.log('🔍 [SignUpForm] watchedValues:', watchedValues);
-    
-    const checkValidation = async () => {
-      console.log('🔍 [SignUpForm] Starting validation check...');
-      
-      // Get current form state before validation
-      const currentValues = step1Form.getValues();
-      const currentErrors = step1Form.formState.errors;
-      const currentIsValid = step1Form.formState.isValid;
-      
-      console.log('🔍 [SignUpForm] Before trigger - Values:', currentValues);
-      console.log('🔍 [SignUpForm] Before trigger - Errors:', currentErrors);
-      console.log('🔍 [SignUpForm] Before trigger - IsValid:', currentIsValid);
-      
-      const isValid = await step1Form.trigger();
-      
-      console.log('🔍 [SignUpForm] After trigger - Result:', isValid);
-      console.log('🔍 [SignUpForm] After trigger - Errors:', step1Form.formState.errors);
-      console.log('🔍 [SignUpForm] After trigger - IsValid:', step1Form.formState.isValid);
-      
-      setIsStep1Valid(isValid);
-      console.log('🔍 [SignUpForm] Set local state to:', isValid);
+  const router = useRouter();
+  const [beat, setBeat] = useState<Beat>('identity');
+  const [dir, setDir] = useState(1);
+  const [submitting, setSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [minorAge, setMinorAge] = useState<number | null>(null);
+
+  const firstName = (step1Form.watch('first_name') || '').trim();
+  const isMinor = !!step2Form.watch('isMinor');
+
+  const order: Beat[] = useMemo(() => {
+    const o: Beat[] = ['identity', 'about', 'sector'];
+    if (isMinor) o.push('guardian');
+    o.push('contact', 'security', 'review');
+    return o;
+  }, [isMinor]);
+
+  const beatIndex = order.indexOf(beat);
+  const progress = order.length > 1 ? beatIndex / (order.length - 1) : 0;
+
+  const go = useCallback((to: Beat, d: number) => { setDir(d); setBeat(to); }, []);
+
+  const next = useCallback(async () => {
+    const i = order.indexOf(beat);
+    const validateMap: Record<string, () => Promise<boolean>> = {
+      identity: () => step1Form.trigger(['first_name', 'last_name']),
+      about: () => step1Form.trigger(['birthdate', 'gender']),
+      sector: () => step1Form.trigger(['sector']),
+      guardian: () => step2Form.trigger(['responsibleName', 'responsiblePhone']),
+      contact: () => step2Form.trigger(['email', 'phone']),
+      security: () => step2Form.trigger(['password', 'confirmPassword', 'termsAccepted']),
     };
-    
-    checkValidation();
-  }, [watchedValues, step1Form]);
-  
-  // console.log('Step 1 Values:', step1Values);
-  // console.log('Step 1 Is Valid:', step1IsValid);
-  // console.log('Step 1 Errors:', step1Errors);
+    if (validateMap[beat]) {
+      const ok = await validateMap[beat]();
+      if (!ok) return;
+    }
+    const nextBeat = order[i + 1];
+    if (nextBeat) go(nextBeat, 1);
+  }, [beat, order, step1Form, step2Form, go]);
 
-  const renderStep1 = () => (
-    <ScrollView showsVerticalScrollIndicator={false}>
-      <View style={{ gap: 16 }}>
-        <Text variant="h3" className="mb-6 text-center">
-          Informações Pessoais
-        </Text>
+  const back = useCallback(() => {
+    const i = order.indexOf(beat);
+    if (i > 0) go(order[i - 1], -1);
+  }, [beat, order, go]);
 
-        {/* Avatar Upload */}
-        <Controller
-          control={step1Form.control}
-          name="avatar"
-          render={({ field: { value, onChange } }) => (
-            <AvatarUpload
-              value={value}
-              onChange={onChange}
-              error={getErrorMessage(step1Form.formState.errors.avatar)}
-              className="mb-6"
-            />
-          )}
-        />
+  // Cria a conta direto (autenticação por email/senha — sem SMS). Mostra o overlay de sucesso;
+  // se o registro falhar, esconde o overlay para o usuário tentar de novo.
+  const submit = useCallback(async () => {
+    setSubmitting(true);
+    setShowSuccess(true);
+    const ok = await Promise.resolve(onSubmit());
+    if (ok === false) {
+      setShowSuccess(false);
+      setSubmitting(false);
+    }
+    // Em caso de sucesso, o AuthContext.register navega para a home (overlay cobre a transição).
+  }, [onSubmit]);
 
-        {/* Nome e Sobrenome */}
-        <View className="flex-row" style={{ gap: 12 }}>
-          <Controller
-            control={step1Form.control}
-            name="first_name"
-            render={({ field: { value, onChange, onBlur } }) => (
-              <View className="flex-1">
-                <Input
-                  label="Nome"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={getErrorMessage(step1Form.formState.errors.first_name)}
-                  autoCapitalize="words"
-                />
-              </View>
-            )}
-          />
+  /* ───── beat content ───── */
+  const headline = (() => {
+    switch (beat) {
+      case 'identity': return 'Vamos começar! Como podemos te chamar?';
+      case 'about': return firstName ? `${firstName}, quando você nasceu?` : 'Quando você nasceu?';
+      case 'sector': return 'De qual setor você é?';
+      case 'guardian': return 'Dados do seu responsável';
+      case 'contact': return firstName ? `${firstName}, qual seu contato?` : 'Qual seu contato?';
+      case 'security': return 'Bora criar uma senha forte';
+      case 'review': return firstName ? `Tudo certo, ${firstName}? 👀` : 'Tudo certo por aqui? 👀';
+    }
+  })();
 
-          <Controller
-            control={step1Form.control}
-            name="last_name"
-            render={({ field: { value, onChange, onBlur } }) => (
-              <View className="flex-1">
-                <Input
-                  label="Sobrenome"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={getErrorMessage(step1Form.formState.errors.last_name)}
-                  autoCapitalize="words"
-                />
-              </View>
-            )}
-          />
-        </View>
+  const helper = (() => {
+    switch (beat) {
+      case 'identity': return 'Comece com uma foto e seu nome.';
+      case 'about': return 'Sua data de nascimento e gênero.';
+      case 'sector': return 'Escolha o setor que você faz parte.';
+      case 'guardian': return 'Como você é menor de idade, precisamos de um responsável.';
+      case 'contact': return 'Email e telefone para contato.';
+      case 'security': return 'Crie uma senha segura e aceite os termos.';
+      case 'review': return 'Confira seus dados antes de criar a conta.';
+    }
+  })();
 
-        {/* Data de Nascimento */}
-        <Controller
-          control={step1Form.control}
-          name="birthdate"
-          render={({ field: { value, onChange } }) => (
-            <DatePicker
-              value={value}
-              onChange={(date) => {
-                onChange(date);
-                checkIfMinor(date);
-              }}
-              label="Data de Nascimento"
-              error={getErrorMessage(step1Form.formState.errors.birthdate)}
-            />
-          )}
-        />
-
-        {/* Gênero */}
-        <Controller
-          control={step1Form.control}
-          name="gender"
-          render={({ field: { value, onChange } }) => (
-            <Box>
-              <Text variant="label" className="mb-2">Gênero</Text>
-              <HStack space={'sm'}>
-                {[
-                  { label: 'Masculino', value: 'M' },
-                  { label: 'Feminino', value: 'F' },
-                ].map((option) => (
-                  <Button
-                    key={option.value}
-                    variant={value === option.value ? 'primary' : 'outline'}
-                    size="large"
-                    onPress={() => onChange(option.value)}
-                    className="flex-1 rounded-full"
-                  >
-                    {option.label}
-                  </Button>
-                ))}
-              </HStack>
-              {getErrorMessage(step1Form.formState.errors.gender) && (
-                <Text className="mt-1 text-red-500">
-                  {getErrorMessage(step1Form.formState.errors.gender)}
-                </Text>
-              )}
-            </Box>
-          )}
-        />
-
-        {/* Setor */}
-        <Controller
-          control={step1Form.control}
-          name="sector"
-          render={({ field: { value, onChange } }) => (
-            <SectorSelect
-              value={value}
-              onChange={onChange}
-              label="Setor"
-              error={getErrorMessage(step1Form.formState.errors.sector)}
-            />
-          )}
-        />
-
-        {/* Debug temporário */}
-        <Button
-          variant="outline"
-          size="small"
-          onPress={() => {
-            const values = step1Form.getValues();
-            const errors = step1Form.formState.errors;
-            const isValid = step1Form.formState.isValid;
-            console.log('🐛 Debug Form:');
-            console.log('Values:', values);
-            console.log('Value types:', {
-              first_name: typeof values.first_name,
-              last_name: typeof values.last_name,
-              birthdate: typeof values.birthdate,
-              gender: typeof values.gender,
-              sector: typeof values.sector,
-              avatar: typeof values.avatar
-            });
-            console.log('Errors:', errors);
-            console.log('IsValid:', isValid);
-            
-            // Test each field individually
-            const { z } = require('zod');
-            console.log('Testing individual fields:');
-            console.log('first_name valid:', z.string().trim().min(2).safeParse(values.first_name));
-            console.log('last_name valid:', z.string().trim().min(2).safeParse(values.last_name));
-            console.log('birthdate valid:', z.date().safeParse(values.birthdate));
-            console.log('gender valid:', z.enum(['M', 'F']).safeParse(values.gender));
-            console.log('sector valid:', z.string().trim().min(1).safeParse(values.sector));
-            
-            // Trigger validation
-            step1Form.trigger().then(valid => {
-              console.log('After trigger - Valid:', valid);
-              console.log('After trigger - Errors:', step1Form.formState.errors);
-              console.log('After trigger - IsValid:', step1Form.formState.isValid);
-              const currentWatchedValues = step1Form.watch(['birthdate', 'gender', 'first_name', 'last_name', 'sector']);
-              
-              alert(`
-📊 FORM STATE SUMMARY:
-===================
-Form Valid (before): ${isValid}
-After Trigger: ${valid}
-Form Valid (after): ${step1Form.formState.isValid}
-Local Valid State: ${isStep1Valid}
-
-📝 VALUES:
-==========
-Birthdate: ${values.birthdate ? values.birthdate.toString() : 'NOT SET'}
-Gender: ${values.gender || 'NOT SET'}
-First Name: "${values.first_name}" (${values.first_name?.length} chars)
-Last Name: "${values.last_name}" (${values.last_name?.length} chars)
-Sector: "${values.sector}" (${values.sector?.length} chars)
-
-❌ ERRORS: ${Object.keys(errors).join(', ') || 'NONE'}
-
-🔍 WATCHED VALUES: ${JSON.stringify(currentWatchedValues)}
-              `);
-            });
-          }}
-          fullWidth
-          style={{ marginBottom: 8 }}
-        >
-          🐛 Debug Form State
-        </Button>
-
-        {/* Botão para forçar valid state - TESTE */}
-        <Button
-          variant="secondary"
-          size="small"
-          onPress={() => {
-            console.log('🔧 [TEST] Forcing valid state to true');
-            setIsStep1Valid(true);
-          }}
-          fullWidth
-          style={{ marginBottom: 8 }}
-        >
-          🔧 Force Valid State (TEST)
-        </Button>
-
-        <Button
-          variant="primary"
-          size="large"
-          onPress={onNextStep}
-          disabled={!isStep1Valid}
-          fullWidth
-          rightIcon={<Icon name={'arrow-right'} size={20} color="#fff" family={'Feather'} />}
-        >
-          Próximo {isStep1Valid ? '✅' : '❌'} (Local: {isStep1Valid ? 'T' : 'F'} | Form: {step1Form.formState.isValid ? 'T' : 'F'})
-        </Button>
-      </View>
-    </ScrollView>
-  );
-
-  const renderStep2 = () => (
-    <ScrollView showsVerticalScrollIndicator={false}>
-      <View style={{ gap: 16 }}>
-        <Text variant="h3" className="mb-6 text-center">
-          Dados de Acesso
-        </Text>
-
-        {/* Email com validação */}
-        <Controller
-          control={step2Form.control}
-          name="email"
-          render={({ field: { value, onChange } }) => (
-            <EmailValidator
-              value={value}
-              onChange={onChange}
-              error={getErrorMessage(step2Form.formState.errors.email)}
-            />
-          )}
-        />
-
-        {/* Telefone */}
-        <Controller
-          control={step2Form.control}
-          name="phone"
-          render={({ field: { value, onChange, onBlur } }) => (
-            <Input
-              label="Telefone"
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              error={getErrorMessage(step2Form.formState.errors.phone)}
-              keyboardType="phone-pad"
-              placeholder="(00) 00000-0000"
-              maxLength={15}
-            />
-          )}
-        />
-
-        {/* Senha */}
-        <Controller
-          control={step2Form.control}
-          name="password"
-          render={({ field: { value, onChange, onBlur } }) => (
-            <View>
-              <Input
-                label="Senha"
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                error={getErrorMessage(step2Form.formState.errors.password)}
-                secureTextEntry
-                autoCapitalize="none"
-              />
-              <PasswordStrengthIndicator password={value} />
+  const renderBeat = () => {
+    switch (beat) {
+      case 'identity':
+        return (
+          <View style={{ gap: 16 }}>
+            <View className="items-center">
+              <Controller2 form={step1Form} name="avatar">
+                {(v, on) => <AvatarUpload value={v} onChange={on} />}
+              </Controller2>
             </View>
-          )}
-        />
-
-        {/* Confirmar Senha */}
-        <Controller
-          control={step2Form.control}
-          name="confirmPassword"
-          render={({ field: { value, onChange, onBlur } }) => (
-            <Input
-              label="Confirmar Senha"
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              error={getErrorMessage(step2Form.formState.errors.confirmPassword)}
-              secureTextEntry
-              autoCapitalize="none"
-            />
-          )}
-        />
-
-        {/* Dados do Responsável (se menor) */}
-        {isMinor && (
-          <View className="p-4 bg-yellow-50 rounded-lg border border-yellow-200" style={{ gap: 16 }}>
-            <Text variant="body" className="font-semibold">
-              Dados do Responsável Legal
-            </Text>
-
-            <Controller
-              control={step2Form.control}
-              name="responsibleName"
-              render={({ field: { value, onChange, onBlur } }) => (
-                <Input
-                  label="Nome do Responsável"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={getErrorMessage(step2Form.formState.errors.responsibleName)}
-                  autoCapitalize="words"
-                />
-              )}
-            />
-
-            <Controller
-              control={step2Form.control}
-              name="responsiblePhone"
-              render={({ field: { value, onChange, onBlur } }) => (
-                <Input
-                  label="Telefone do Responsável"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={getErrorMessage(step2Form.formState.errors.responsiblePhone)}
-                  keyboardType="phone-pad"
-                  placeholder="(00) 00000-0000"
-                />
-              )}
-            />
+            <View className="flex-row" style={{ gap: 12 }}>
+              <Controller2 form={step1Form} name="first_name">
+                {(v, on, ob) => (
+                  <View className="flex-1">
+                    <GlassInput placeholder="Nome" value={v} onChangeText={on} onBlur={ob} autoCapitalize="words" error={err(step1Form.formState.errors.first_name)} />
+                  </View>
+                )}
+              </Controller2>
+              <Controller2 form={step1Form} name="last_name">
+                {(v, on, ob) => (
+                  <View className="flex-1">
+                    <GlassInput placeholder="Sobrenome" value={v} onChangeText={on} onBlur={ob} autoCapitalize="words" error={err(step1Form.formState.errors.last_name)} />
+                  </View>
+                )}
+              </Controller2>
+            </View>
+            <Pressable onPress={() => router.replace('/(auth)/sign-in')} hitSlop={8} className="items-center mt-1">
+              <RNText style={styles.signinLink}>Já tenho conta · <RNText style={styles.link}>Entrar</RNText></RNText>
+            </Pressable>
           </View>
-        )}
+        );
+      case 'about':
+        return (
+          <View style={{ gap: 16 }}>
+            <Controller2 form={step1Form} name="birthdate">
+              {(v, on) => (
+                <DatePicker
+                  value={v}
+                  label="Data de nascimento"
+                  showAge
+                  error={err(step1Form.formState.errors.birthdate)}
+                  onChange={(date: Date) => {
+                    on(date);
+                    const m = checkIfMinor(date);
+                    const age = Math.floor((Date.now() - new Date(date).getTime()) / (365.25 * 864e5));
+                    setMinorAge(m ? age : null);
+                  }}
+                />
+              )}
+            </Controller2>
+            {minorAge !== null && <MinorBadge age={minorAge} />}
+            <View>
+              <Text variant="label" className="mb-2 text-typography-300">Gênero</Text>
+              <Controller2 form={step1Form} name="gender">
+                {(v, on) => <SegmentedGender value={v} onChange={on} />}
+              </Controller2>
+              {err(step1Form.formState.errors.gender) && <RNText style={styles.fieldErr}>{err(step1Form.formState.errors.gender)}</RNText>}
+            </View>
+          </View>
+        );
+      case 'sector':
+        return (
+          <Controller2 form={step1Form} name="sector">
+            {(v, on) => <SectorSelect value={v} onChange={on} label="Setor" error={err(step1Form.formState.errors.sector)} />}
+          </Controller2>
+        );
+      case 'guardian':
+        return (
+          <View style={{ gap: 14 }}>
+            <Controller2 form={step2Form} name="responsibleName">
+              {(v, on, ob) => <GlassInput icon={<User size={20} color="rgba(226,232,240,0.7)" />} placeholder="Nome do responsável" value={v} onChangeText={on} onBlur={ob} autoCapitalize="words" error={err(step2Form.formState.errors.responsibleName)} />}
+            </Controller2>
+            <Controller2 form={step2Form} name="responsiblePhone">
+              {(v, on, ob) => <GlassInput icon={<Phone size={20} color="rgba(226,232,240,0.7)" />} placeholder="Telefone do responsável" value={v} onChangeText={on} onBlur={ob} keyboardType="phone-pad" error={err(step2Form.formState.errors.responsiblePhone)} />}
+            </Controller2>
+          </View>
+        );
+      case 'contact':
+        return (
+          <View style={{ gap: 14 }}>
+            <Controller2 form={step2Form} name="email">
+              {(v, on, ob) => <GlassInput icon={<Mail size={20} color="rgba(226,232,240,0.7)" />} placeholder="Email" value={v} onChangeText={on} onBlur={ob} keyboardType="email-address" error={err(step2Form.formState.errors.email)} />}
+            </Controller2>
+            <Controller2 form={step2Form} name="phone">
+              {(v, on, ob) => <GlassInput icon={<Phone size={20} color="rgba(226,232,240,0.7)" />} placeholder="Telefone — (00) 00000-0000" value={v} onChangeText={on} onBlur={ob} keyboardType="phone-pad" error={err(step2Form.formState.errors.phone)} />}
+            </Controller2>
+          </View>
+        );
+      case 'security':
+        return (
+          <View style={{ gap: 14 }}>
+            <Controller2 form={step2Form} name="password">
+              {(v, on, ob) => (
+                <View>
+                  <GlassInput icon={<Lock size={20} color="rgba(226,232,240,0.7)" />} placeholder="Senha" value={v} onChangeText={on} onBlur={ob} password error={err(step2Form.formState.errors.password)} />
+                  <PasswordStrengthIndicator password={v} />
+                </View>
+              )}
+            </Controller2>
+            <Controller2 form={step2Form} name="confirmPassword">
+              {(v, on, ob) => <GlassInput icon={<Lock size={20} color="rgba(226,232,240,0.7)" />} placeholder="Confirmar senha" value={v} onChangeText={on} onBlur={ob} password error={err(step2Form.formState.errors.confirmPassword)} />}
+            </Controller2>
+            <Controller2 form={step2Form} name="termsAccepted">
+              {(v, on) => <TermsCheckbox value={!!v} onChange={on} error={err(step2Form.formState.errors.termsAccepted)} />}
+            </Controller2>
+          </View>
+        );
+      case 'review':
+        return <ReviewCard step1={step1Form} step2={step2Form} isMinor={isMinor} firstName={firstName} onEdit={(b) => go(b, -1)} />;
+    }
+  };
 
-        {/* Termos */}
-        <Controller
-          control={step2Form.control}
-          name="termsAccepted"
-          render={({ field: { value, onChange } }) => (
-            <TermsCheckbox
-              value={value}
-              onChange={onChange}
-              error={getErrorMessage(step2Form.formState.errors.termsAccepted)}
-            />
-          )}
-        />
-
-        <View className="flex-row" style={{ gap: 12 }}>
-          <Button
-            variant="outline"
-            size="large"
-            onPress={onPreviousStep}
-            className="flex-1"
-            leftIcon={<Icon name={ChevronLeft} size={20} color="#3b82f6" />}
-          >
-            Voltar
-          </Button>
-
-          <Button
-            variant="primary"
-            size="large"
-            onPress={onNextStep}
-            disabled={!step2Form.formState.isValid}
-            className="flex-1"
-            rightIcon={<Icon name={ChevronRight} size={20} color="#fff" />}
-          >
-            Próximo
-          </Button>
-        </View>
-      </View>
-    </ScrollView>
-  );
-
-  const renderStep3 = () => (
-    <View className="flex-1 justify-center">
-      <View style={{ gap: 24 }}>
-        <View className="items-center mb-8">
-          <Text variant="h3" className="mb-2">
-            Verificação
-          </Text>
-          <Text variant="body" color="#6b7280" className="text-center">
-            Digite o código de 6 dígitos enviado para{'\n'}
-            {step2Form.getValues('phone')}
-          </Text>
-        </View>
-
-        <Input
-          label="Código de Verificação"
-          value={verificationCode}
-          onChangeText={setVerificationCode}
-          placeholder="000000"
-          keyboardType="number-pad"
-          maxLength={6}
-          autoFocus
-          inputStyle={{ textAlign: 'center', fontSize: 24 }}
-        />
-
-        {resendTimer > 0 ? (
-          <Text variant="caption" color="#6b7280" className="text-center">
-            Reenviar código em {resendTimer}s
-          </Text>
-        ) : (
-          <Button
-            variant="ghost"
-            size="small"
-            onPress={onResendCode}
-            disabled={verificationLoading}
-          >
-            Reenviar código
-          </Button>
-        )}
-
-        <View className="flex-row" style={{ gap: 12 }}>
-          <Button
-            variant="outline"
-            size="large"
-            onPress={onPreviousStep}
-            disabled={loading}
-            className="flex-1"
-            leftIcon={<Icon name={ChevronLeft} size={20} color="#3b82f6" />}
-          >
-            Voltar
-          </Button>
-
-          <Button
-            variant="primary"
-            size="large"
-            onPress={() => onSubmit(verificationCode)}
-            disabled={verificationCode.length !== 6 || loading}
-            loading={loading}
-            className="flex-1"
-          >
-            Verificar e Criar Conta
-          </Button>
-        </View>
-      </View>
-    </View>
-  );
-
-  const steps = [renderStep1, renderStep2, renderStep3];
+  const ctaLabel = beat === 'review' ? 'Criar conta' : beat === 'security' ? 'Revisar meus dados' : 'Continuar';
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1"
-    >
-      <View className="flex-1">
-        <ProgressIndicator
-          currentStep={currentStep}
-          totalSteps={3}
-          labels={['Pessoal', 'Acesso', 'Verificação']}
-          className="mb-6"
-        />
-
-        <View className="flex-1">
-          {steps[currentStep - 1]()}
-        </View>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1">
+      {/* chrome: back + progress */}
+      <View className="flex-row items-center mb-5" style={{ gap: 12 }}>
+        <Pressable onPress={() => (beatIndex === 0 ? router.replace('/(auth)/sign-in') : back())} hitSlop={10} style={styles.backBtn}>
+          <ChevronLeft size={22} color="#E2E8F0" />
+        </Pressable>
+        <View className="flex-1"><ProgressThread progress={progress} /></View>
+        <Text variant="caption" className="text-typography-400">{beatIndex + 1}/{order.length}</Text>
       </View>
+
+      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1, paddingBottom: 16 }}>
+        <StepScreen key={beat} dir={dir}>
+          <Text className="text-typography-0 mb-1" style={styles.headline}>{headline}</Text>
+          <Text className="text-typography-400 mb-7" style={styles.helper}>{helper}</Text>
+          {renderBeat()}
+        </StepScreen>
+      </ScrollView>
+
+      <View style={{ paddingTop: 8 }}>
+        <GradientButton
+          label={ctaLabel}
+          onPress={beat === 'review' ? submit : next}
+          loading={beat === 'review' && (loading || submitting)}
+        />
+      </View>
+
+      {showSuccess && <SuccessOverlay firstName={firstName} />}
     </KeyboardAvoidingView>
   );
 });
 
 SignUpForm.displayName = 'SignUpForm';
+
+/* tiny inline RHF Controller (avoids importing Controller everywhere) */
+const Controller2: React.FC<{ form: UseFormReturn<any>; name: string; children: (v: any, onChange: (x: any) => void, onBlur: () => void) => React.ReactNode }> = ({ form, name, children }) => {
+  const { field } = useController({ control: form.control, name });
+  return <>{children(field.value, field.onChange, field.onBlur)}</>;
+};
+
+/* ───── Review card ───── */
+const ReviewCard: React.FC<{ step1: UseFormReturn<any>; step2: UseFormReturn<any>; isMinor: boolean; firstName: string; onEdit: (b: Beat) => void }> = ({ step1, step2, isMinor, onEdit }) => {
+  const s1 = step1.getValues();
+  const s2 = step2.getValues();
+  const fullName = `${s1.first_name || ''} ${s1.last_name || ''}`.trim();
+  const initials = `${(s1.first_name || '?')[0] || ''}${(s1.last_name || '')[0] || ''}`.toUpperCase();
+  const birth = s1.birthdate ? new Date(s1.birthdate).toLocaleDateString('pt-BR') : '—';
+
+  const Row = ({ k, v }: { k: string; v: string }) => (
+    <View className="flex-row justify-between py-1.5">
+      <RNText style={rc.k}>{k}</RNText>
+      <RNText style={rc.v} numberOfLines={1}>{v || '—'}</RNText>
+    </View>
+  );
+  const Section = ({ title, beat, children }: { title: string; beat: Beat; children: React.ReactNode }) => (
+    <View style={rc.section}>
+      <View className="flex-row items-center justify-between mb-1">
+        <RNText style={rc.sectionTitle}>{title}</RNText>
+        <Pressable onPress={() => onEdit(beat)} hitSlop={8} className="flex-row items-center" style={{ gap: 4 }}>
+          <Pencil size={13} color="#F472B6" />
+          <RNText style={rc.edit}>Editar</RNText>
+        </Pressable>
+      </View>
+      {children}
+    </View>
+  );
+
+  return (
+    <View style={{ gap: 14 }}>
+      <View className="items-center">
+        <View style={rc.avatar}><RNText style={rc.avatarTxt}>{initials}</RNText></View>
+        <RNText style={rc.name}>{fullName}</RNText>
+      </View>
+
+      <Section title="Você" beat="identity">
+        <Row k="Nascimento" v={birth} />
+        <Row k="Gênero" v={s1.gender === 'M' ? 'Masculino' : s1.gender === 'F' ? 'Feminino' : '—'} />
+      </Section>
+
+      <Section title="Acesso" beat="contact">
+        <Row k="Email" v={s2.email} />
+        <Row k="Telefone" v={s2.phone} />
+        <Row k="Senha" v={s2.password ? '••••••••' : '—'} />
+      </Section>
+
+      {isMinor && (
+        <Section title="Responsável" beat="guardian">
+          <Row k="Nome" v={s2.responsibleName} />
+          <Row k="Telefone" v={s2.responsiblePhone} />
+        </Section>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  headline: { fontSize: 27, fontWeight: '700', lineHeight: 33 },
+  helper: { fontSize: 15 },
+  backBtn: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.05)' },
+  fieldErr: { color: '#FCA5A5', fontSize: 12, marginTop: 6, marginLeft: 4 },
+  link: { color: '#F472B6', fontWeight: '600', fontSize: 15 },
+  signinLink: { color: '#94A3B8', fontSize: 14 },
+});
+
+const rc = StyleSheet.create({
+  avatar: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(229,28,68,0.18)', borderWidth: 1, borderColor: 'rgba(229,28,68,0.4)' },
+  avatarTxt: { color: '#fff', fontSize: 26, fontWeight: '800' },
+  name: { color: '#F8FAFC', fontSize: 20, fontWeight: '700', marginTop: 10 },
+  section: { padding: 16, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)' },
+  sectionTitle: { color: '#94A3B8', fontSize: 12, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' },
+  edit: { color: '#F472B6', fontSize: 13, fontWeight: '600' },
+  k: { color: '#94A3B8', fontSize: 14 },
+  v: { color: '#E2E8F0', fontSize: 14, fontWeight: '600', maxWidth: '60%' },
+});
