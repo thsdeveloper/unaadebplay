@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
-import { TouchableOpacity } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Pressable } from 'react-native';
+import { Calendar } from 'lucide-react-native';
 import { Text } from '../Text';
 import { DatePickerTriggerProps } from './types';
 
@@ -13,54 +13,44 @@ export const DatePickerTrigger = memo<DatePickerTriggerProps>(({
   disabled = false,
   className,
 }) => {
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('pt-BR');
-  };
+  const formatDate = (date: Date) =>
+    date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
   return (
     <>
       {label && (
-        <Text variant="label" className="mb-2">
+        <Text variant="label" className="mb-2 text-typography-300">
           {label}
         </Text>
       )}
-      
-      <TouchableOpacity
+
+      <Pressable
         onPress={onPress}
         disabled={disabled}
         className={`
+          h-14
           rounded-2xl
           border
-          ${error ? 'border-red-500' : 'border-white/20'}
-          bg-white/5
+          ${error ? 'border-error-500' : 'border-white/10'}
+          bg-white/[0.06]
           px-4
-          py-4.5
           flex-row
           items-center
-          justify-between
           ${disabled ? 'opacity-50' : 'active:bg-white/10'}
           ${className || ''}
         `.trim()}
-        activeOpacity={0.8}
       >
-        <Text 
-          className={`
-            ${value ? 'text-white' : 'text-white/30'}
-            text-base
-          `.trim()}
+        <Calendar size={20} color="rgba(226,232,240,0.7)" />
+        <Text
+          numberOfLines={1}
+          className={`flex-1 ml-3 text-base ${value ? 'text-typography-0' : 'text-typography-500'}`}
         >
           {value ? formatDate(value) : placeholder}
         </Text>
-        
-        <MaterialIcons 
-          name="calendar-today" 
-          size={20} 
-          color="rgba(255,255,255,0.5)" 
-        />
-      </TouchableOpacity>
+      </Pressable>
 
       {error && (
-        <Text variant="error" className="mt-1">
+        <Text variant="error" className="mt-1.5 ml-1">
           {error}
         </Text>
       )}
