@@ -257,6 +257,23 @@ const DirectusImage = memo(({
         style as ViewStyle
     ], [borderRadius, dimensions, style]);
 
+    // Image source configuration — hooks SEMPRE antes de qualquer early-return (Rules of
+    // Hooks): instâncias re-renderizam offline/sem assetId e a contagem de hooks precisa
+    // ser invariável, senão o React lança "Rendered fewer/more hooks than expected".
+    const imageSource: ImageSource = useMemo(() => ({
+        uri: imageUrl,
+        ...(Platform.OS === 'web' && {
+            headers: {
+                'Accept': 'image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+            }
+        })
+    }), [imageUrl]);
+
+    const placeholderSource: ImageSource | undefined = useMemo(() =>
+        placeholderUrl ? { uri: placeholderUrl } : undefined,
+        [placeholderUrl]
+    );
+
     // Check for valid asset ID and network
     if (!assetId || !imageUrl) {
         return (
@@ -292,21 +309,6 @@ const DirectusImage = memo(({
             </View>
         );
     }
-
-    // Image source configuration
-    const imageSource: ImageSource = useMemo(() => ({
-        uri: imageUrl,
-        ...(Platform.OS === 'web' && {
-            headers: {
-                'Accept': 'image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
-            }
-        })
-    }), [imageUrl]);
-
-    const placeholderSource: ImageSource | undefined = useMemo(() =>
-        placeholderUrl ? { uri: placeholderUrl } : undefined,
-        [placeholderUrl]
-    );
 
     return (
         <View
