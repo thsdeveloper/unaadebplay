@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import { Dimensions, View } from 'react-native';
 import { Link } from 'expo-router';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -17,9 +18,12 @@ import { useColorScheme } from 'react-native';
 
 interface NewsCardProps {
   news: NewsTypes;
-  variant?: 'default' | 'featured' | 'compact';
+  variant?: 'default' | 'featured' | 'compact' | 'rail';
   onPress?: () => void;
 }
+
+/** Largura do card de notícia no rail horizontal da home (Netflix-style). */
+export const NEWS_CARD_WIDTH = Math.round(Dimensions.get('window').width * 0.72);
 
 export const NewsCard = memo(({ news, variant = 'default', onPress }: NewsCardProps) => {
   const colorScheme = useColorScheme();
@@ -35,6 +39,66 @@ export const NewsCard = memo(({ news, variant = 'default', onPress }: NewsCardPr
   const getCategoryColor = (color?: string) => {
     return color || '#3B82F6';
   };
+
+  if (variant === 'rail') {
+    const RAIL_H = Math.round(NEWS_CARD_WIDTH * 0.62);
+    return (
+      <Link href={`/(tabs)/(posts)/post/${news.id}`} asChild>
+        <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={news.title} style={{ width: NEWS_CARD_WIDTH }}>
+          <View
+            style={{
+              width: NEWS_CARD_WIDTH,
+              height: RAIL_H,
+              borderRadius: 16,
+              overflow: 'hidden',
+              backgroundColor: 'rgba(255,255,255,0.06)',
+            }}
+          >
+            <DirectusImage
+              assetId={news.featured_image ?? ''}
+              bucket="images"
+              width={NEWS_CARD_WIDTH}
+              height={RAIL_H}
+              resizeMode="cover"
+            />
+            <LinearGradient
+              colors={['transparent', 'rgba(13,15,23,0.9)']}
+              style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: RAIL_H * 0.7 }}
+            />
+            {news.category && (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 10,
+                  left: 10,
+                  backgroundColor: getCategoryColor(news.category.color),
+                  borderRadius: 999,
+                  paddingHorizontal: 10,
+                  paddingVertical: 3,
+                }}
+              >
+                <Text className="text-white text-xs font-semibold">{news.category.name}</Text>
+              </View>
+            )}
+            <View style={{ position: 'absolute', left: 12, right: 12, bottom: 10 }}>
+              <Heading size="sm" className="text-white font-bold" numberOfLines={2}>
+                {news.title}
+              </Heading>
+              <HStack className="items-center mt-1" space="xs">
+                {!!news.reading_time && (
+                  <>
+                    <Text className="text-gray-300 text-xs">{news.reading_time} min</Text>
+                    <Text className="text-gray-300 text-xs">•</Text>
+                  </>
+                )}
+                <Text className="text-gray-300 text-xs">{formatPublishDate(news.publish_date)}</Text>
+              </HStack>
+            </View>
+          </View>
+        </Pressable>
+      </Link>
+    );
+  }
 
   if (variant === 'featured') {
     return (
