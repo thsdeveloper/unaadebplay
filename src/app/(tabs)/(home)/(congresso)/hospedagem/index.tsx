@@ -1,600 +1,395 @@
-import React, {useContext, useEffect, useState} from 'react';
-import {useForm, Controller} from 'react-hook-form';
+import React, { useContext, useEffect, useState } from 'react';
+import {
+  View, Text as RNText, Pressable, ScrollView, TextInput,
+  KeyboardAvoidingView, Platform, ActivityIndicator, StyleSheet,
+} from 'react-native';
+import { useForm, Controller } from 'react-hook-form';
 import * as Yup from 'yup';
-import {yupResolver} from '@hookform/resolvers/yup';
-import {useAuth} from "@/contexts/AuthContext";
-import AlertContext from "@/contexts/AlertContext";
-import {RadioInput} from "@/components/Forms/Radio";
-import {getItems, getItemSingleton, setCreateItem, setUpdateItem} from "@/services/items";
-import {KeyboardAvoidingView, Platform, ScrollView} from "react-native";
-import {Switch} from "@/components/Forms/Switch";
-import { useThemedColors } from "@/hooks/useThemedColors";
-import {CustomInput } from "@/components/Forms/Input";
-import {HospedagemTypes} from "@/types/HospedagemTypes";
-import {HospedagemSkeleton} from "@/components/Skeletons/HospedagemSkeletons";
-import {formatCurrency} from "@/utils/directus";
-import {MaterialIcons} from "@expo/vector-icons";
-import {SubscribedHosTypes} from "@/types/SubscribedHosTypes";
-import {router} from 'expo-router';
-import {Box} from "@/components/ui/box";
-import {Heading} from "@/components/ui/heading";
-import {HStack} from "@/components/ui/hstack";
+import { yupResolver } from '@hookform/resolvers/yup';
+import { Stack, useRouter } from 'expo-router';
+import { QrCode, BedDouble, Baby, Pill, Droplet, HeartPulse, Phone, ScrollText, ArrowLeft } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '@/contexts/AuthContext';
+import AlertContext from '@/contexts/AlertContext';
+import { getItems, getItemSingleton, setCreateItem } from '@/services/items';
+import { GradientButton } from '@/components/atoms/GradientButton';
+import { formatCurrency } from '@/utils/directus';
+import { SHEET } from '@/constants/sheetTokens';
+import type { HospedagemTypes } from '@/types/HospedagemTypes';
 
 const schema = Yup.object({
-    accommodation: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
-    child_companion: Yup.boolean().required('O campo acompanhante é obrigatório'),
-    take_medication: Yup.boolean().required('O campo medicamentos é obrigatório'),
-    take_medication_description: Yup.string().optional(),
-    blood_type: Yup.string().required('O campo Tipo sanguíneo é obrigatório'),
-    blood_type_rh: Yup.string().required('O campo Fator RH é obrigatório'),
-    allergies: Yup.boolean().required('O campo alergia é obrigatório'),
-    allergies_description: Yup.string().optional(),
-    emergency_contact: Yup.string().required('O campo contato de emergência é obrigatório'),
+  accommodation: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+  child_companion: Yup.boolean().required('O campo acompanhante é obrigatório'),
+  take_medication: Yup.boolean().required('O campo medicamentos é obrigatório'),
+  take_medication_description: Yup.string().optional(),
+  blood_type: Yup.string().required('O campo Tipo sanguíneo é obrigatório'),
+  blood_type_rh: Yup.string().required('O campo Fator RH é obrigatório'),
+  allergies: Yup.boolean().required('O campo alergia é obrigatório'),
+  allergies_description: Yup.string().optional(),
+  emergency_contact: Yup.string().required('O campo contato de emergência é obrigatório'),
+  normas_um: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+  normas_dois: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+  normas_tres: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+  normas_quatro: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+  normas_cinco: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+  normas_seis: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+  normas_sete: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+  normas_oito: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+  normas_nove: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+  normas_dez: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+  member: Yup.string().required(),
+});
+type FormData = Yup.InferType<typeof schema>;
 
-    normas_um: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
-    normas_dois: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
-    normas_tres: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
-    normas_quatro: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
-    normas_cinco: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
-    normas_seis: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
-    normas_sete: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
-    normas_oito: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
-    normas_nove: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
-    normas_dez: Yup.boolean().required('Você deve concordar com o termo').oneOf([true], 'Você deve concordar com o termo'),
+const BLOOD_TYPES = [
+  { value: 'a', label: 'A' },
+  { value: 'b', label: 'B' },
+  { value: 'ab', label: 'AB' },
+  { value: 'o', label: 'O' },
+  { value: 'nao_sabe', label: 'Não sei meu tipo sanguíneo' },
+];
+const BLOOD_RH = [
+  { value: 'positivo', label: 'Positivo' },
+  { value: 'negativo', label: 'Negativo' },
+  { value: 'nao_sabe', label: 'Não sei meu fator Rh' },
+];
 
-    member: Yup.string().required()
+const ACCOMMODATION_TEXT =
+  'A Secretaria de Hospedagem estará disponibilizando espaços no Arena Hall, local de realização do Congresso, para os inscritos para a hospedagem. Será fornecido somente o colchonete; cada inscrito deverá levar sua roupa de cama, travesseiro e itens de higiene pessoal.';
+const CHILD_TEXT =
+  'Crianças de até 10 anos só podem se hospedar quando acompanhados por um dos pais ou representante legal. A criança menor de 10 anos é isenta do pagamento. Lembrando que os alojamentos são separados para meninos/varões e meninas/irmãs.';
+
+const NORMAS: { name: keyof FormData; text: string }[] = [
+  { name: 'normas_um', text: 'Direitos do inscrito: Colchonete para a hospedagem; A alimentação será café-da-manhã, almoço e jantar; A Pulseira de identificação que servirá como um passaporte para as refeições e alojamentos. Obs: como a hospedagem será no próprio Arena Hall, não teremos transporte incluso na hospedagem.' },
+  { name: 'normas_dois', text: 'O primeiro objetivo da hospedagem é apoiar a Diretoria Geral da UNAADEB na realização da hospedagem para o Congresso Geral, oferecendo um local acessível aos congressistas que optarem por se hospedar no evento.' },
+  { name: 'normas_tres', text: 'Como o Congresso é um local de reunião e adoração a Deus, esperamos de cada um atitude digna de cristão, observando os critérios disciplinares, evitando conversas apimentadas, gritarias, algazarras e todo comportamento que possa prejudicar o ambiente harmonioso.' },
+  { name: 'normas_quatro', text: 'A distribuição dos inscritos nos respectivos alojamentos será por Setores da ADEB, desde que a inscrição seja realizada até a data limite; a partir desta data não serão aceitas novas inscrições por meio deste formulário. No início do Congresso, se ainda estiverem vagas, a Secretaria de Hospedagem irá disponibilizar vagas para novos inscritos, não sendo garantido que o inscrito fique junto com seu Setor.' },
+  { name: 'normas_cinco', text: 'A troca de alojamentos não será autorizada, a não ser por motivo justificado à Secretaria de Hospedagem.' },
+  { name: 'normas_seis', text: 'Os hóspedes devem zelar pela conservação dos alojamentos, mantendo sempre arrumados e limpos os quartos e banheiros dos locais de hospedagem.' },
+  { name: 'normas_sete', text: 'Só será permitida a presença nos alojamentos de pessoas devidamente inscritas pela Secretaria de Hospedagem. Não será permitido o ingresso de meninos no alojamento das meninas e vice-versa.' },
+  { name: 'normas_oito', text: 'O inscrito menor só poderá se ausentar dos locais programados com prévia autorização do responsável e informado à Secretaria de Hospedagem para controle.' },
+  { name: 'normas_nove', text: 'Os inscritos deverão zelar pelos seus objetos de valor e/ou aparelhos eletrônicos, sendo os mesmos de responsabilidade única e exclusiva do seu dono, eximindo de qualquer responsabilidade a Secretaria de Hospedagem.' },
+  { name: 'normas_dez', text: 'Concordo com as Regras e Normas Gerais. Estou ciente de que, se desrespeitar as Regras e Normas acima, poderei ter a minha permanência suspensa a qualquer momento; meus pais e/ou responsáveis poderão ter sua presença solicitada pela Secretaria de Hospedagem e o valor pago por mim não será restituído. Todos os assuntos omissos neste regulamento serão tratados pela Secretaria de Hospedagem.' },
+];
+
+// ---- Controles dark (SHEET) ----
+const Toggle: React.FC<{ value?: boolean; onChange: (v: boolean) => void; labelTrue?: string; labelFalse?: string; error?: string }> = ({
+  value, onChange, labelTrue = 'Concordo', labelFalse = 'Discordo', error,
+}) => (
+  <View>
+    <View style={f.toggleRow}>
+      <Pressable onPress={() => onChange(true)} style={[f.toggleOpt, value === true && f.toggleOptOn]}>
+        <RNText style={[f.toggleText, value === true && f.toggleTextOn]}>{labelTrue}</RNText>
+      </Pressable>
+      <Pressable onPress={() => onChange(false)} style={[f.toggleOpt, value === false && f.toggleOptOff]}>
+        <RNText style={[f.toggleText, value === false && f.toggleTextOff]}>{labelFalse}</RNText>
+      </Pressable>
+    </View>
+    {!!error && <RNText style={f.error}>{error}</RNText>}
+  </View>
+);
+
+const RadioGroup: React.FC<{ value?: string; onChange: (v: string) => void; options: { value: string; label: string }[]; error?: string }> = ({
+  value, onChange, options, error,
+}) => (
+  <View style={{ gap: 8 }}>
+    {options.map((o) => {
+      const on = value === o.value;
+      return (
+        <Pressable key={o.value} onPress={() => onChange(o.value)} style={[f.radio, on && f.radioOn]}>
+          <View style={[f.radioDot, on && f.radioDotOn]}>{on && <View style={f.radioDotInner} />}</View>
+          <RNText style={[f.radioLabel, on && f.radioLabelOn]}>{o.label}</RNText>
+        </Pressable>
+      );
+    })}
+    {!!error && <RNText style={f.error}>{error}</RNText>}
+  </View>
+);
+
+const Field: React.FC<{ value?: string; onChangeText: (v: string) => void; onBlur?: () => void; placeholder?: string; error?: string; multiline?: boolean }> = ({
+  value, onChangeText, onBlur, placeholder, error, multiline,
+}) => (
+  <View>
+    <TextInput
+      style={[f.input, multiline && { height: 90, textAlignVertical: 'top', paddingTop: 12 }]}
+      value={value}
+      onChangeText={onChangeText}
+      onBlur={onBlur}
+      placeholder={placeholder}
+      placeholderTextColor={SHEET.textFaint}
+      multiline={multiline}
+    />
+    {!!error && <RNText style={f.error}>{error}</RNText>}
+  </View>
+);
+
+const SectionCard: React.FC<{ Icon?: any; title: string; children: React.ReactNode }> = ({ Icon, title, children }) => (
+  <View style={f.card}>
+    <View style={f.cardHead}>
+      {Icon && <View style={f.cardIcon}><Icon size={17} color={SHEET.brand} /></View>}
+      <RNText style={f.cardTitle}>{title}</RNText>
+    </View>
+    {children}
+  </View>
+);
+
+const RegistrationFormHospedagem = React.memo(() => {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { user } = useAuth();
+  const alert = useContext(AlertContext);
+
+  const [hos, setHos] = useState<HospedagemTypes>();
+  const [loading, setLoading] = useState(true);
+
+  const { control, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
+    resolver: yupResolver(schema) as any,
+    defaultValues: {
+      member: user?.id,
+      accommodation: false,
+      take_medication: false,
+      child_companion: false,
+      allergies: false,
+    },
+    mode: 'all',
+  });
+
+  useEffect(() => { if (user?.id) setValue('member', user.id); }, [user?.id, setValue]);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const data = await getItemSingleton<HospedagemTypes>('hospedagem');
+        if (alive) setHos(data);
+      } catch {
+        alert.error('Houve um erro ao carregar os dados. Tente novamente mais tarde.', 8000);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, [alert]);
+
+  const takeMedication = watch('take_medication');
+  const allergies = watch('allergies');
+
+  const onSubmit = async (data: FormData) => {
+    try {
+      const existing = await getItems<any[]>('subscribed_hos', { filter: { member: { _eq: user?.id } } });
+      if (existing && existing.length > 0) {
+        alert.warning('Já existe uma inscrição de hospedagem para este usuário.', 8000);
+        router.replace('/(tabs)/(home)/(congresso)/cartao-acesso');
+        return;
+      }
+      const res = await setCreateItem('subscribed_hos', { ...data, member: user?.id });
+      if (res) {
+        alert.success('Inscrição realizada com sucesso!');
+        router.replace('/(tabs)/(home)/(congresso)/cartao-acesso');
+      }
+    } catch {
+      alert.error('Erro no processo de inscrição da hospedagem.');
+    }
+  };
+
+  const onInvalid = () => alert.error('Existem campos obrigatórios que faltam ser preenchidos.');
+
+  return (
+    <View style={f.screen}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <View style={[f.bar, { paddingTop: insets.top + 6 }]} pointerEvents="box-none">
+        <Pressable onPress={() => router.back()} hitSlop={8} style={f.pill} accessibilityRole="button" accessibilityLabel="Voltar">
+          <ArrowLeft size={21} color={SHEET.textPrimary} strokeWidth={2.5} />
+        </Pressable>
+        <RNText style={f.barTitle}>Hospedagem</RNText>
+        <View style={{ width: 40 }} />
+      </View>
+
+      {loading ? (
+        <View style={f.centered}><ActivityIndicator size="large" color={SHEET.brand} /><RNText style={f.loadingText}>Carregando...</RNText></View>
+      ) : (
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+          <ScrollView
+            contentContainerStyle={[f.scroll, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 100 }]}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Cabeçalho */}
+            <RNText style={f.hello}>Solicitante, {user?.first_name || ''}</RNText>
+            <View style={f.investRow}>
+              <RNText style={f.investLabel}>Investimento</RNText>
+              <RNText style={f.investValue}>{hos?.custo != null ? formatCurrency(hos.custo) : 'A definir'}</RNText>
+            </View>
+
+            <View style={f.pixNote}>
+              <QrCode size={18} color={SHEET.gold} />
+              <RNText style={f.pixNoteText}>No momento o método de pagamento é o PIX identificado. Estamos trabalhando para oferecer outros meios.</RNText>
+            </View>
+
+            {!!hos?.regras && <RNText style={f.intro}>{hos.regras}</RNText>}
+
+            {/* Alojamento */}
+            <SectionCard Icon={BedDouble} title="Alojamento">
+              <RNText style={f.para}>{ACCOMMODATION_TEXT}</RNText>
+              <Controller control={control} name="accommodation" render={({ field: { onChange, value } }) => (
+                <Toggle value={value} onChange={onChange} error={errors.accommodation?.message} />
+              )} />
+            </SectionCard>
+
+            {/* Hospedagem de crianças */}
+            <SectionCard Icon={Baby} title="Hospedagem de crianças">
+              <RNText style={f.para}>{CHILD_TEXT}</RNText>
+              <Controller control={control} name="child_companion" render={({ field: { onChange, value } }) => (
+                <Toggle value={value} onChange={onChange} labelTrue="Com acompanhante" labelFalse="Sem acompanhante" error={errors.child_companion?.message} />
+              )} />
+            </SectionCard>
+
+            {/* Medicamentos */}
+            <SectionCard Icon={Pill} title="Uso de medicamentos / cuidados médicos">
+              <Controller control={control} name="take_medication" render={({ field: { onChange, value } }) => (
+                <Toggle value={value} onChange={onChange} labelTrue="Sim" labelFalse="Não" error={errors.take_medication?.message} />
+              )} />
+              {takeMedication === true && (
+                <View style={{ marginTop: 12 }}>
+                  <Controller control={control} name="take_medication_description" render={({ field: { onChange, value, onBlur } }) => (
+                    <Field value={value} onChangeText={onChange} onBlur={onBlur} multiline placeholder="Especifique o uso de medicamentos e os cuidados médicos necessários" error={errors.take_medication_description?.message} />
+                  )} />
+                </View>
+              )}
+            </SectionCard>
+
+            {/* Tipo sanguíneo */}
+            <SectionCard Icon={Droplet} title="Tipo sanguíneo">
+              <Controller control={control} name="blood_type" render={({ field: { onChange, value } }) => (
+                <RadioGroup value={value} onChange={onChange} options={BLOOD_TYPES} error={errors.blood_type?.message} />
+              )} />
+            </SectionCard>
+
+            {/* Fator Rh */}
+            <SectionCard Icon={Droplet} title="Fator Rh">
+              <Controller control={control} name="blood_type_rh" render={({ field: { onChange, value } }) => (
+                <RadioGroup value={value} onChange={onChange} options={BLOOD_RH} error={errors.blood_type_rh?.message} />
+              )} />
+            </SectionCard>
+
+            {/* Alergia */}
+            <SectionCard Icon={HeartPulse} title="Possui alergia?">
+              <Controller control={control} name="allergies" render={({ field: { onChange, value } }) => (
+                <Toggle value={value} onChange={onChange} labelTrue="Sim" labelFalse="Não" error={errors.allergies?.message} />
+              )} />
+              {allergies === true && (
+                <View style={{ marginTop: 12 }}>
+                  <Controller control={control} name="allergies_description" render={({ field: { onChange, value } }) => (
+                    <Field value={value} onChangeText={onChange} placeholder="Especifique qual alergia" error={errors.allergies_description?.message} />
+                  )} />
+                </View>
+              )}
+            </SectionCard>
+
+            {/* Contato de emergência */}
+            <SectionCard Icon={Phone} title="Contato de emergência">
+              <RNText style={f.para}>Em caso de acidente ou mal súbito, ligar para:</RNText>
+              <Controller control={control} name="emergency_contact" render={({ field: { onChange, value } }) => (
+                <Field value={value} onChangeText={onChange} placeholder="Ex: José, (61) 99994-9449" error={errors.emergency_contact?.message} />
+              )} />
+            </SectionCard>
+
+            {/* Normas gerais */}
+            <SectionCard Icon={ScrollText} title="Orientações, regras e normas gerais">
+              <View style={{ gap: 16 }}>
+                {NORMAS.map((n) => (
+                  <View key={n.name} style={f.consentItem}>
+                    <RNText style={f.para}>{n.text}</RNText>
+                    <Controller control={control} name={n.name as any} render={({ field: { onChange, value } }) => (
+                      <Toggle value={value as boolean | undefined} onChange={onChange} error={(errors as any)[n.name]?.message} />
+                    )} />
+                  </View>
+                ))}
+              </View>
+            </SectionCard>
+          </ScrollView>
+
+          {/* Rodapé fixo */}
+          <View style={[f.footer, { paddingBottom: insets.bottom + 10 }]}>
+            <GradientButton
+              label={isSubmitting ? 'Cadastrando...' : 'Inscrever-se agora'}
+              loading={isSubmitting}
+              onPress={handleSubmit(onSubmit, onInvalid)}
+            />
+          </View>
+        </KeyboardAvoidingView>
+      )}
+    </View>
+  );
 });
 
-const RegistrationFormHospedagem = () => {
-    const colors = useThemedColors();
-
-    const {user} = useAuth();
-    const [hos, setHos] = useState<HospedagemTypes>();
-    const [dataForms, setDataForms] = useState<FormDataProps>();
-    const [loading, setLoading] = useState<boolean>(true);
-    const [paymentData, setPaymentData] = useState(null);
-    const alert = useContext(AlertContext)
-
-    useEffect(() => {
-        const loadHospedagem = async () => {
-            try {
-                const [hospedagens] = await Promise.all([
-                    getItemSingleton<HospedagemTypes>('hospedagem'),
-                ]);
-                setHos(hospedagens);
-            } catch (error) {
-                alert.error("Houve um erro ao carregar os dados. Por favor, tente novamente mais tarde.", 10000);
-            } finally {
-                setLoading(false)
-            }
-        };
-        loadHospedagem();
-    }, []);
-
-
-    type FormDataProps = Yup.InferType<typeof schema>;
-
-    const {
-        control,
-        handleSubmit,
-        trigger,
-        watch,
-        formState: {
-            errors,
-            isValid,
-            isSubmitting,
-            isLoading
-        }
-    } = useForm<FormDataProps>({
-        resolver: yupResolver(schema),
-        defaultValues: {
-            member: user?.id,
-            accommodation: false,
-            take_medication: false,
-            child_companion: false,
-            allergies: false,
-        },
-        mode: 'all'
-    });
-
-    const takeMedicationValue = watch('take_medication');
-    const allergiesValue = watch('allergies');
-
-    const onCheckFormAndSubmit = async (data: FormDataProps) => {
-        try {
-            const filter = {
-                filter: {
-                    member: {
-                        _eq: user?.id, // Utiliza o operador _eq para buscar registros com user_id igual ao userId
-                    },
-                },
-            };
-            const existingRecords = await getItems<SubscribedHosTypes[]>('subscribed_hos', filter);
-            if (existingRecords && existingRecords.length > 0) {
-                alert.warning('Já existe um registro de hospedagem para esse usuário. Consulte na página do congresso para mais informações', 10000)
-            } else {
-                const response = await setCreateItem<SubscribedHosTypes>('subscribed_hos', data);
-                if (response) {
-                    router.replace('/(tabs)/(home)/(congresso)/cartao-acesso');
-                    alert.success('Inscrição realizada com sucesso')
-                }
-            }
-
-        } catch (e) {
-            alert.error('Erro no processo de inscrição da hospedagem')
-        }
-
-        setDataForms(data)
-
-        trigger().then((isFormValid: any) => {
-            if (!isFormValid) {
-                alert.error("Existem campos que faltam ser preenchidos");
-            } else {
-                // Se o formulário estiver válido, prepara os dados para submissão
-                // handleSubmit(handleSignUp)();
-            }
-        });
-    };
-    const optionsBloodYype = [
-        {value: 'a', label: 'A'},
-        {value: 'b', label: 'B'},
-        {value: 'ab', label: 'AB'},
-        {value: 'o', label: 'O'},
-        {value: 'nao_sabe', label: 'Não sei meu tipo sanguíneo.'},
-    ];
-    const optionsBloodYypeRh = [
-        {value: 'positivo', label: 'Positivo'},
-        {value: 'negativo', label: 'Negativo'},
-        {value: 'nao_sabe', label: 'Não sei meu fator Rh'},
-    ];
-
-    return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={{flex: 1}}
-        >
-            {!loading ? (
-                <>
-                    <ScrollView>
-                        <Box p={4} mb={20}>
-                            <Box>
-                                <Heading>Solicitante, {user?.first_name}</Heading>
-                                <Heading size={'sm'}>Investimento: {formatCurrency(hos?.custo)}</Heading>
-                            </Box>
-
-                            <HStack backgroundColor={'orange.200'} p={2} my={4} alignItems={'center'} space={2}>
-                                <MaterialIcons name="pix" size={40} color={colors.dark}/>
-                                <Text pr={20}>No momento o nosso método de pagamento será o PIX identificado. Estamos
-                                    trabalhando para fornecer outros meio de pagamento.</Text>
-                            </HStack>
-                            <Text>{hos?.regras}</Text>
-                            <Divider my={4}/>
-                            <Controller
-                                control={control}
-                                name="accommodation"
-                                render={({field: {onChange, value}}) => (
-                                    <>
-                                        <Heading pb={2}>Alojamento:</Heading>
-                                        <Text pb={2}>
-                                            A Secretaria de Hospedagem estará disponibilizando espaços no Arena Hall,
-                                            local de
-                                            realização do Congresso, para os inscritos para a hospedagem 2023. Será
-                                            fornecido
-                                            somente o colchonete, cada inscrito deverá levar sua roupa de cama,
-                                            travesseiro e
-                                            itens de higiene pessoal.
-                                        </Text>
-                                        <Switch
-                                            textTrue={'Concordo'}
-                                            textFalse={'Discordo'}
-                                            value={value}
-                                            onChange={onChange}
-                                            errorMessage={errors.accommodation?.message}
-                                        />
-                                    </>
-                                )}
-                            />
-
-
-                            <Divider my={4}/>
-                            <Controller
-                                control={control}
-                                name={'child_companion'}
-                                render={({field: {onChange, value}}) => (
-                                    <>
-                                        <Heading pb={2}>Hospedagem de crianças:</Heading>
-                                        <Switch
-                                            textTrue={'com acompanhado'}
-                                            textFalse={'Sem acompanhante'}
-                                            value={value}
-                                            onChange={onChange}
-                                            message={'Crianças de até 10 anos só podem se hospedar quando acompanhados por um dos pais ou representante legal. A criança menor de 10 anos é isenta do pagamento. Lembrando que os alojamentos são separados para meninos/varões e meninas/irmãs.'}
-                                            errorMessage={errors.child_companion?.message}
-                                        />
-                                    </>
-                                )}
-                            />
-                            <Divider my={4}/>
-                            <Controller
-                                control={control}
-                                name={'take_medication'}
-                                render={({field: {onChange, value}}) => (
-                                    <>
-                                        <Heading pb={2}>Faz uso de medicamentos e/ou está sob cuidados
-                                            médicos?</Heading>
-                                        <Switch
-                                            textTrue={'Sim'}
-                                            textFalse={'Não'}
-                                            value={value}
-                                            onChange={onChange}
-                                            errorMessage={errors.take_medication?.message}
-                                        />
-                                    </>
-                                )}
-                            />
-                            {takeMedicationValue === true && (
-                                <Controller
-                                    control={control}
-                                    name="take_medication_description"
-                                    render={({field: {onChange, value, onBlur}}) => (
-                                        <Input
-                                            mt={2}
-                                            placeholder={'Especifique o uso de medicamentos e os cuidados médicos necessários:'}
-                                            value={value}
-                                            onBlur={onBlur}
-                                            onChangeText={onChange}
-                                            errorMessage={errors.take_medication_description?.message}
-                                        />
-                                    )}
-                                />
-                            )}
-                            <Divider my={4}/>
-                            <Controller
-                                control={control}
-                                name={'blood_type'}
-                                render={({field: {onChange, value}}) => (
-                                    <>
-                                        <Heading>Tipo sanguíneo:</Heading>
-                                        <RadioInput
-                                            stackType={'vertical'}
-                                            message=""
-                                            value={value}
-                                            options={optionsBloodYype}
-                                            onChange={onChange}
-                                            errorMessage={errors.blood_type?.message}
-                                        />
-                                    </>
-                                )}
-                            />
-                            <Divider my={4}/>
-                            <Controller
-                                control={control}
-                                name={'blood_type_rh'}
-                                render={({field: {onChange, value}}) => (
-                                    <>
-                                        <Heading>Fator Rh:</Heading>
-                                        <RadioInput
-                                            stackType={'vertical'}
-                                            message=""
-                                            value={value}
-                                            options={optionsBloodYypeRh}
-                                            onChange={onChange}
-                                            errorMessage={errors.blood_type_rh?.message}
-                                        />
-                                    </>
-                                )}
-                            />
-                            <Divider my={4}/>
-                            <Controller
-                                control={control}
-                                name={'allergies'}
-                                render={({field: {onChange, value}}) => (
-                                    <>
-                                        <Heading pb={2}>Possui alergia?</Heading>
-                                        <Switch
-                                            textTrue={'Sim'}
-                                            textFalse={'Não'}
-                                            value={value}
-                                            onChange={onChange}
-                                            errorMessage={errors.allergies?.message}
-                                        />
-                                    </>
-                                )}
-                            />
-                            {allergiesValue === true && (
-                                <Controller
-                                    control={control}
-                                    name={'allergies_description'}
-                                    render={({field: {onChange, value}}) => (
-                                        <>
-                                            <Input
-                                                mt={2}
-                                                placeholder={'Especifique qual alergia:'}
-                                                value={value}
-                                                onChangeText={onChange}
-                                                errorMessage={errors.allergies_description?.message}
-                                            />
-                                        </>
-                                    )}
-                                />
-                            )}
-                            <Divider my={4}/>
-                            <Controller
-                                control={control}
-                                name={'emergency_contact'}
-                                render={({field: {onChange, value}}) => (
-                                    <>
-                                        <Heading pb={4}>Em caso de acidente ou mal súbito ligar para:</Heading>
-                                        <Input
-                                            placeholder={'Ex: José, 61 999949449'}
-                                            value={value}
-                                            onChangeText={onChange}
-                                            errorMessage={errors.emergency_contact?.message}
-                                        />
-                                    </>
-                                )}
-                            />
-                            <Divider my={4}/>
-                            <Controller
-                                control={control}
-                                name="normas_um"
-                                render={({field: {onChange, value}}) => (
-                                    <>
-                                        <Heading pb={2}>Orientações, regras e normas gerais:</Heading>
-                                        <Text pb={2}>
-                                            Direitos do inscrito: Colchonete para a hospedagem; A alimentação será
-                                            café-da-manhã, almoço e jantar no dia 10/06; A Pulseira de identificação que
-                                            servirá
-                                            como um passaporte para as refeições e alojamentos. Obs: como a hospedagem
-                                            será no
-                                            próprio Arena Hall, não teremos transporte incluso na hospedagem.
-                                        </Text>
-                                        <Switch
-                                            textTrue={'Concordo'}
-                                            textFalse={'Discordo'}
-                                            value={value}
-                                            onChange={onChange}
-                                            errorMessage={errors.normas_um?.message}
-                                        />
-                                    </>
-                                )}
-                            />
-                            <Divider my={4}/>
-                            <Controller
-                                control={control}
-                                name="normas_dois"
-                                render={({field: {onChange, value}}) => (
-                                    <>
-                                        <Text pb={2}>
-                                            O primeiro objetivo da hospedagem é Apoiar a Diretoria Geral da UNAADEB na
-                                            realização da hospedagem para o Congresso Geral, oferecendo um local
-                                            acessível aos
-                                            congressistas que optarem por se hospedar no evento.
-                                        </Text>
-                                        <Switch
-                                            textTrue={'Concordo'}
-                                            textFalse={'Discordo'}
-                                            value={value}
-                                            onChange={onChange}
-                                            errorMessage={errors.normas_dois?.message}
-                                        />
-                                    </>
-                                )}
-                            />
-                            <Divider my={4}/>
-                            <Controller
-                                control={control}
-                                name="normas_tres"
-                                render={({field: {onChange, value}}) => (
-                                    <>
-                                        <Text pb={2}>
-                                            Como o Congresso é um local de reunião e adoração à Deus, esperamos de cada
-                                            um,
-                                            atitude digna de cristão, observando os critérios disciplinares, evitando
-                                            conversas
-                                            apimentadas, gritarias, algazarras e todo comportamento que possa prejudicar
-                                            o
-                                            ambiente harmonioso.
-                                        </Text>
-                                        <Switch
-                                            textTrue={'Concordo'}
-                                            textFalse={'Discordo'}
-                                            value={value}
-                                            onChange={onChange}
-                                            errorMessage={errors.normas_tres?.message}
-                                        />
-                                    </>
-                                )}
-                            />
-                            <Divider my={4}/>
-                            <Controller
-                                control={control}
-                                name="normas_quatro"
-                                render={({field: {onChange, value}}) => (
-                                    <>
-                                        <Text pb={2}>
-                                            A distribuição dos inscritos nos respectivos alojamentos será por Setores da
-                                            ADEB,
-                                            desde que a inscrição seja realizada até 02/06 (Sexta-feira), a partir desta
-                                            data
-                                            não serão aceitas novas inscrições por meio deste formulário. No início do
-                                            Congresso, se ainda estiverem vagas, a Secretaria de Hospedagem irá
-                                            disponibilizar
-                                            vagas para novos inscritos, não sendo garantido que o inscrito fique junto
-                                            com seu
-                                            Setor.
-                                        </Text>
-                                        <Switch
-                                            textTrue={'Concordo'}
-                                            textFalse={'Discordo'}
-                                            value={value}
-                                            onChange={onChange}
-                                            errorMessage={errors.normas_quatro?.message}
-                                        />
-                                    </>
-                                )}
-                            />
-                            <Divider my={4}/>
-                            <Controller
-                                control={control}
-                                name="normas_cinco"
-                                render={({field: {onChange, value}}) => (
-                                    <>
-                                        <Text pb={2}>
-                                            A troca de alojamentos não será autorizada, a não ser por motivo justificado
-                                            à
-                                            Secretaria de Hospedagem.
-                                        </Text>
-                                        <Switch
-                                            textTrue={'Concordo'}
-                                            textFalse={'Discordo'}
-                                            value={value}
-                                            onChange={onChange}
-                                            errorMessage={errors.normas_cinco?.message}
-                                        />
-                                    </>
-                                )}
-                            />
-                            <Divider my={4}/>
-                            <Controller
-                                control={control}
-                                name="normas_seis"
-                                render={({field: {onChange, value}}) => (
-                                    <>
-                                        <Text pb={2}>
-                                            Os hóspedes devem zelar pela conservação dos alojamentos, mantendo sempre
-                                            arrumados
-                                            e limpos os quartos e banheiros dos locais de hospedagem.
-                                        </Text>
-                                        <Switch
-                                            textTrue={'Concordo'}
-                                            textFalse={'Discordo'}
-                                            value={value}
-                                            onChange={onChange}
-                                            errorMessage={errors.normas_seis?.message}
-                                        />
-                                    </>
-                                )}
-                            />
-                            <Divider my={4}/>
-                            <Controller
-                                control={control}
-                                name="normas_sete"
-                                render={({field: {onChange, value}}) => (
-                                    <>
-                                        <Text pb={2}>
-                                            Só será permitida a presença nos alojamentos de pessoas devidamente
-                                            inscritas pela
-                                            Secretaria de Hospedagem. Não será permitido o ingresso de meninos no
-                                            alojamento das
-                                            meninas e vice-versa.
-                                        </Text>
-                                        <Switch
-                                            textTrue={'Concordo'}
-                                            textFalse={'Discordo'}
-                                            value={value}
-                                            onChange={onChange}
-                                            errorMessage={errors.normas_sete?.message}
-                                        />
-                                    </>
-                                )}
-                            />
-                            <Divider my={4}/>
-                            <Controller
-                                control={control}
-                                name="normas_oito"
-                                render={({field: {onChange, value}}) => (
-                                    <>
-                                        <Text pb={2}>
-                                            O inscrito menor, só poderá se ausentar dos locais programados com prévia
-                                            autorização do responsável e informado à Secretaria de Hospedagem para
-                                            controle.
-                                        </Text>
-                                        <Switch
-                                            textTrue={'Concordo'}
-                                            textFalse={'Discordo'}
-                                            value={value}
-                                            onChange={onChange}
-                                            errorMessage={errors.normas_oito?.message}
-                                        />
-                                    </>
-                                )}
-                            />
-                            <Divider my={4}/>
-                            <Controller
-                                control={control}
-                                name="normas_nove"
-                                render={({field: {onChange, value}}) => (
-                                    <>
-                                        <Text pb={2}>
-                                            Os inscritos deverão zelar pelos seus objetos de valor e/ou aparelhos
-                                            eletrônicos,
-                                            sendo os mesmos de responsabilidade única e exclusiva do seu dono, eximindo
-                                            de
-                                            qualquer responsabilidade a Secretaria de Hospedagem.
-                                        </Text>
-                                        <Switch
-                                            textTrue={'Concordo'}
-                                            textFalse={'Discordo'}
-                                            value={value}
-                                            onChange={onChange}
-                                            errorMessage={errors.normas_nove?.message}
-                                        />
-                                    </>
-                                )}
-                            />
-                            <Divider my={4}/>
-                            <Controller
-                                control={control}
-                                name="normas_dez"
-                                render={({field: {onChange, value}}) => (
-                                    <>
-                                        <Text pb={2}>
-                                            Concordo com as Regra e Normas Gerais. Estou ciente que se desrespeitar as
-                                            Regras e
-                                            Normas acima, poderei ter a minha permanência suspensa a qualquer momento e
-                                            meus
-                                            pais e/ou responsáveis poderão ter sua presença solicitada pela Secretaria
-                                            de
-                                            Hospedagem e o valor pago por mim não será restituído. Todos os assuntos
-                                            omissos
-                                            neste regulamento serão tratados pela Secretaria de Hospedagem.
-                                        </Text>
-                                        <Switch
-                                            textTrue={'Concordo'}
-                                            textFalse={'Discordo'}
-                                            value={value}
-                                            onChange={onChange}
-                                            errorMessage={errors.normas_dez?.message}
-                                        />
-                                    </>
-                                )}
-                            />
-                        </Box>
-                    </ScrollView>
-                    <Center position="absolute" bottom={0} p={2} width="100%" backgroundColor={colors.white} shadow={4}>
-                        <Button
-                            size={'lg'}
-                            colorScheme={'danger'}
-                            rounded={'full'}
-                            onPress={handleSubmit(onCheckFormAndSubmit)}
-                            isLoading={isSubmitting}
-                            isLoadingText="Cadastrando..."
-                            width="100%"
-                        >
-                            Inscreva-se agora!
-                        </Button>
-                    </Center>
-                </>
-            ) : (
-                <>
-                    <Box>
-                        <HospedagemSkeleton/>
-                    </Box>
-                </>
-            )}
-        </KeyboardAvoidingView>
-    );
-};
+RegistrationFormHospedagem.displayName = 'RegistrationFormHospedagem';
 
 export default RegistrationFormHospedagem;
+
+const PILL_BG = 'rgba(10,12,20,0.58)';
+const PILL_BORDER = 'rgba(255,255,255,0.22)';
+
+const f = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: SHEET.bg },
+  bar: {
+    position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingBottom: 6,
+  },
+  barTitle: { color: SHEET.textPrimary, fontSize: 16, fontWeight: '800' },
+  pill: {
+    width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: PILL_BG, borderWidth: StyleSheet.hairlineWidth, borderColor: PILL_BORDER,
+  },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  loadingText: { color: SHEET.textMuted, fontSize: 14, marginTop: 12 },
+
+  scroll: { paddingHorizontal: 16, gap: 14 },
+  hello: { color: SHEET.textPrimary, fontSize: 22, fontWeight: '800' },
+  investRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginTop: -6 },
+  investLabel: { color: SHEET.textMuted, fontSize: 13 },
+  investValue: { color: SHEET.brand, fontSize: 18, fontWeight: '800' },
+
+  pixNote: {
+    flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14,
+    backgroundColor: 'rgba(255,215,0,0.08)', borderWidth: 1, borderColor: 'rgba(255,215,0,0.28)',
+  },
+  pixNoteText: { color: SHEET.textSecondary, fontSize: 12.5, flex: 1, lineHeight: 17 },
+  intro: { color: SHEET.textSecondary, fontSize: 14, lineHeight: 21 },
+
+  card: { borderRadius: 18, backgroundColor: SHEET.glass, borderWidth: 1, borderColor: SHEET.border, padding: 16 },
+  cardHead: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  cardIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: SHEET.brandTint },
+  cardTitle: { color: SHEET.textPrimary, fontSize: 15.5, fontWeight: '800', flex: 1 },
+  para: { color: SHEET.textSecondary, fontSize: 13.5, lineHeight: 20, marginBottom: 12 },
+
+  consentItem: { paddingBottom: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: SHEET.hairline },
+
+  toggleRow: { flexDirection: 'row', gap: 10 },
+  toggleOpt: { flex: 1, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: SHEET.surface, borderWidth: 1, borderColor: SHEET.border },
+  toggleOptOn: { backgroundColor: SHEET.brandTint, borderColor: SHEET.brand },
+  toggleOptOff: { backgroundColor: 'rgba(148,163,184,0.12)', borderColor: SHEET.textFaint },
+  toggleText: { color: SHEET.textMuted, fontSize: 14, fontWeight: '700' },
+  toggleTextOn: { color: SHEET.brand },
+  toggleTextOff: { color: SHEET.textSecondary },
+
+  radio: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 48, paddingHorizontal: 14, borderRadius: 12, backgroundColor: SHEET.surface, borderWidth: 1, borderColor: SHEET.border },
+  radioOn: { backgroundColor: SHEET.brandTint, borderColor: SHEET.brand },
+  radioDot: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: SHEET.textFaint, alignItems: 'center', justifyContent: 'center' },
+  radioDotOn: { borderColor: SHEET.brand },
+  radioDotInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: SHEET.brand },
+  radioLabel: { color: SHEET.textSecondary, fontSize: 14.5, fontWeight: '600', flex: 1 },
+  radioLabelOn: { color: SHEET.textPrimary },
+
+  input: {
+    minHeight: 48, borderRadius: 12, paddingHorizontal: 14, color: SHEET.textPrimary, fontSize: 14.5,
+    backgroundColor: SHEET.surface, borderWidth: 1, borderColor: SHEET.border,
+  },
+  error: { color: SHEET.danger, fontSize: 12.5, marginTop: 6, fontWeight: '600' },
+
+  footer: {
+    position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 16, paddingTop: 10,
+    backgroundColor: 'rgba(13,15,23,0.92)', borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: SHEET.border,
+  },
+});
