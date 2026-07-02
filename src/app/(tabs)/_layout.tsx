@@ -36,7 +36,10 @@ export default function TabsLayout() {
 
     return (
         <ThemeProvider value={DarkTheme}>
-            <NativeTabs tintColor={SHEET.brand}>
+            {/* disableTransparentOnScrollEdge: mantém o vidro no topo também — sem ele,
+                o tab bar fica transparente no scroll edge (versão "clean") e só vira
+                vidro ao rolar, causando a incongruência claro/escuro. */}
+            <NativeTabs tintColor={SHEET.brand} disableTransparentOnScrollEdge>
                 <NativeTabs.Trigger name="(home)">
                     <NativeTabs.Trigger.Icon sf="house.fill" md="home" />
                     <NativeTabs.Trigger.Label>Início</NativeTabs.Trigger.Label>

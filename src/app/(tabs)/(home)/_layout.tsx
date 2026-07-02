@@ -32,39 +32,23 @@ export default function HomeLayout() {
                     name={'contribua'}
                     options={{headerShown: false, presentation: 'modal'}}
                 />
+                {/* Telas do congresso refeitas no padrão dark SHEET: header nativo
+                    desligado — cada tela desenha seu próprio header overlay. */}
                 <Stack.Screen
                     name={'(congresso)/[id]'}
-                    options={{
-                        title: 'Home page de Tabs',
-                        headerTransparent: false
-                    }}
+                    options={{ headerShown: false }}
                 />
                 <Stack.Screen
                     name={'(congresso)/convidado/[id]'}
-                    options={
-                        {title: 'Convidado', presentation: 'modal'}
-                    }/>
+                    options={{ headerShown: false, presentation: 'modal' }}
+                />
                 <Stack.Screen
                     name={'(congresso)/hospedagem/index'}
-                    options={{
-                        title: 'Hospedagem',
-                        headerStyle: {
-                            backgroundColor: colors.primary,
-                        },
-                        headerBackTitle: 'Voltar',
-                        headerTintColor: colors.textInverse,
-                    }}
+                    options={{ headerShown: false }}
                 />
                 <Stack.Screen
                     name={'(congresso)/cartao-acesso'}
-                    options={{
-                        title: 'Cartão de acesso',
-                        headerStyle: {
-                            backgroundColor: colors.primary,
-                        },
-                        headerBackTitle: 'Voltar',
-                        headerTintColor: colors.textInverse,
-                    }}
+                    options={{ headerShown: false }}
                 />
                 <Stack.Screen
                     name={'(congresso)/pagamento-hospedagem'}
@@ -120,7 +104,7 @@ export default function HomeLayout() {
                     }/>
                 <Stack.Screen
                     name={'repertories'}
-                    options={{title: 'Repertórios', presentation: 'modal'}}/>
+                    options={{headerShown: false}}/>
             </Stack>
         </>
     );
