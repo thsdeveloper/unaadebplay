@@ -1,5 +1,17 @@
 import React, { useState } from 'react'
 import { MessageType, showMessage} from "react-native-flash-message"
+import { lightColors as palette } from "@/constants/colors"
+
+// Mantemos o react-native-flash-message; só trocamos as cores de fundo padrão da lib
+// pelas cores acentuadas do nosso Design System (src/constants/colors.ts), para que o
+// banner combine com a paleta do app. Texto branco garante contraste sobre o acento.
+const ALERT_BG: Record<'success' | 'danger' | 'warning', string> = {
+    success: palette.success, // #10B981
+    danger: palette.error,    // #EF4444 (vermelho de erro da paleta)
+    warning: palette.warning, // #F59E0B
+}
+const ALERT_TEXT = '#FFFFFF'
+
 interface AlertContextData {
     type: MessageType
     message: string
@@ -35,6 +47,8 @@ const AlertProvider: React.FC<AlertProviderProps> = ({ children }: AlertProvider
                     showMessage({
                         message: text,
                         type: 'success',
+                        backgroundColor: ALERT_BG.success,
+                        color: ALERT_TEXT,
                         duration: time || duration,
                     });
                 },
@@ -45,6 +59,8 @@ const AlertProvider: React.FC<AlertProviderProps> = ({ children }: AlertProvider
                     showMessage({
                         message: text,
                         type: 'danger',
+                        backgroundColor: ALERT_BG.danger,
+                        color: ALERT_TEXT,
                         duration: time || duration,
                     });
                 },
@@ -55,6 +71,8 @@ const AlertProvider: React.FC<AlertProviderProps> = ({ children }: AlertProvider
                     showMessage({
                         message: text,
                         type: 'warning',
+                        backgroundColor: ALERT_BG.warning,
+                        color: ALERT_TEXT,
                         duration: time || duration,
                     });
                 },
