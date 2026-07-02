@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useAnimatedStyle, interpolate, Extrapolation, type SharedValue } from 'react-native-reanimated';
 import { Avatar } from '@/components/Avatar';
+import { AppWordmark } from '@/components/atoms';
 import { NotificationBell } from '@/components/NotificationBell';
 import { useAuth } from '@/contexts/AuthContext';
 import { SHEET } from '@/constants/sheetTokens';
@@ -59,7 +60,7 @@ export const HomeHeader = React.memo(function HomeHeader({ scrollY }: Props) {
       <View style={st.topbar}>
         <View style={st.left}>
           <Image source={ICON} style={st.brandIcon} contentFit="cover" />
-          <RNText style={st.title}>Início</RNText>
+          <AppWordmark />
         </View>
         <View style={st.right}>
           <NotificationBell color={SHEET.textPrimary} />
@@ -109,7 +110,6 @@ const st = StyleSheet.create({
   topbar: { height: HOME_TOPBAR_H, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24 },
   left: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   brandIcon: { width: 30, height: 30, borderRadius: 8 },
-  title: { color: SHEET.textPrimary, fontSize: 22, fontWeight: '800', letterSpacing: 0.2 },
   right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   avatarRing: { padding: 2, borderRadius: 999, borderWidth: 1.5, borderColor: SHEET.brand },
   chipsWrap: { overflow: 'hidden', justifyContent: 'center' },

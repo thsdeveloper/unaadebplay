@@ -9,6 +9,7 @@ export * from './Checkbox';
 export * from './Link';
 export * from './LoadingSpinner';
 export * from './GradientBackground';
+export * from './AppWordmark';
 // NÃO reexportar GlassSurface aqui: ela importa expo-glass-effect (binding nativo em
 // module-scope) e o barrel é consumido por telas de pré-login. Importe direto de
 // '@/components/atoms/GlassSurface' onde precisar.

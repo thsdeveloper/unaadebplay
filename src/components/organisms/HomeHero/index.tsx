@@ -7,7 +7,6 @@ import { Text } from '@/components/ui/text';
 import { DirectusImage } from '@/components/DirectusImage';
 import { HeroCTAButtons } from '@/components/molecules/HeroCTAButtons';
 import { hexToRgba, darken } from '@/utils/color';
-import { SHEET } from '@/constants/sheetTokens';
 import type { HeroSlide } from './buildHeroSlides';
 import type { SectionStatus } from '@/hooks/useHomeFeed';
 
@@ -160,8 +159,6 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS,
     overflow: 'hidden',
     backgroundColor: BG,
-    borderWidth: 1,
-    borderColor: SHEET.border,
   },
   content: { position: 'absolute', left: 18, right: 18, bottom: 20 },
   eyebrow: { color: GOLD, fontSize: 12, fontWeight: '800', letterSpacing: 1.5, marginBottom: 6 },
