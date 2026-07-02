@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, Dispatch, SetStateAction } from 'react';
 import { newsService } from '@/services/news';
 import { 
   NewsTypes, 
@@ -22,7 +22,7 @@ interface UseNewsReturn {
   loadNews: () => Promise<void>;
   loadMore: () => Promise<void>;
   refresh: () => Promise<void>;
-  setFilters: (filters: NewsFilters) => void;
+  setFilters: Dispatch<SetStateAction<NewsFilters>>;
   clearFilters: () => void;
 }
 

@@ -1,345 +1,156 @@
-import React, {useContext, useState} from "react";
-import {KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, View} from "react-native";
-import * as Yup from "yup";
-import {Controller, useForm} from "react-hook-form";
-import {yupResolver} from "@hookform/resolvers/yup";
-import {Button} from "@/components/Button";
-import {updateUserMe} from "@/services/user";
-import TranslationContext from "@/contexts/TranslationContext";
-import AlertContext from "@/contexts/AlertContext";
-import authContext from "@/contexts/AuthContext";
-import AvatarUpdated from "@/components/AvatarUpdated";
-import {handleErrors} from "@/utils/directus";
-import {RadioInput} from "@/components/Forms/Radio";
-import {VStack} from "@/components/ui/vstack";
-import {HStack} from "@/components/ui/hstack";
-import {Box} from "@/components/ui/box";
-import {Badge} from "@/components/ui/badge";
-import {CustomInput} from "@/components/Forms/Input";
-import {Link, router} from "expo-router";
-import {Text} from "@/components/ui/text";
-import {Heading} from "@/components/ui/heading";
-import {Icon} from "@/components/ui/icon";
-import {Divider} from "@/components/ui/divider";
-import {Ionicons} from "@expo/vector-icons";
+import React, { useContext, useState, useCallback } from 'react';
+import { View, Text as RNText, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import * as Yup from 'yup';
+import { Controller, useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { User, MapPin, FileText, Bell } from 'lucide-react-native';
+import AvatarUpdated from '@/components/AvatarUpdated';
+import { GlassInput } from '@/components/molecules/GlassInput';
+import { GradientButton } from '@/components/atoms/GradientButton';
+import { SheetGroup } from '@/components/molecules/SheetGroup';
+import { SheetRow } from '@/components/molecules/SheetRow';
+import { SegmentedGender } from '@/components/molecules/ConversationControls';
+import { SHEET } from '@/constants/sheetTokens';
+import { updateUserMe } from '@/services/user';
+import authContext from '@/contexts/AuthContext';
+import AlertContext from '@/contexts/AlertContext';
+import TranslationContext from '@/contexts/TranslationContext';
+import { handleErrors } from '@/utils/directus';
 
-const signUpSchema = Yup.object({
-    first_name: Yup.string().trim().min(2, 'O primeiro nome deve ter pelo menos 2 caracteres').required('O campo nome é obrigatório'),
-    last_name: Yup.string().trim().min(2, 'O sobrenome deve ter pelo menos 2 caracteres').required('O campo sobrenome é obrigatório'),
-    email: Yup.string().email('Digite um email válido').required('Email é obrigatório'),
-    gender: Yup.string().required('O campo gênero deve ser preenchido'),
-    location: Yup.string().trim().min(2, 'O campo localização é obrigatório').required('O campo localização é obrigatório'),
-    description: Yup.string().trim().min(20, 'O campo descrição deve conter pelo menos 20 caracteres'),
-})
+// E-mail NÃO é editável aqui (trocar o login exige supabase.auth.updateUser + confirmação);
+// fica visível/read-only no bloco de identidade. Gênero usa 'M'/'F' — o mesmo vocabulário
+// que o cadastro grava em profiles.gender (evita encoding misto no banco).
+const schema = Yup.object({
+  first_name: Yup.string().trim().min(2, 'Mínimo de 2 caracteres').required('Informe seu nome'),
+  last_name: Yup.string().trim().min(2, 'Mínimo de 2 caracteres').required('Informe seu sobrenome'),
+  location: Yup.string().trim().min(2, 'Informe sua localização').required('Informe sua localização'),
+  description: Yup.string().trim().notRequired(),
+  gender: Yup.string().oneOf(['M', 'F']).required('Selecione o gênero'),
+});
+type FormData = Yup.InferType<typeof schema>;
 
-type FormDataProps = Yup.InferType<typeof signUpSchema>;
+export default function SettingsScreen() {
+  const { t } = useContext(TranslationContext);
+  const alert = useContext(AlertContext);
+  const { user, setUser } = useContext(authContext);
+  const [saving, setSaving] = useState(false);
 
-export default function Index() {
-    const {t} = useContext(TranslationContext);
-    const alert = useContext(AlertContext)
-    const {user, setUser, logout} = useContext(authContext)
+  // Só semeia o gênero se já estiver no vocabulário canônico ('M'/'F'); valores legados
+  // ('masculino'/vazio) ficam sem seleção e o usuário escolhe (normalizando para 'M'/'F').
+  const seedGender = user?.gender === 'M' || user?.gender === 'F' ? user.gender : undefined;
 
-    const [loading, setLoading] = useState(false);
+  const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
+    resolver: yupResolver(schema),
+    mode: 'onTouched',
+    defaultValues: {
+      first_name: user?.first_name ?? '',
+      last_name: user?.last_name ?? '',
+      location: user?.location ?? '',
+      description: user?.description ?? '',
+      gender: seedGender,
+    },
+  });
 
-    const {control, handleSubmit, formState: {errors, isValid}} = useForm<FormDataProps>({
-        resolver: yupResolver(signUpSchema),
-        mode: 'all'
-    });
-
-    async function handleUpdateUser(dataUserForm: FormDataProps) {
-        setLoading(true)
-        try {
-            const userData = {
-                ...dataUserForm,
-                title: t('member_unaadeb'),
-            }
-            const user = await updateUserMe(userData);
-            await setUser(user)
-            alert.success(`Atualizado com sucesso`)
-        } catch (error) {
-            const message = handleErrors(error.errors);
-            alert.error(`Error ao atualizar o usuário: ${message}`)
-        } finally {
-            setLoading(false)
-        }
+  const onSave = useCallback(async (d: FormData) => {
+    setSaving(true);
+    try {
+      const memberTitle = t('member_unaadeb');
+      const updated = await updateUserMe({
+        ...d,
+        title: memberTitle === 'member_unaadeb' ? 'Membro UNAADEB' : memberTitle,
+      });
+      await setUser(updated);
+      alert.success('Perfil atualizado com sucesso');
+    } catch (e: any) {
+      alert.error(`Erro ao atualizar: ${handleErrors(e)}`);
+    } finally {
+      setSaving(false);
     }
+  }, [t, setUser, alert]);
 
-    const radioOptions = [
-        {value: 'masculino', label: 'Masculino'},
-        {value: 'feminino', label: 'Feminino'},
-    ];
+  const goNotif = useCallback(() => router.push('/(tabs)/(settings)/notification-settings'), []);
 
-    return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            className="flex-1 bg-gray-50 dark:bg-gray-900"
-        >
-            <ScrollView showsVerticalScrollIndicator={false}>
-                {/* Header Section com Avatar */}
-                <Box className="bg-white dark:bg-gray-800 pb-6">
-                    <VStack space="md" alignItems="center" className="pt-4">
-                        <AvatarUpdated userAvatarID={user?.avatar}/>
-                        <VStack space="xs" alignItems="center">
-                            <Heading size="lg" className="text-gray-900 dark:text-white">
-                                {user?.first_name} {user?.last_name}
-                            </Heading>
-                            <Text className="text-gray-500 dark:text-gray-400">{user?.email}</Text>
-                            <Badge colorScheme="info" variant="outline" className="mt-2">
-                                <Text>{user?.title}</Text>
-                            </Badge>
-                        </VStack>
-                    </VStack>
-                </Box>
+  return (
+    <SafeAreaView style={s.safe} edges={['top']}>
+      <StatusBar style="light" />
+      <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <View style={s.header}>
+          <RNText style={s.eyebrow}>MINHA CONTA</RNText>
+          <RNText style={s.title}>Configurações</RNText>
+        </View>
 
-                {/* Quick Actions Section */}
-                <Box className="px-4 -mt-4">
-                    <Box className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4">
-                        <HStack space="lg" className="justify-around">
-                            <TouchableOpacity onPress={() => router.push('/(tabs)/(settings)/notification-settings')} className="items-center">
-                                <Box className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full mb-2">
-                                    <Icon as={Ionicons} name="notifications-outline" size="lg" className="text-blue-600 dark:text-blue-400"/>
-                                </Box>
-                                <Text className="text-xs text-gray-600 dark:text-gray-300">Notificações</Text>
-                            </TouchableOpacity>
+        <ScrollView contentContainerStyle={s.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          {/* identidade editável (sem novo organism) */}
+          <View style={s.identity}>
+            <AvatarUpdated userAvatarID={user?.avatar} hideLabel />
+            <RNText style={s.editHint}>Toque para editar a foto</RNText>
+            <RNText style={s.name} numberOfLines={1}>{user?.first_name} {user?.last_name}</RNText>
+            {!!user?.email && <RNText style={s.email} numberOfLines={1}>{user?.email}</RNText>}
+            {!!user?.title && (
+              <View style={s.badge}>
+                <RNText style={s.badgeText}>{user.title}</RNText>
+              </View>
+            )}
+          </View>
 
-                            <TouchableOpacity onPress={() => alert('Privacidade')} className="items-center">
-                                <Box className="bg-green-100 dark:bg-green-900 p-3 rounded-full mb-2">
-                                    <Icon as={Ionicons} name="lock-closed-outline" size="lg" className="text-green-600 dark:text-green-400"/>
-                                </Box>
-                                <Text className="text-xs text-gray-600 dark:text-gray-300">Privacidade</Text>
-                            </TouchableOpacity>
+          {/* seção de edição do perfil */}
+          <View>
+            <RNText style={s.groupTitle}>PERFIL</RNText>
+            <View style={{ gap: 12 }}>
+              <Controller control={control} name="first_name" render={({ field: { onChange, onBlur, value } }) => (
+                <GlassInput icon={<User size={20} color={SHEET.textMuted} />} placeholder="Primeiro nome" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.first_name?.message} autoCapitalize="words" accessibilityLabel="Primeiro nome" />
+              )} />
+              <Controller control={control} name="last_name" render={({ field: { onChange, onBlur, value } }) => (
+                <GlassInput icon={<User size={20} color={SHEET.textMuted} />} placeholder="Sobrenome" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.last_name?.message} autoCapitalize="words" accessibilityLabel="Sobrenome" />
+              )} />
+              <Controller control={control} name="location" render={({ field: { onChange, onBlur, value } }) => (
+                <GlassInput icon={<MapPin size={20} color={SHEET.textMuted} />} placeholder="Cidade, Estado" value={value} onChangeText={onChange} onBlur={onBlur} error={errors.location?.message} autoCapitalize="words" accessibilityLabel="Localização" />
+              )} />
+              <Controller control={control} name="description" render={({ field: { onChange, onBlur, value } }) => (
+                <GlassInput icon={<FileText size={20} color={SHEET.textMuted} />} placeholder="Conte um pouco sobre você..." value={value} onChangeText={onChange} onBlur={onBlur} error={errors.description?.message} multiline numberOfLines={4} autoCapitalize="sentences" accessibilityLabel="Sobre você" />
+              )} />
+              <View style={{ gap: 8 }}>
+                <RNText style={s.fieldLabel}>Gênero</RNText>
+                <Controller control={control} name="gender" render={({ field: { onChange, value } }) => (
+                  <SegmentedGender value={value} onChange={onChange} />
+                )} />
+                {!!errors.gender && <RNText style={s.errText}>{errors.gender.message}</RNText>}
+              </View>
+              <GradientButton label="Salvar alterações" onPress={handleSubmit(onSave)} loading={saving} style={{ marginTop: 6 }} />
+            </View>
+          </View>
 
-                            <TouchableOpacity onPress={() => alert('Ajuda')} className="items-center">
-                                <Box className="bg-purple-100 dark:bg-purple-900 p-3 rounded-full mb-2">
-                                    <Icon as={Ionicons} name="help-circle-outline" size="lg" className="text-purple-600 dark:text-purple-400"/>
-                                </Box>
-                                <Text className="text-xs text-gray-600 dark:text-gray-300">Ajuda</Text>
-                            </TouchableOpacity>
-                        </HStack>
-                    </Box>
-                </Box>
+          {/* único destino real de configuração */}
+          <SheetGroup title="Preferências">
+            <SheetRow icon={<Bell size={18} color={SHEET.gold} />} label="Notificações" description="Permissões e alertas" onPress={goNotif} />
+          </SheetGroup>
 
-                {/* Profile Information Section */}
-                <Box className="px-4 mt-6">
-                    <Heading size="md" className="mb-4 text-gray-900 dark:text-white">Informações do Perfil</Heading>
-                    <Box className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4">
-                        <VStack space="lg">
-                            <Controller
-                                control={control}
-                                name={'first_name'}
-                                defaultValue={user?.first_name}
-                                render={({field: {onChange, value}}) => (
-                                    <VStack space="xs">
-                                        <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Primeiro nome</Text>
-                                        <CustomInput
-                                            placeholder={'Digite seu primeiro nome'}
-                                            value={value}
-                                            placeholderTextColor={'gray.400'}
-                                            onChangeText={onChange}
-                                            errorMessage={errors.first_name?.message}
-                                            autoCapitalize="none"
-                                            autoCorrect={false}
-                                            className="bg-gray-50 dark:bg-gray-700"
-                                        />
-                                    </VStack>
-                                )}/>
-                            <Controller
-                                control={control}
-                                name={'last_name'}
-                                defaultValue={user?.last_name}
-                                render={({field: {onChange, value}}) => (
-                                    <VStack space="xs">
-                                        <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sobrenome</Text>
-                                        <CustomInput
-                                            placeholder={'Digite seu sobrenome'}
-                                            value={value}
-                                            placeholderTextColor={'gray.400'}
-                                            onChangeText={onChange}
-                                            errorMessage={errors.last_name?.message}
-                                            autoCapitalize="none"
-                                            autoCorrect={false}
-                                            className="bg-gray-50 dark:bg-gray-700"
-                                        />
-                                    </VStack>
-                                )}/>
-                            <Controller
-                                control={control}
-                                name={'email'}
-                                defaultValue={user?.email}
-                                render={({field: {onChange, value}}) => (
-                                    <VStack space="xs">
-                                        <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">E-mail</Text>
-                                        <CustomInput
-                                            type={'email'}
-                                            placeholder={'seu@email.com'}
-                                            value={value}
-                                            placeholderTextColor={'gray.400'}
-                                            onChangeText={onChange}
-                                            errorMessage={errors.email?.message}
-                                            className="bg-gray-50 dark:bg-gray-700"
-                                        />
-                                    </VStack>
-                                )}
-                            />
-                            <Controller
-                                control={control}
-                                name={'location'}
-                                defaultValue={user?.location}
-                                render={({field: {onChange, value}}) => (
-                                    <VStack space="xs">
-                                        <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Localização</Text>
-                                        <CustomInput
-                                            value={value}
-                                            placeholder={'Cidade, Estado'}
-                                            placeholderTextColor={'gray.400'}
-                                            onChangeText={onChange}
-                                            errorMessage={errors.location?.message}
-                                            className="bg-gray-50 dark:bg-gray-700"
-                                        />
-                                    </VStack>
-                                )}
-                            />
-                            <Controller
-                                control={control}
-                                name={'description'}
-                                defaultValue={user?.description}
-                                render={({field: {onChange, value}}) => (
-                                    <VStack space="xs">
-                                        <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sobre você</Text>
-                                        <CustomInput
-                                            value={value}
-                                            placeholder={'Conte um pouco sobre você...'}
-                                            placeholderTextColor={'gray.400'}
-                                            onChangeText={onChange}
-                                            errorMessage={errors.description?.message}
-                                            multiline
-                                            numberOfLines={4}
-                                            className="bg-gray-50 dark:bg-gray-700 min-h-[100px]"
-                                        />
-                                    </VStack>
-                                )}
-                            />
-                            <Controller
-                                control={control}
-                                name={'gender'}
-                                defaultValue={user?.gender}
-                                render={({field: {onChange, value}}) => (
-                                    <VStack space="xs">
-                                        <Text className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gênero</Text>
-                                        <RadioInput
-                                            message=""
-                                            value={value}
-                                            options={radioOptions}
-                                            onChange={onChange}
-                                            errorMessage={errors.gender?.message}
-                                        />
-                                    </VStack>
-                                )}
-                            />
-                        </VStack>
+          <RNText style={s.footer}>Tema, suporte e conta ficam em “Minha conta”, no avatar da home.</RNText>
+          <View style={{ height: 16 }} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
 
-                        <Button
-                            title={'Salvar alterações'}
-                            className="mt-6 bg-blue-600 dark:bg-blue-500"
-                            onPress={handleSubmit(handleUpdateUser)}
-                            isLoading={loading}
-                            isLoadingText="Salvando..."
-                        />
-                    </Box>
-                </Box>
-
-                {/* Settings Menu Section */}
-                <Box className="px-4 mt-6">
-                    <Heading size="md" className="mb-4 text-gray-900 dark:text-white">Configurações</Heading>
-                    <Box className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-                        <VStack divider={<Divider />}>
-                            <TouchableOpacity onPress={() => router.push('/(tabs)/(settings)/notification-settings')}>
-                                <HStack space="md" className="p-4 items-center">
-                                    <Icon as={Ionicons} name="notifications-outline" size="md" className="text-gray-600 dark:text-gray-400"/>
-                                    <VStack className="flex-1">
-                                        <Text className="font-medium text-gray-900 dark:text-white">Notificações</Text>
-                                        <Text className="text-sm text-gray-500 dark:text-gray-400">Gerencie suas preferências</Text>
-                                    </VStack>
-                                    <Icon as={Ionicons} name="chevron-forward" size="sm" className="text-gray-400"/>
-                                </HStack>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity onPress={() => alert('Privacidade e Segurança')}>
-                                <HStack space="md" className="p-4 items-center">
-                                    <Icon as={Ionicons} name="shield-checkmark-outline" size="md" className="text-gray-600 dark:text-gray-400"/>
-                                    <VStack className="flex-1">
-                                        <Text className="font-medium text-gray-900 dark:text-white">Privacidade e Segurança</Text>
-                                        <Text className="text-sm text-gray-500 dark:text-gray-400">Proteja sua conta</Text>
-                                    </VStack>
-                                    <Icon as={Ionicons} name="chevron-forward" size="sm" className="text-gray-400"/>
-                                </HStack>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity onPress={() => alert('Aparência')}>
-                                <HStack space="md" className="p-4 items-center">
-                                    <Icon as={Ionicons} name="color-palette-outline" size="md" className="text-gray-600 dark:text-gray-400"/>
-                                    <VStack className="flex-1">
-                                        <Text className="font-medium text-gray-900 dark:text-white">Aparência</Text>
-                                        <Text className="text-sm text-gray-500 dark:text-gray-400">Tema e personalização</Text>
-                                    </VStack>
-                                    <Icon as={Ionicons} name="chevron-forward" size="sm" className="text-gray-400"/>
-                                </HStack>
-                            </TouchableOpacity>
-                        </VStack>
-                    </Box>
-                </Box>
-
-                {/* Support Section */}
-                <Box className="px-4 mt-6">
-                    <Heading size="md" className="mb-4 text-gray-900 dark:text-white">Suporte</Heading>
-                    <Box className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
-                        <VStack divider={<Divider />}>
-                            <TouchableOpacity onPress={() => alert('Central de Ajuda')}>
-                                <HStack space="md" className="p-4 items-center">
-                                    <Icon as={Ionicons} name="help-circle-outline" size="md" className="text-gray-600 dark:text-gray-400"/>
-                                    <VStack className="flex-1">
-                                        <Text className="font-medium text-gray-900 dark:text-white">Central de Ajuda</Text>
-                                        <Text className="text-sm text-gray-500 dark:text-gray-400">FAQs e tutoriais</Text>
-                                    </VStack>
-                                    <Icon as={Ionicons} name="chevron-forward" size="sm" className="text-gray-400"/>
-                                </HStack>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity onPress={() => alert('Fale Conosco')}>
-                                <HStack space="md" className="p-4 items-center">
-                                    <Icon as={Ionicons} name="chatbubbles-outline" size="md" className="text-gray-600 dark:text-gray-400"/>
-                                    <VStack className="flex-1">
-                                        <Text className="font-medium text-gray-900 dark:text-white">Fale Conosco</Text>
-                                        <Text className="text-sm text-gray-500 dark:text-gray-400">Suporte direto</Text>
-                                    </VStack>
-                                    <Icon as={Ionicons} name="chevron-forward" size="sm" className="text-gray-400"/>
-                                </HStack>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity onPress={() => alert('Sobre')}>
-                                <HStack space="md" className="p-4 items-center">
-                                    <Icon as={Ionicons} name="information-circle-outline" size="md" className="text-gray-600 dark:text-gray-400"/>
-                                    <VStack className="flex-1">
-                                        <Text className="font-medium text-gray-900 dark:text-white">Sobre</Text>
-                                        <Text className="text-sm text-gray-500 dark:text-gray-400">Versão do app e informações</Text>
-                                    </VStack>
-                                    <Icon as={Ionicons} name="chevron-forward" size="sm" className="text-gray-400"/>
-                                </HStack>
-                            </TouchableOpacity>
-                        </VStack>
-                    </Box>
-                </Box>
-
-                {/* Logout Button */}
-                <Box className="px-4 mt-6 mb-8">
-                    <TouchableOpacity onPress={logout} className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-4">
-                        <HStack space="md" className="items-center justify-center">
-                            <Icon as={Ionicons} name="log-out-outline" size="md" className="text-red-600 dark:text-red-400"/>
-                            <Text className="font-medium text-red-600 dark:text-red-400">Sair da conta</Text>
-                        </HStack>
-                    </TouchableOpacity>
-                </Box>
-            </ScrollView>
-        </KeyboardAvoidingView>
-    );
-};
+const s = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: SHEET.bg },
+  flex: { flex: 1 },
+  header: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
+  eyebrow: { color: SHEET.textFaint, fontSize: 11, letterSpacing: 1.5, fontWeight: '600' },
+  title: { color: SHEET.textPrimary, fontSize: 28, fontWeight: '800', marginTop: 4 },
+  content: { paddingHorizontal: 16, paddingBottom: 32, gap: 20 },
+  identity: { alignItems: 'center', paddingTop: 8 },
+  editHint: { color: SHEET.textMuted, fontSize: 12.5, marginTop: 6 },
+  name: { color: SHEET.textPrimary, fontSize: 20, fontWeight: '700', marginTop: 10 },
+  email: { color: SHEET.textMuted, fontSize: 14, marginTop: 2 },
+  badge: { marginTop: 10, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: SHEET.glass, borderWidth: 1, borderColor: SHEET.border },
+  badgeText: { color: SHEET.gold, fontSize: 12.5, fontWeight: '600' },
+  groupTitle: { color: SHEET.textMuted, fontSize: 13, fontWeight: '600', marginBottom: 10, marginLeft: 4 },
+  fieldLabel: { color: SHEET.textSecondary, fontSize: 14, fontWeight: '600', marginLeft: 4 },
+  errText: { color: '#FCA5A5', fontSize: 12, marginLeft: 4 },
+  footer: { color: SHEET.textFaint, fontSize: 12.5, textAlign: 'center', lineHeight: 18 },
+});

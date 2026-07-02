@@ -1,261 +1,138 @@
-import React, {useContext, useState, useEffect, useCallback, useMemo} from "react";
-import {Alert, Animated, RefreshControl, TouchableOpacity} from "react-native";
-import BannerCarousel from "@/components/BannerCarousel";
-import TranslationContext from "@/contexts/TranslationContext";
-import { useThemedColors } from "@/hooks/useThemedColors";
-import BannerCarouselUsers from "@/components/BannerCarouselUsers";
-import AvatarGroup from "@/components/AvatarGroup";
-import InfoCongressCarousel from "@/components/InfoCongressCarousel";
-import {useNavigation} from "expo-router";
-import {BlurView} from 'expo-blur';
-import SectionInfo from "@/components/SectionInfo";
-import {Box} from "@/components/ui/box";
-import {Text} from "@/components/ui/text";
-import {useBiometricAuth} from "@/hooks/useBiometricAuth";
-import TranslatedHeading from "@/components/Translated/TranslatedHeading";
-import {VStack} from "@/components/ui/vstack";
-import SectionContainer from "@/components/SectionContainer";
+import React, { useCallback } from 'react';
+import { View, StyleSheet, ListRenderItem, RefreshControl } from 'react-native';
+import Animated, { useSharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { HomeHeader, HOME_HEADER_H } from '@/components/home/HomeHeader';
+import { useHomeFeed } from '@/hooks/useHomeFeed';
+import { HomeHero } from '@/components/organisms/HomeHero';
+import { QuickAccessBento } from '@/components/organisms/QuickAccessBento';
+import { MediaRail } from '@/components/organisms/MediaRail';
+import { LeadershipRail } from '@/components/organisms/LeadershipRail';
+import { HomeFooter } from '@/components/organisms/HomeFooter';
+import { EventCard, EVENT_CARD_WIDTH } from '@/components/molecules/EventCard';
+import { NewsCard, NEWS_CARD_WIDTH } from '@/components/NewsCard';
+import type { EventsTypes } from '@/types/EventsTypes';
+import type { NewsTypes } from '@/types/NewsTypes';
 
-const HomeTabs = React.memo(() => {
-    const colors = useThemedColors();
-    const [refreshing, setRefreshing] = useState(false);
-    const {t} = useContext(TranslationContext);
-    const navigation = useNavigation()
-    const [scrollY, setScrollY] = useState(new Animated.Value(0));
-    const {
-        isBiometricAvailable,
-        isBiometricEnabled,
-        biometricType,
-        loading: biometricLoading,
-        initialized: biometricInitialized,
-        saveBiometricCredentials,
-        authenticateWithBiometrics,
-        checkBiometricAvailability
-    } = useBiometricAuth();
+const BG = '#0D0F17';
 
-    const headerBackgroundColor = useMemo(() => 
-        scrollY.interpolate({
-            inputRange: [0, 50, 100],
-            outputRange: ['rgba(15, 70, 82, 0)', 'rgb(13,15,23)', 'rgb(13,15,23)'],
-            extrapolate: 'clamp'
-        })
-    , [scrollY]);
+type SectionType = 'quickAccess' | 'events' | 'news' | 'leadership' | 'footer';
+interface Section { key: string; type: SectionType; }
 
-    const handleRefresh = useCallback(() => {
-        setRefreshing(true);
-        // Aguarda um tempo mínimo para garantir feedback visual
-        Promise.all([
-            new Promise(resolve => setTimeout(resolve, 1000)),
-            // Aqui você pode adicionar outras chamadas de API se necessário
-        ]).then(() => {
-            setRefreshing(false);
-        });
-    }, []);
+const SECTIONS: Section[] = [
+  { key: 'quickAccess', type: 'quickAccess' },
+  { key: 'events', type: 'events' },
+  { key: 'news', type: 'news' },
+  { key: 'leadership', type: 'leadership' },
+  { key: 'footer', type: 'footer' },
+];
 
-    useEffect(() => {
-        navigation.setOptions({
-            headerTransparent: true,
-            headerStyle: {
-                backgroundColor: 'transparent',
-            },
-            headerBackground: () => (
-                <Animated.View
-                    style={{
-                        backgroundColor: headerBackgroundColor,
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                    }}
-                >
-                    <BlurView
-                        style={{flex: 1}}
-                        intensity={30}
-                        tint={'dark'}
-                    />
-                </Animated.View>
-            ),
-        });
-    }, [headerBackgroundColor]);
+/**
+ * Home no estilo Netflix: um único FlatList vertical virtualizado cujos itens SÃO
+ * as seções — hero cinematográfico (ListHeaderComponent), âncora de acesso rápido
+ * e prateleiras horizontais. Zero lógica de negócio (fica no useHomeFeed).
+ */
+export default function HomeScreen() {
+  const feed = useHomeFeed();
+  const insets = useSafeAreaInsets();
 
-    return (
-        <Animated.ScrollView
-            className={'bg-background-dark'}
-            onScroll={Animated.event(
-                [{nativeEvent: {contentOffset: {y: scrollY}}}],
-                {useNativeDriver: false}
-            )}
-            removeClippedSubviews={true}
-            scrollEventThrottle={16}
-            bounces={true}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-                <RefreshControl
-                    refreshing={refreshing}
-                    onRefresh={handleRefresh}
-                    colors={[colors.primary]}
-                    tintColor={colors.primary}
-                    progressBackgroundColor={colors.background}
-                />
-            }
-        >
-            <Box>
-                <InfoCongressCarousel 
-                    refreshing={refreshing}
-                    onRefresh={handleRefresh}
-                />
-            </Box>
+  // Scroll compartilhado (UI thread) → o HomeHeader colapsa os chips e revela a hairline.
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler({
+    onScroll: (e) => { scrollY.value = e.contentOffset.y; },
+  });
 
-            <SectionContainer
-                title="Seja parceiro dessa obra"
-                seeAllRoute="/(tabs)/(events)"
-                icon="home"
-            >
-                <Box className="mx-3">
-                    <SectionInfo to={'/contribua'}
-                                 title={'Contribua para a UNAADEB'}
-                                 description={'Faça sua doação em PIX para o congresso'}
-                                 icon={'award'}
-                                 bgColor={colors.secundary2}
-                                 iconVariant="floating"
-                    />
-                </Box>
-            </SectionContainer>
+  // Callbacks estáveis -> o React.memo do MediaRail consegue pular trilhos inalterados.
+  const renderEventCard = useCallback((e: EventsTypes) => <EventCard event={e} />, []);
+  const renderNewsCard = useCallback((n: NewsTypes) => <NewsCard news={n} variant="rail" />, []);
+  const eventKey = useCallback((e: EventsTypes) => e.id, []);
+  const newsKey = useCallback((n: NewsTypes) => n.id, []);
 
-            <SectionContainer
-                title="Destaques no tempo"
-                subtitle={'kjgkjhgj'}
-                seeAllRoute="/(tabs)/(events)"
-                icon="home"
-            >
-                <BannerCarousel
-                    refreshing={refreshing}
-                    setRefreshing={setRefreshing}
-                />
-            </SectionContainer>
+  const renderItem = useCallback<ListRenderItem<Section>>(
+    ({ item }) => {
+      switch (item.type) {
+        case 'quickAccess':
+          return <QuickAccessBento />;
+        case 'events':
+          return (
+            <MediaRail<EventsTypes>
+              title="Próximos eventos"
+              icon="calendar"
+              data={feed.events.data}
+              status={feed.events.status}
+              cardWidth={EVENT_CARD_WIDTH}
+              cardHeight={Math.round(EVENT_CARD_WIDTH * 0.56)}
+              keyExtractor={eventKey}
+              renderCard={renderEventCard}
+              seeAllRoute="/(tabs)/(events)"
+            />
+          );
+        case 'news':
+          return (
+            <MediaRail<NewsTypes>
+              title="Notícias"
+              icon="book-open"
+              data={feed.news.data}
+              status={feed.news.status}
+              cardWidth={NEWS_CARD_WIDTH}
+              cardHeight={Math.round(NEWS_CARD_WIDTH * 0.62)}
+              keyExtractor={newsKey}
+              renderCard={renderNewsCard}
+              seeAllRoute="/(tabs)/(posts)"
+            />
+          );
+        case 'leadership':
+          return <LeadershipRail slice={feed.leadership} />;
+        case 'footer':
+          return <HomeFooter />;
+        default:
+          return null;
+      }
+    },
+    [feed.events, feed.news, feed.leadership],
+  );
 
-            <SectionContainer
-                title="Destaques no tempo"
-                subtitle={'kjgkjhgj'}
-                seeAllRoute="/(tabs)/(events)"
-                icon="home"
-            >
-                <BannerCarouselUsers
-                    refreshing={refreshing}
-                    setRefreshing={setRefreshing}
-                    idRole="862a4a56-6f34-4d1f-9ddd-3585d6a71ab8"
-                    showNames={true}
-                />
-            </SectionContainer>
-
-            <Box className="mt-[-40px] bg-background-dark px-3 py-3">
-                {/*<Box>*/}
-                {/*    <SectionInfo to={'/contribua'}*/}
-                {/*                 title={'Contribua para a UNAADEB'}*/}
-                {/*                 description={'Faça sua doação em PIX para o congresso'}*/}
-                {/*                 icon={'award'}*/}
-                {/*                 bgColor={colors.secundary2}*/}
-                {/*                 iconVariant="floating"*/}
-                {/*    />*/}
-                {/*</Box>*/}
-                <Box>
-                    <Box>
-                        <TranslatedHeading
-                            translationKey="title_coordenation_geral"
-                            size={'xl'}
-                            animateUpdates={true}
-                        />
-                    </Box>
-                    <Box>
-                        <BannerCarouselUsers
-                            refreshing={refreshing}
-                            setRefreshing={setRefreshing}
-                            idRole="862a4a56-6f34-4d1f-9ddd-3585d6a71ab8"
-                            showNames={true}
-                        />
-                    </Box>
-                </Box>
-                <Box>
-                    <Box>
-                        <TranslatedHeading
-                            translationKey="diretoria_unaadeb"
-                            size={'xl'}
-                            animateUpdates={true}
-                        />
-                    </Box>
-                    <Box>
-                        <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing}
-                                             idRole={'862a4a56-6f34-4d1f-9ddd-3585d6a71ab8'}/>
-                    </Box>
-                </Box>
-
-                <Box>
-                    <TranslatedHeading
-                        translationKey="pr_coodenadores"
-                        size={'xl'}
-                        animateUpdates={true}
-                    />
-                    <Box>
-                        <BannerCarouselUsers refreshing={refreshing} setRefreshing={setRefreshing}
-                                             idRole={'862a4a56-6f34-4d1f-9ddd-3585d6a71ab8'}/>
-                    </Box>
-                </Box>
-                <VStack space={'md'} className={'mt-4'}>
-                    <SectionInfo to={'/youtube'}
-                                 title={'Acesse nosso canal no Youtube'}
-                                 description={'Todos os vídeos do congresso'}
-                                 icon={'youtube'}
-                                 bgColor="#FF0000"
-                                 variant="gradient"
-                                 iconVariant="floating"
-                    />
-
-                    <SectionInfo
-                        to="/programacao"
-                        title="Programação completa"
-                        description="Cronograma diário de atividades"
-                        icon="clock"
-                        bgColor="#2980B9" // Azul
-                        variant="gradient"
-                        iconVariant="floating"
-                    />
-                    <SectionInfo
-                        to="/alimentacao"
-                        title="Onde comer"
-                        description="Restaurantes e lanchonetes próximos"
-                        icon="coffee"
-                        bgColor="#C0392B" // Vermelho
-                        variant="outline"
-                        iconVariant="square"
-                    />
-                </VStack>
-                <Box>
-                    <AvatarGroup/>
-                </Box>
-
-                <TouchableOpacity
-                    onLongPress={() => {
-                        checkBiometricAvailability().then(() => {
-                            Alert.alert(
-                                "Status da Biometria",
-                                `Disponível: ${isBiometricAvailable ? "Sim" : "Não"}\n` +
-                                `Habilitada: ${isBiometricEnabled ? "Sim" : "Não"}\n` +
-                                `Tipo: ${biometricType}\n` +
-                                `Inicializada: ${biometricInitialized ? "Sim" : "Não"}`
-                            );
-                        });
-                    }}
-                    style={{position: 'absolute', bottom: 20, right: 20, width: 40, height: 40}}
-                >
-                    <Text>THIAGO</Text>
-
-                </TouchableOpacity>
-            </Box>
-
-
-        </Animated.ScrollView>
-    );
-});
-
-export default HomeTabs;
+  return (
+    <View style={{ flex: 1, backgroundColor: BG }}>
+      {/* Degradê ambiente (só na Home) — tom mais claro vindo do canto direito, à la Netflix. */}
+      <LinearGradient
+        colors={['#1E2A47', '#12182B', '#0D0F17']}
+        locations={[0, 0.42, 0.88]}
+        start={{ x: 1, y: 0.02 }}
+        end={{ x: 0.05, y: 0.62 }}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+      <StatusBar style="light" />
+      <Animated.FlatList
+        style={{ backgroundColor: 'transparent' }}
+        data={SECTIONS}
+        keyExtractor={(s) => s.key}
+        renderItem={renderItem}
+        ListHeaderComponent={<HomeHero slides={feed.heroSlides} status={feed.heroStatus} />}
+        contentContainerStyle={{ paddingTop: insets.top + HOME_HEADER_H + 16, paddingBottom: 12 }}
+        contentInsetAdjustmentBehavior="never"
+        showsVerticalScrollIndicator={false}
+        removeClippedSubviews
+        windowSize={5}
+        initialNumToRender={3}
+        maxToRenderPerBatch={3}
+        updateCellsBatchingPeriod={50}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl
+            refreshing={feed.refreshing}
+            onRefresh={feed.reload}
+            tintColor="#E51C44"
+            colors={['#E51C44']}
+            progressBackgroundColor="#111827"
+          />
+        }
+      />
+      <HomeHeader scrollY={scrollY} />
+    </View>
+  );
+}

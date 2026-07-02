@@ -1,101 +1,94 @@
-import React, {useContext, useEffect, useRef} from 'react';
-import {MaterialIcons} from '@expo/vector-icons';
-import {ImageBackground, PanResponder, Animated, TouchableOpacity} from 'react-native';
-import ConfigContext from '@/contexts/ConfigContext';
-import {LinearGradient} from 'expo-linear-gradient';
-import {RepertoriesTypes} from '@/types/RepertoriesTypes';
-import {Image} from '@/components/Image';
-import {Box} from "@/components/ui/box";
-import {HStack} from "@/components/ui/hstack";
+import React from 'react';
+import { View, Text as RNText, Pressable, StyleSheet } from 'react-native';
+import { Image as ExpoImage } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+import { Play, Pause, X, Music } from 'lucide-react-native';
+import { usePlayerControls, usePlayerProgress } from '@/contexts/AudioPlayerContext';
+import { Equalizer } from './Equalizer';
+import { SHEET } from '@/constants/sheetTokens';
+import { hexToRGBA } from './color';
 
-interface CollapsedViewProps {
-    album: RepertoriesTypes | null;
-    isPlaying: boolean;
-    onPlayPausePress: () => void;
-    duration: number;
-    stopSound: () => void;
-    onPress: () => void;
-}
+/** Linha de progresso isolada — só ela re-renderiza a cada tick. */
+const MiniProgress: React.FC<{ accent: string; buffering: boolean }> = ({ accent, buffering }) => {
+  const { position, duration } = usePlayerProgress();
+  const pct = duration > 0 ? Math.min(1, Math.max(0, position / duration)) : 0;
+  return (
+    <View style={styles.progressTrack} pointerEvents="none">
+      <View style={[styles.progressFill, { width: `${pct * 100}%`, backgroundColor: buffering ? SHEET.textMuted : accent }]} />
+    </View>
+  );
+};
 
-const CollapsedView = ({album, isPlaying, onPlayPausePress, duration, stopSound, onPress}: CollapsedViewProps) => {
-    const config = useContext(ConfigContext);
-    const pan = useRef(new Animated.ValueXY()).current;
-    const panResponderRef = useRef(PanResponder.create({})); // Inicializa com um objeto vazio
-    const opacity = useRef(new Animated.Value(1)).current;
+/**
+ * Mini-player (barra compacta) dentro do BottomAccessory nativo das tabs.
+ * Fundo próprio (gradiente dark tingido pela cor da faixa) para garantir contraste
+ * sobre o vidro nativo — independente do tema claro/escuro do sistema.
+ */
+const CollapsedView: React.FC<{ onExpand: () => void }> = ({ onExpand }) => {
+  const { track, isPlaying, isBuffering, toggle, close } = usePlayerControls();
+  if (!track) return null;
 
-    useEffect(() => {
-        panResponderRef.current = PanResponder.create({
-            onStartShouldSetPanResponder: () => true,
-            onMoveShouldSetPanResponder: () => true,
-            onPanResponderMove: (e, gesture) => {
-                if (Math.abs(gesture.dx) > 10) { // Verifica se o movimento é significativo para tratar como arrastar
-                    Animated.event([null, { dx: pan.x }], { useNativeDriver: false })(e, gesture);
-                    const distanceMoved = Math.abs(gesture.dx);
-                    const newOpacity = 1 - (0.5 * Math.min(distanceMoved / 100, 1));
-                    opacity.setValue(newOpacity);
-                }
-            },
-            onPanResponderRelease: (e, gestureState) => {
-                if (gestureState.dx > 100) {
-                    stopSound();
-                } else {
-                    Animated.parallel([
-                        Animated.spring(pan, {
-                            toValue: {x: 0, y: 0},
-                            useNativeDriver: false,
-                        }),
-                        Animated.spring(opacity, {
-                            toValue: 1,
-                            useNativeDriver: false,
-                        }),
-                    ]).start();
-                }
-            },
-        });
-    }, [stopSound]);
+  const accent = track.color || SHEET.brand;
 
-    return (
-        <Animated.View
-            {...panResponderRef.current.panHandlers}
-            style={{
-                transform: pan.getTranslateTransform(),
-                opacity: opacity,// Utiliza getTranslateTransform para maior clareza
-            }}
-        >
-            <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
-                <Box position="absolute" width="100%" top={-80} height={20} padding={2}>
-                    <ImageBackground source={{uri: `${config.url_api}/assets/${album?.image_cover.filename_disk}`}}>
-                        <LinearGradient colors={['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.8)', 'rgba(0,0,0,0.7)']}>
-                            <HStack space={2} alignItems="center" justifyContent="space-between">
-                                <HStack alignItems="center" space={2}>
-                                    <Image width={16} height={16} assetId={album?.image_cover.id}/>
-                                    <Box>
-                                        <Text color="white" bold>
-                                            {album?.title}
-                                        </Text>
-                                        <Text color="white">{album?.artist}</Text>
-                                    </Box>
-                                </HStack>
-                                <HStack pr={4}>
-                                    <IconButton
-                                        icon={<MaterialIcons name="stop" size={24} color="white"/>}
-                                        onPress={stopSound}
-                                        borderRadius="full"
-                                    />
-                                    <IconButton
-                                        icon={<MaterialIcons name={isPlaying ? 'pause' : 'play-arrow'} size={24}
-                                                             color="white"/>}
-                                        onPress={onPlayPausePress}
-                                        borderRadius="full"
-                                    />
-                                </HStack>
-                            </HStack>
-                        </LinearGradient>
-                    </ImageBackground>
-                </Box>
-            </TouchableOpacity>
-        </Animated.View>
-    );
+  const onToggle = () => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); toggle(); };
+  const onClose = () => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid); close(); };
+
+  return (
+    <Pressable onPress={onExpand} style={styles.wrap} accessibilityRole="button" accessibilityLabel={`Abrir player: ${track.title}`}>
+      <LinearGradient
+        colors={[hexToRGBA(accent, 0.32), SHEET.bgDeep, SHEET.bgDeep]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+
+      <View style={styles.row}>
+        <View style={[styles.art, { backgroundColor: accent }]}>
+          {track.artworkUri ? (
+            <ExpoImage source={{ uri: track.artworkUri }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
+          ) : (
+            <Music size={18} color="#fff" />
+          )}
+          {isPlaying && (
+            <View style={styles.artEq}>
+              <Equalizer color="#fff" active size={14} barWidth={2.5} />
+            </View>
+          )}
+        </View>
+
+        <View style={styles.meta}>
+          <RNText numberOfLines={1} style={styles.title}>{track.title}</RNText>
+          <RNText numberOfLines={1} style={styles.artist}>{track.artist}</RNText>
+        </View>
+
+        <Pressable onPress={onToggle} hitSlop={12} style={[styles.playBtn, { backgroundColor: accent }]} accessibilityRole="button" accessibilityLabel={isPlaying ? 'Pausar' : 'Tocar'}>
+          {isPlaying
+            ? <Pause size={18} color="#fff" fill="#fff" />
+            : <Play size={18} color="#fff" fill="#fff" style={{ marginLeft: 1.5 }} />}
+        </Pressable>
+        <Pressable onPress={onClose} hitSlop={10} style={styles.closeBtn} accessibilityRole="button" accessibilityLabel="Fechar player">
+          <X size={17} color="rgba(255,255,255,0.6)" strokeWidth={2.5} />
+        </Pressable>
+      </View>
+
+      <MiniProgress accent={accent} buffering={isBuffering} />
+    </Pressable>
+  );
 };
 
 export default CollapsedView;
+
+const styles = StyleSheet.create({
+  wrap: { flex: 1, borderRadius: 16, overflow: 'hidden', justifyContent: 'center', minHeight: 56 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 11, paddingHorizontal: 10, paddingVertical: 8 },
+  art: { width: 42, height: 42, borderRadius: 9, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  artEq: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.32)' },
+  meta: { flex: 1, justifyContent: 'center' },
+  title: { color: '#FFFFFF', fontSize: 14.5, fontWeight: '700' },
+  artist: { color: 'rgba(255,255,255,0.68)', fontSize: 12, marginTop: 1.5 },
+  playBtn: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
+  closeBtn: { width: 30, height: 34, alignItems: 'center', justifyContent: 'center' },
+  progressTrack: { position: 'absolute', left: 10, right: 10, bottom: 4, height: 2.5, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.14)', overflow: 'hidden' },
+  progressFill: { height: '100%', borderRadius: 2 },
+});

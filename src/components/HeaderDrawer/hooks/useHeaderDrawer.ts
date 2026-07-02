@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { Alert, Vibration } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'expo-router';
-import { updateUserMe } from '@/services/user';
+import { deactivateMyAccount } from '@/services/user';
 import { MenuItem } from '../types';
 import { MENU_ITEMS } from '../constants';
 
@@ -31,7 +31,7 @@ export const useHeaderDrawer = () => {
           onPress: async () => {
             try {
               setIsLoading(true);
-              await updateUserMe({ status: 'suspended' });
+              await deactivateMyAccount();
               Alert.alert('Sucesso', 'Solicitação enviada com sucesso!');
               logout();
             } catch (error) {

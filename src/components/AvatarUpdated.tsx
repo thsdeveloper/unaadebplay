@@ -21,6 +21,8 @@ type AvatarUpdatedProps = {
     width?: number;
     height?: number;
     onChange?: (newAvatarId: string) => void;
+    /** Oculta o rótulo interno "Editar foto" (legado, invisível em fundo escuro). */
+    hideLabel?: boolean;
 };
 
 // Estados possíveis do componente
@@ -37,7 +39,8 @@ export default function AvatarUpdated({
                                           size = "xl",
                                           width,
                                           height,
-                                          onChange
+                                          onChange,
+                                          hideLabel
                                       }: AvatarUpdatedProps) {
     // Estados
     const [uploadState, setUploadState] = useState<UploadState>(UploadState.IDLE);
@@ -259,15 +262,17 @@ export default function AvatarUpdated({
                             content: <Ionicons name="pencil" size={10} color="white" />
                         }}
                     />
-                    <Text
-                        textAlign="center"
-                        fontWeight="bold"
-                        mt={2}
-                        fontSize="sm"
-                        color="$textLight800"
-                    >
-                        Editar foto
-                    </Text>
+                    {!hideLabel && (
+                        <Text
+                            textAlign="center"
+                            fontWeight="bold"
+                            mt={2}
+                            fontSize="sm"
+                            color="$textLight800"
+                        >
+                            Editar foto
+                        </Text>
+                    )}
                 </Box>
             </TouchableOpacity>
 

@@ -1,21 +1,19 @@
-import React, { useState, useCallback, useContext } from 'react';
-import { View, ScrollView } from 'react-native';
-import { Box } from '@/components/ui/box';
-import { VStack } from '@/components/ui/vstack';
-import { HStack } from '@/components/ui/hstack';
-import { Text } from '@/components/ui/text';
-import { Heading } from '@/components/ui/heading';
-import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
-import { Badge, BadgeText } from '@/components/ui/badge';
-import { Pressable } from '@/components/ui/pressable';
-import { Select, SelectTrigger, SelectInput, SelectPortal, SelectBackdrop, SelectContent, SelectDragIndicatorWrapper, SelectDragIndicator, SelectItem } from '@/components/ui/select';
-import { Actionsheet, ActionsheetBackdrop, ActionsheetContent, ActionsheetDragIndicatorWrapper, ActionsheetDragIndicator } from '@/components/ui/actionsheet';
-import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, Text as RNText, ScrollView, Pressable, StyleSheet } from 'react-native';
+import {
+  Actionsheet,
+  ActionsheetBackdrop,
+  ActionsheetContent,
+  ActionsheetDragIndicatorWrapper,
+  ActionsheetDragIndicator,
+} from '@/components/ui/actionsheet';
+import { Users, Music, GraduationCap, CalendarDays, MapPin } from 'lucide-react-native';
 import { DatePicker } from '@/components/molecules/DatePicker';
+import { GradientButton } from '@/components/atoms/GradientButton';
+import { SHEET } from '@/constants/sheetTokens';
+import { GlassSurface } from '@/components/atoms/GlassSurface';
 import { EventFilters } from '@/services/events';
 import { useEventFilters } from '@/hooks/useEvents';
-import TranslationContext from '@/contexts/TranslationContext';
 
 interface EventFiltersSheetProps {
   isOpen: boolean;
@@ -25,271 +23,134 @@ interface EventFiltersSheetProps {
   onClearFilters: () => void;
 }
 
-const EVENT_TYPE_OPTIONS = [
-  { value: 'congresso-geral', label: 'Congresso Geral', icon: 'groups' },
-  { value: 'ensaio', label: 'Ensaio', icon: 'music-note' },
-  { value: 'palestras', label: 'Palestras', icon: 'school' },
-  { value: 'cpre-congresso', label: 'Pré-Congresso', icon: 'event' },
+const EVENT_TYPES: { value: string; label: string; Icon: any }[] = [
+  { value: 'congresso-geral', label: 'Congresso Geral', Icon: Users },
+  { value: 'ensaio', label: 'Ensaio', Icon: Music },
+  { value: 'palestras', label: 'Palestras', Icon: GraduationCap },
+  { value: 'cpre-congresso', label: 'Pré-Congresso', Icon: CalendarDays },
+];
+const STATUS: { value: string; label: string }[] = [
+  { value: 'active', label: 'Ativo' },
+  { value: 'pending', label: 'Pendente' },
+  { value: 'cancelled', label: 'Cancelado' },
 ];
 
-const STATUS_OPTIONS = [
-  { value: 'active', label: 'Ativo', color: 'bg-green-500' },
-  { value: 'pending', label: 'Pendente', color: 'bg-yellow-500' },
-  { value: 'cancelled', label: 'Cancelado', color: 'bg-red-500' },
-];
+const Chip: React.FC<{ label: string; Icon?: any; active: boolean; onPress: () => void }> = ({ label, Icon, active, onPress }) => (
+  <Pressable onPress={onPress} style={[ch.chip, active && ch.chipActive]} accessibilityRole="button" accessibilityLabel={label}>
+    {Icon && <Icon size={14} color={active ? SHEET.textPrimary : SHEET.textMuted} />}
+    <RNText style={[ch.chipText, active && ch.chipTextActive]}>{label}</RNText>
+  </Pressable>
+);
 
-export const EventFiltersSheet: React.FC<EventFiltersSheetProps> = ({
-  isOpen,
-  onClose,
-  onApplyFilters,
-  activeFilters,
-  onClearFilters,
-}) => {
-  const [tempFilters, setTempFilters] = useState<EventFilters>(activeFilters);
-  
-  const { eventTypes, locations, organizers, loading } = useEventFilters();
-  const { t } = useContext(TranslationContext);
+/** Bottom sheet de filtros — dark, chips (tipo/status/local) + período (DatePicker). */
+export const EventFiltersSheet: React.FC<EventFiltersSheetProps> = ({ isOpen, onClose, onApplyFilters, activeFilters, onClearFilters }) => {
+  const [temp, setTemp] = useState<EventFilters>(activeFilters);
+  const { locations } = useEventFilters();
 
-  // Sincroniza filtros temporários quando o sheet abre
-  React.useEffect(() => {
-    if (isOpen) {
-      setTempFilters(activeFilters);
-    }
+  useEffect(() => {
+    if (isOpen) setTemp(activeFilters);
   }, [isOpen, activeFilters]);
 
-  const handleApplyFilters = useCallback(() => {
-    onApplyFilters(tempFilters);
-    onClose();
-  }, [tempFilters, onApplyFilters, onClose]);
-
-  const handleClearFilters = useCallback(() => {
-    setTempFilters({});
-    onClearFilters();
-    onClose();
-  }, [onClearFilters, onClose]);
-
-  const handleDateFromChange = useCallback((selectedDate: Date) => {
-    setTempFilters(prev => ({
-      ...prev,
-      dateFrom: selectedDate,
-    }));
+  const toggle = useCallback((key: keyof EventFilters, value: string) => {
+    setTemp((prev) => ({ ...prev, [key]: prev[key] === value ? undefined : value }));
   }, []);
 
-  const handleDateToChange = useCallback((selectedDate: Date) => {
-    setTempFilters(prev => ({
-      ...prev,
-      dateTo: selectedDate,
-    }));
-  }, []);
+  const apply = useCallback(() => { onApplyFilters(temp); onClose(); }, [temp, onApplyFilters, onClose]);
+  const clear = useCallback(() => { setTemp({}); onClearFilters(); onClose(); }, [onClearFilters, onClose]);
 
-  const activeFiltersCount = Object.keys(tempFilters).filter(key => tempFilters[key as keyof EventFilters]).length;
+  const count = Object.entries(temp).filter(([k, v]) => k !== 'search' && v).length;
 
   return (
-    <>
-      <Actionsheet isOpen={isOpen} onClose={onClose}>
-        <ActionsheetBackdrop />
-        <ActionsheetContent maxHeight="90%">
-          <ActionsheetDragIndicatorWrapper>
-            <ActionsheetDragIndicator />
-          </ActionsheetDragIndicatorWrapper>
-          
-          <VStack className="p-4 pb-8 w-full">
-            <HStack className="items-center justify-between mb-6">
-              <Heading size="lg">{t('filter_events') || 'Filtrar Eventos'}</Heading>
-              {activeFiltersCount > 0 && (
-                <Badge className="bg-purple-600">
-                  <BadgeText className="text-white text-xs">{activeFiltersCount} ativos</BadgeText>
-                </Badge>
-              )}
-            </HStack>
+    <Actionsheet isOpen={isOpen} onClose={onClose}>
+      <ActionsheetBackdrop />
+      <ActionsheetContent
+        style={{ backgroundColor: 'transparent', borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 0, paddingBottom: 0, overflow: 'hidden' }}
+      >
+        <GlassSurface style={StyleSheet.absoluteFill} glassEffectStyle="regular" blurIntensity={40} fallbackColor={SHEET.bg} pointerEvents="none" />
+        <ActionsheetDragIndicatorWrapper>
+          <ActionsheetDragIndicator style={{ backgroundColor: SHEET.grabber }} />
+        </ActionsheetDragIndicatorWrapper>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <VStack className="space-y-6 pb-6">
-                <VStack className="space-y-2">
-                  <Text className="font-semibold text-gray-700">
-                    {t('event_type') || 'Tipo de Evento'}
-                  </Text>
-                  <HStack className="flex-wrap gap-2">
-                    {EVENT_TYPE_OPTIONS.map(option => (
-                      <Pressable
-                        key={option.value}
-                        onPress={() => setTempFilters(prev => ({
-                          ...prev,
-                          eventType: prev.eventType === option.value ? undefined : option.value,
-                        }))}
-                      >
-                        <Badge
-                          className={`${
-                            tempFilters.eventType === option.value
-                              ? 'bg-purple-600'
-                              : 'bg-gray-200'
-                          }`}
-                        >
-                          <HStack className="items-center space-x-1">
-                            <Icon
-                              as={MaterialIcons}
-                              name={option.icon as any}
-                              size="xs"
-                              className={
-                                tempFilters.eventType === option.value
-                                  ? 'text-white'
-                                  : 'text-gray-600'
-                              }
-                            />
-                            <BadgeText
-                              className={
-                                tempFilters.eventType === option.value
-                                  ? 'text-white'
-                                  : 'text-gray-600'
-                              }
-                            >
-                              {option.label}
-                            </BadgeText>
-                          </HStack>
-                        </Badge>
-                      </Pressable>
-                    ))}
-                  </HStack>
-                </VStack>
+        <View style={f.body}>
+          <View style={f.header}>
+            <RNText style={f.heading}>Filtrar eventos</RNText>
+            {count > 0 && (
+              <View style={f.countBadge}>
+                <RNText style={f.countText}>{count} {count === 1 ? 'ativo' : 'ativos'}</RNText>
+              </View>
+            )}
+          </View>
 
-                <VStack className="space-y-2">
-                  <Text className="font-semibold text-gray-700">
-                    {t('status') || 'Status'}
-                  </Text>
-                  <HStack className="flex-wrap gap-2">
-                    {STATUS_OPTIONS.map(option => (
-                      <Pressable
-                        key={option.value}
-                        onPress={() => setTempFilters(prev => ({
-                          ...prev,
-                          status: prev.status === option.value ? undefined : option.value,
-                        }))}
-                      >
-                        <Badge
-                          className={
-                            tempFilters.status === option.value
-                              ? option.color
-                              : 'bg-gray-200'
-                          }
-                        >
-                          <BadgeText
-                            className={
-                              tempFilters.status === option.value
-                                ? 'text-white'
-                                : 'text-gray-600'
-                            }
-                          >
-                            {option.label}
-                          </BadgeText>
-                        </Badge>
-                      </Pressable>
-                    ))}
-                  </HStack>
-                </VStack>
+          <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 430 }} keyboardShouldPersistTaps="handled">
+            <RNText style={f.label}>Tipo de evento</RNText>
+            <View style={f.chips}>
+              {EVENT_TYPES.map((o) => (
+                <Chip key={o.value} label={o.label} Icon={o.Icon} active={temp.eventType === o.value} onPress={() => toggle('eventType', o.value)} />
+              ))}
+            </View>
 
-                <VStack className="space-y-4">
-                  <Text className="font-semibold text-gray-700">
-                    {t('date_range') || 'Período'}
-                  </Text>
-                  <HStack className="space-x-4">
-                    <View className="flex-1">
-                      <DatePicker
-                        value={tempFilters.dateFrom}
-                        onChange={handleDateFromChange}
-                        placeholder={t('from_date') || 'Data inicial'}
-                        maximumDate={tempFilters.dateTo || undefined}
-                      />
-                    </View>
-                    <View className="flex-1">
-                      <DatePicker
-                        value={tempFilters.dateTo}
-                        onChange={handleDateToChange}
-                        placeholder={t('to_date') || 'Data final'}
-                        minimumDate={tempFilters.dateFrom || undefined}
-                      />
-                    </View>
-                  </HStack>
-                </VStack>
+            <RNText style={f.label}>Status</RNText>
+            <View style={f.chips}>
+              {STATUS.map((o) => (
+                <Chip key={o.value} label={o.label} active={temp.status === o.value} onPress={() => toggle('status', o.value)} />
+              ))}
+            </View>
 
-                {locations.length > 0 && (
-                  <VStack className="space-y-2">
-                    <Text className="font-semibold text-gray-700">
-                      {t('location') || 'Local'}
-                    </Text>
-                    <Select
-                      selectedValue={tempFilters.location || ''}
-                      onValueChange={(value) => setTempFilters(prev => ({ ...prev, location: value }))}
-                    >
-                      <SelectTrigger variant="outline" size="md">
-                        <SelectInput placeholder={t('select_location') || 'Selecione um local'} />
-                      </SelectTrigger>
-                      <SelectPortal>
-                        <SelectBackdrop />
-                        <SelectContent>
-                          <SelectDragIndicatorWrapper>
-                            <SelectDragIndicator />
-                          </SelectDragIndicatorWrapper>
-                          <SelectItem label={t('all_locations') || 'Todos os locais'} value="" />
-                          {locations.map(location => (
-                            <SelectItem key={location} label={location} value={location} />
-                          ))}
-                        </SelectContent>
-                      </SelectPortal>
-                    </Select>
-                  </VStack>
-                )}
+            <RNText style={f.label}>Período</RNText>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <View style={{ flex: 1 }}>
+                <DatePicker value={temp.dateFrom} onChange={(d) => setTemp((p) => ({ ...p, dateFrom: d }))} placeholder="Data inicial" maximumDate={temp.dateTo || undefined} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <DatePicker value={temp.dateTo} onChange={(d) => setTemp((p) => ({ ...p, dateTo: d }))} placeholder="Data final" minimumDate={temp.dateFrom || undefined} />
+              </View>
+            </View>
 
-                {organizers.length > 0 && (
-                  <VStack className="space-y-2">
-                    <Text className="font-semibold text-gray-700">
-                      {t('organizer') || 'Organizador'}
-                    </Text>
-                    <Select
-                      selectedValue={tempFilters.organizer || ''}
-                      onValueChange={(value) => setTempFilters(prev => ({ ...prev, organizer: value }))}
-                    >
-                      <SelectTrigger variant="outline" size="md">
-                        <SelectInput placeholder={t('select_organizer') || 'Selecione um organizador'} />
-                      </SelectTrigger>
-                      <SelectPortal>
-                        <SelectBackdrop />
-                        <SelectContent>
-                          <SelectDragIndicatorWrapper>
-                            <SelectDragIndicator />
-                          </SelectDragIndicatorWrapper>
-                          <SelectItem label={t('all_organizers') || 'Todos os organizadores'} value="" />
-                          {organizers.map(organizer => (
-                            <SelectItem key={organizer} label={organizer} value={organizer} />
-                          ))}
-                        </SelectContent>
-                      </SelectPortal>
-                    </Select>
-                  </VStack>
-                )}
-              </VStack>
-            </ScrollView>
+            {locations.length > 0 && (
+              <>
+                <RNText style={f.label}>Local</RNText>
+                <View style={f.chips}>
+                  {locations.map((loc) => (
+                    <Chip key={loc} label={loc} Icon={MapPin} active={temp.location === loc} onPress={() => toggle('location', loc)} />
+                  ))}
+                </View>
+              </>
+            )}
+            <View style={{ height: 8 }} />
+          </ScrollView>
 
-            <HStack className="space-x-3 mt-6">
-              <Button
-                variant="outline"
-                onPress={handleClearFilters}
-                className="flex-1"
-              >
-                <Text className="text-gray-700">{t('clear_filters') || 'Limpar'}</Text>
-              </Button>
-              <Button
-                onPress={handleApplyFilters}
-                className="flex-1 bg-purple-600"
-              >
-                <Text className="text-white">{t('apply_filters') || 'Aplicar'}</Text>
-              </Button>
-            </HStack>
-          </VStack>
-        </ActionsheetContent>
-      </Actionsheet>
-
-    </>
+          <View style={f.footer}>
+            <Pressable onPress={clear} style={f.clearBtn} accessibilityRole="button" accessibilityLabel="Limpar filtros">
+              <RNText style={f.clearText}>Limpar</RNText>
+            </Pressable>
+            <View style={{ flex: 1 }}>
+              <GradientButton label="Aplicar" onPress={apply} />
+            </View>
+          </View>
+        </View>
+      </ActionsheetContent>
+    </Actionsheet>
   );
 };
 
 export default EventFiltersSheet;
+
+const ch = StyleSheet.create({
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 999, backgroundColor: SHEET.glass, borderWidth: 1, borderColor: SHEET.border },
+  chipActive: { backgroundColor: SHEET.brand, borderColor: SHEET.brand },
+  chipText: { color: SHEET.textMuted, fontSize: 13.5, fontWeight: '600' },
+  chipTextActive: { color: SHEET.textPrimary },
+});
+
+const f = StyleSheet.create({
+  body: { width: '100%', paddingHorizontal: 16, paddingBottom: 16 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 4, paddingBottom: 16 },
+  heading: { color: SHEET.textPrimary, fontSize: 20, fontWeight: '800' },
+  countBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, backgroundColor: SHEET.brandTint },
+  countText: { color: SHEET.brand, fontSize: 12, fontWeight: '700' },
+  label: { color: SHEET.textSecondary, fontSize: 14, fontWeight: '700', marginTop: 18, marginBottom: 10 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  footer: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 16 },
+  clearBtn: { height: 58, paddingHorizontal: 24, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: SHEET.glass, borderWidth: 1, borderColor: SHEET.border },
+  clearText: { color: SHEET.textSecondary, fontSize: 15, fontWeight: '700' },
+});

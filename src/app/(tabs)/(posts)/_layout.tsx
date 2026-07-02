@@ -8,12 +8,12 @@ export default function PostsLayout() {
     return (
         <Stack screenOptions={{
             headerBackTitle: 'Voltar',
-            headerTintColor: colors.light,
+            headerTintColor: colors.textInverse,
             headerStyle: {
                 backgroundColor: colors.primary,
             }
         }}>
-            <Stack.Screen name={'index'} options={{title: 'Notícias'}} />
+            <Stack.Screen name={'index'} options={{ headerShown: false }} />
             <Stack.Screen name={'post/[id]'} options={{title: 'Notícia detail'}} />
         </Stack>
     );

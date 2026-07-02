@@ -42,7 +42,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children, value 
 
         async function fetchConfig() {
             try {
-                console.log('⚙️  [ConfigProvider] Buscando configurações do Directus...');
+                console.log('⚙️  [ConfigProvider] Buscando configurações do Supabase...');
                 setConfig(prev => ({ ...prev, isLoading: true, hasError: false }));
                 const configData = await getSettings();
 

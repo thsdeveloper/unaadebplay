@@ -4,15 +4,16 @@ export * from './Input';
 export * from './Text';
 export * from './Icon';
 export * from './Logo';
-export * from './LogoXpe';
 export * from './Divider';
 export * from './Checkbox';
 export * from './Link';
 export * from './LoadingSpinner';
 export * from './GradientBackground';
+export * from './AppWordmark';
+// NÃO reexportar GlassSurface aqui: ela importa expo-glass-effect (binding nativo em
+// module-scope) e o barrel é consumido por telas de pré-login. Importe direto de
+// '@/components/atoms/GlassSurface' onde precisar.
 export * from './AvatarUpload';
 export * from './ProgressIndicator';
 export * from './DatePickerTrigger';
-export * from './SectionHeader';
-export * from './InfoRow';
-export * from './ThemeToggle';
+export * from './SelectTrigger';

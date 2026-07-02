@@ -1,5 +1,6 @@
 import { useMemo, useContext } from 'react';
 import ConfigContext from '@/contexts/ConfigContext';
+import { getStorageUrl, type StorageBucket } from '@/services/storage';
 
 export interface UseDirectusImageOptions {
   width?: number | string;
@@ -7,6 +8,7 @@ export interface UseDirectusImageOptions {
   quality?: number;
   fit?: 'cover' | 'contain' | 'fill';
   format?: 'webp' | 'jpg' | 'png';
+  bucket?: StorageBucket;
 }
 
 export interface UseDirectusImageReturn {
@@ -44,37 +46,10 @@ export const useDirectusImage = (
 
   const buildUrl = useMemo(() => {
     return (targetAssetId: string, targetOptions: UseDirectusImageOptions = {}) => {
-      if (!targetAssetId || !apiUrl) return null;
-      
-      const params = new URLSearchParams();
-      
-      // Merge options with defaults
       const finalOptions = { ...options, ...targetOptions };
-      
-      if (finalOptions.width) {
-        params.append('width', finalOptions.width.toString());
-      }
-      
-      if (finalOptions.height) {
-        params.append('height', finalOptions.height.toString());
-      }
-      
-      if (finalOptions.quality) {
-        params.append('quality', finalOptions.quality.toString());
-      }
-      
-      if (finalOptions.fit) {
-        params.append('fit', finalOptions.fit);
-      }
-      
-      if (finalOptions.format) {
-        params.append('format', finalOptions.format);
-      }
-      
-      const queryString = params.toString();
-      return `${apiUrl}/assets/${targetAssetId}${queryString ? `?${queryString}` : ''}`;
+      return getStorageUrl(targetAssetId, finalOptions.bucket ?? 'images');
     };
-  }, [apiUrl, options]);
+  }, [options]);
 
   const imageUrl = useMemo(() => {
     if (!assetId || !isValidAssetId) return null;
@@ -97,7 +72,8 @@ export const useDirectusAvatar = (assetId?: string, size: number = 64) => {
     height: size,
     quality: 85,
     fit: 'cover',
-    format: 'webp'
+    format: 'webp',
+    bucket: 'avatars'
   });
 };
 

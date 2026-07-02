@@ -1,13 +1,8 @@
-import {Link, Stack} from 'expo-router';
+import {Stack} from 'expo-router';
 import React from "react";
-import {Avatar} from "@/components/Avatar";
-import {useAuth} from "@/contexts/AuthContext";
 import {useThemedColors} from "@/hooks/useThemedColors";
-import {Box} from "@/components/ui/box";
-import {NotificationBell} from "@/components/NotificationBell";
 
 export default function HomeLayout() {
-    const {user} = useAuth();
     const colors = useThemedColors();
 
     return (
@@ -16,27 +11,9 @@ export default function HomeLayout() {
                 headerTransparent: false,
                 headerTintColor: colors.text,
             }}>
-                <Stack.Screen name={'index'} options={{
-                    headerTransparent: true,
-                    headerTintColor: colors.white,
-                    title: `Olá ${user?.first_name}, bem-vindo`,
-                    headerShadowVisible: false,
-                    headerRight: () => user ? (
-                        <Box>
-                            <NotificationBell color={colors.white} />
-                        </Box>
-                    ) : null,
-                    headerLeft: () => user ? (
-                        <Box>
-                            <Link href={'/modal'}>
-                                <Avatar
-                                    userAvatarID={user?.avatar}
-                                    name={user?.first_name}
-                                    size={'sm'}/>
-                            </Link>
-                        </Box>
-                    ) : null
-                }}/>
+                {/* Header nativo desligado: a Home desenha um header custom animado
+                    (hide-on-scroll) dentro da própria tela. */}
+                <Stack.Screen name={'index'} options={{ headerShown: false }} />
 
                 {/* Adicionamos a tela de notificações à stack */}
                 <Stack.Screen
@@ -55,39 +32,23 @@ export default function HomeLayout() {
                     name={'contribua'}
                     options={{headerShown: false, presentation: 'modal'}}
                 />
+                {/* Telas do congresso refeitas no padrão dark SHEET: header nativo
+                    desligado — cada tela desenha seu próprio header overlay. */}
                 <Stack.Screen
                     name={'(congresso)/[id]'}
-                    options={{
-                        title: 'Home page de Tabs',
-                        headerTransparent: false
-                    }}
+                    options={{ headerShown: false }}
                 />
                 <Stack.Screen
                     name={'(congresso)/convidado/[id]'}
-                    options={
-                        {title: 'Convidado', presentation: 'modal'}
-                    }/>
+                    options={{ headerShown: false, presentation: 'modal' }}
+                />
                 <Stack.Screen
                     name={'(congresso)/hospedagem/index'}
-                    options={{
-                        title: 'Hospedagem',
-                        headerStyle: {
-                            backgroundColor: colors.primary,
-                        },
-                        headerBackTitle: 'Voltar',
-                        headerTintColor: colors.textInverse,
-                    }}
+                    options={{ headerShown: false }}
                 />
                 <Stack.Screen
                     name={'(congresso)/cartao-acesso'}
-                    options={{
-                        title: 'Cartão de acesso',
-                        headerStyle: {
-                            backgroundColor: colors.primary,
-                        },
-                        headerBackTitle: 'Voltar',
-                        headerTintColor: colors.textInverse,
-                    }}
+                    options={{ headerShown: false }}
                 />
                 <Stack.Screen
                     name={'(congresso)/pagamento-hospedagem'}
@@ -128,14 +89,12 @@ export default function HomeLayout() {
                 <Stack.Screen
                     name={'modal'}
                     options={{
-                        title: 'Minhas informações',
-                        headerTintColor: colors.textInverse,
                         presentation: 'modal',
-                        headerStyle: {
-                            backgroundColor: colors.primary,
-                        }
-                    }
-                    }/>
+                        headerShown: false,
+                        // Sheet escuro desenha o próprio header; contentStyle evita o flash branco no mount/dismiss (iOS).
+                        contentStyle: { backgroundColor: '#0E1526' },
+                    }}
+                />
                 <Stack.Screen
                     name={'youtube'}
                     options={
@@ -145,7 +104,7 @@ export default function HomeLayout() {
                     }/>
                 <Stack.Screen
                     name={'repertories'}
-                    options={{title: 'Repertórios', presentation: 'modal'}}/>
+                    options={{headerShown: false}}/>
             </Stack>
         </>
     );

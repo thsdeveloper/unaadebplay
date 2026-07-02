@@ -8,18 +8,6 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "owner": "thsdeveloper",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#E51C44"
-    },
-    "notification": {
-      "icon": "./assets/icon.png",
-      "color": "#E51C44",
-      "iosDisplayInForeground": true,
-      "androidMode": "default",
-      "androidCollapsedTitle": "Novas notificações"
-    },
     "plugins": [
       [
         "expo-image-picker",
@@ -43,7 +31,19 @@
       "expo-router",
       "expo-asset",
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      "@react-native-community/datetimepicker",
+      "expo-image",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#E51C44"
+        }
+      ],
+      "expo-status-bar",
+      "expo-audio"
     ],
     "assetBundlePatterns": [
       "**/*"
@@ -61,9 +61,7 @@
         "projectId": "7a5a2114-b085-4afe-b2c7-a3cfec041131"
       }
     },
-    "runtimeVersion": {
-      "policy": "sdkVersion"
-    },
+    "runtimeVersion": "exposdk:56.0.0",
     "updates": {
       "url": "https://u.expo.dev/7a5a2114-b085-4afe-b2c7-a3cfec041131"
     },
@@ -77,7 +75,10 @@
     },
     "ios": {
       "bundleIdentifier": "com.unaadebplay",
-      "buildNumber": "1.0.3"
+      "buildNumber": "1.0.3",
+      "infoPlist": {
+        "UIBackgroundModes": ["audio"]
+      }
     }
   }
 }

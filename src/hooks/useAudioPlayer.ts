@@ -1,104 +1,92 @@
-import { useState, useEffect, useCallback, useContext } from 'react';
-import { Audio } from 'expo-av';
+import { useState, useEffect, useCallback, useRef, useContext } from 'react';
+import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
 import AlertContext from "@/contexts/AlertContext";
-import { Sound } from "expo-av/build/Audio/Sound";
 
 export const useAudioPlayer = (audioURI: string | null) => {
-    const [sound, setSound] = useState<Sound | null>(null);
+    // expo-audio é imperativo: criamos/destruímos o player por URI via ref
+    const playerRef = useRef<AudioPlayer | null>(null);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
+    // position/duration expostos em MILISSEGUNDOS para preservar o contrato dos consumidores
     const [position, setPosition] = useState<number>(0);
     const [duration, setDuration] = useState<number>(0);
     const alert = useContext(AlertContext);
 
+    // Configura a sessão de áudio (uma vez).
+    // Garante reprodução mesmo no modo silencioso (iOS) e em background.
     useEffect(() => {
-        const configureAudioSession = async () => {
-            try {
-                // Configura a sessão de áudio para reprodução de mídia
-                // Isso garante que o áudio seja reproduzido mesmo que o switch de silencioso esteja ativado
-                await Audio.setAudioModeAsync({
-                    allowsRecordingIOS: false,
-                    playsInSilentModeIOS: true, // Importante para tocar áudio mesmo no modo silencioso
-                    shouldDuckAndroid: true,
-                    playThroughEarpieceAndroid: false,
-                    staysActiveInBackground: true,
-                });
-            } catch (e) {
-                console.error('Failed to set audio session category: ', e);
-            }
-        };
-        configureAudioSession();
+        setAudioModeAsync({
+            allowsRecording: false,
+            playsInSilentMode: true,
+            interruptionMode: 'duckOthers',
+            shouldRouteThroughEarpiece: false,
+            shouldPlayInBackground: true,
+        }).catch((e) => {
+            console.error('Failed to set audio session category: ', e);
+        });
     }, []);
 
-    // Carrega o áudio quando o audioURI muda
+    // Cria (ou recria) o player quando o audioURI muda
     useEffect(() => {
-        let isMounted = true;  // Flag para verificar se o componente está montado
+        if (!audioURI) return;
 
-        const loadSound = async () => {
-            if (!audioURI) return;
+        let player: AudioPlayer;
+        try {
+            player = createAudioPlayer({ uri: audioURI });
+            playerRef.current = player;
+            player.play();
+            setIsPlaying(true);
+        } catch (error) {
+            alert.error(`Error loading audio: ${error}`);
+            return;
+        }
 
-            // Tenta descarregar o som atual antes de carregar um novo
-            if (sound) {
-                await sound.unloadAsync();
+        // expo-audio reporta tempos em SEGUNDOS — convertemos para ms na fronteira do hook
+        const subscription = player.addListener('playbackStatusUpdate', (status) => {
+            setPosition(status.currentTime * 1000);
+            if (status.duration > 0) {
+                setDuration(status.duration * 1000);
             }
-
-            try {
-                const { sound: newSound } = await Audio.Sound.createAsync(
-                    { uri: audioURI },
-                    { shouldPlay: true, staysActiveInBackground: true }  // Inicialmente não deve tocar
-                );
-
-                if (isMounted) {
-                    setSound(newSound);
-                    setIsPlaying(true);  // Não toca automaticamente
-
-                    newSound.setOnPlaybackStatusUpdate((status) => {
-                        setPosition(status.positionMillis);
-                        setDuration(status.durationMillis);
-                        setIsPlaying(status.isPlaying);
-                    });
-                }
-            } catch (error) {
-                alert.error(`Error loading audio: ${error}`);
-            }
-        };
-
-        loadSound();
+            setIsPlaying(status.playing);
+        });
 
         return () => {
-            isMounted = false;  // Define que o componente não está mais montado
-            sound?.unloadAsync();
+            subscription.remove();
+            player.remove();
+            playerRef.current = null;
         };
     }, [audioURI]);
 
     // Toca ou pausa o som
     const playPauseSound = useCallback(async () => {
-        if (!sound) return;
+        const player = playerRef.current;
+        if (!player) return;
 
-        if (isPlaying) {
-            await sound.pauseAsync();
+        if (player.playing) {
+            player.pause();
         } else {
-            await sound.playAsync();
+            player.play();
         }
-    }, [sound, isPlaying]);
+    }, []);
 
-    // Para o som e descarrega o áudio
+    // Para o som (pausa e volta ao início). Mantém o player carregado para permitir retomar.
     const stopSound = useCallback(async () => {
         try {
-            if (!sound) return;
-            await sound.stopAsync();  // Usa stopAsync para garantir que o áudio pare
-            await sound.unloadAsync();
+            const player = playerRef.current;
+            if (!player) return;
+            player.pause();
+            await player.seekTo(0);
             setIsPlaying(false);
             setPosition(0);
-            setSound(null);
         } catch (error) {
             alert.error('Não foi possível parar o áudio');
         }
-    }, [sound]);
+    }, []);
 
-    // Função para buscar uma nova posição no áudio
-    const seek = async (position) => {
-        if (sound) {
-            await sound.setPositionAsync(position);
+    // Busca uma nova posição. Recebe MILISSEGUNDOS (contrato público) e converte para segundos.
+    const seek = async (positionMillis: number) => {
+        const player = playerRef.current;
+        if (player) {
+            await player.seekTo(positionMillis / 1000);
         }
     };
 

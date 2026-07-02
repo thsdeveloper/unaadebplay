@@ -49,7 +49,6 @@ export const NotificationBell = memo(function NotificationBell({
 
     // Callback para cancelar animação de pulso
     const cancelPulseAnimation = useCallback(() => {
-        'worklet';
         cancelAnimation(pulseScale);
         pulseScale.value = withTiming(1, { duration: 300 });
     }, []);

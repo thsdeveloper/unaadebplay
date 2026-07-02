@@ -1,23 +1,26 @@
-import {Tabs} from 'expo-router/tabs';
-import {Feather} from "@expo/vector-icons";
 import React from "react";
-import {View, ActivityIndicator} from "react-native";
+import { ActivityIndicator } from "react-native";
+import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { Redirect, ThemeProvider, DarkTheme } from "expo-router";
 import AudioPlayer from "@/components/AudioPlayer/AudioPlayer";
-import {BottomTabBar} from "@react-navigation/bottom-tabs";
-import {Box} from "@/components/ui/box";
-import {useApiErrorHandler} from "@/utils/apiErrorHandler";
-import {useAuth} from "@/contexts/AuthContext";
-import {Redirect} from "expo-router";
-import {Center} from "@/components/ui/center";
-import {Text} from "@/components/ui/text";
+import { useApiErrorHandler } from "@/utils/apiErrorHandler";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRepertorieContext } from "@/contexts/AudioPlayerContext";
+import { Center } from "@/components/ui/center";
+import { Text } from "@/components/ui/text";
+import { SHEET } from "@/constants/sheetTokens";
 
+/**
+ * Tab bar NATIVA (UITabBar). No iOS 26+ vem com Liquid Glass automático e o conteúdo
+ * rola por trás nativamente; o inset inferior das telas é tratado pelo próprio nativo
+ * (não usar padding manual). O mini-player de áudio vai no slot nativo BottomAccessory.
+ * ThemeProvider(DarkTheme) evita o flash branco em transições no iOS 26.
+ */
 export default function TabsLayout() {
-    // Registrar o tratador de erros de API
     useApiErrorHandler();
-    
-    const {signed, loading, user} = useAuth();
+    const { signed, loading, user } = useAuth();
+    const { repertorieID } = useRepertorieContext();
 
-    // Mostrar loading enquanto verifica autenticação
     if (loading) {
         return (
             <Center className="flex-1">
@@ -27,52 +30,44 @@ export default function TabsLayout() {
         );
     }
 
-    // Se não estiver autenticado, redirecionar para login
     if (!signed || !user) {
         return <Redirect href="/(auth)/sign-in" />;
     }
 
     return (
-        <View style={{flex: 1}}>
-            <Tabs
-                screenOptions={
-                    {
-                        headerShown: false,
-                    }}
-                tabBar={(props) => (
-                    <Box>
-                        <Box>
-                            <AudioPlayer />
-                        </Box>
-                        <BottomTabBar {...props} />
-                    </Box>
-                )}
-            >
-                <Tabs.Screen name={'(home)'} options={{
-                    title: 'Início',
-                    tabBarIcon: ({color, size}) => (
-                        <Feather name="home" size={size} color={color}/>
-                    )
-                }}/>
-                <Tabs.Screen name={'(posts)'} options={{
-                    title: 'Notícias',
-                    tabBarIcon: ({color, size}) => (
-                        <Feather name="rss" size={size} color={color}/>
-                    )
-                }}/>
-                <Tabs.Screen name={'(events)'} options={{
-                    title: 'Eventos',
-                    tabBarIcon: ({color, size}) => (
-                        <Feather name="calendar" size={size} color={color}/>
-                    )
-                }}/>
-                <Tabs.Screen name={'(settings)'} options={{
-                    title: 'Configurações',
-                    tabBarIcon: ({color, size}) => (
-                        <Feather name="settings" size={size} color={color}/>
-                    )
-                }}/>
-            </Tabs>
-        </View>
+        <ThemeProvider value={DarkTheme}>
+            {/* disableTransparentOnScrollEdge: mantém o vidro no topo também — sem ele,
+                o tab bar fica transparente no scroll edge (versão "clean") e só vira
+                vidro ao rolar, causando a incongruência claro/escuro. */}
+            <NativeTabs tintColor={SHEET.brand} disableTransparentOnScrollEdge>
+                <NativeTabs.Trigger name="(home)">
+                    <NativeTabs.Trigger.Icon sf="house.fill" md="home" />
+                    <NativeTabs.Trigger.Label>Início</NativeTabs.Trigger.Label>
+                </NativeTabs.Trigger>
+
+                <NativeTabs.Trigger name="(posts)">
+                    <NativeTabs.Trigger.Icon sf="newspaper.fill" md="rss_feed" />
+                    <NativeTabs.Trigger.Label>Notícias</NativeTabs.Trigger.Label>
+                </NativeTabs.Trigger>
+
+                <NativeTabs.Trigger name="(events)">
+                    <NativeTabs.Trigger.Icon sf="calendar" md="calendar_month" />
+                    <NativeTabs.Trigger.Label>Eventos</NativeTabs.Trigger.Label>
+                </NativeTabs.Trigger>
+
+                <NativeTabs.Trigger name="(settings)">
+                    <NativeTabs.Trigger.Icon sf="gearshape.fill" md="settings" />
+                    <NativeTabs.Trigger.Label>Configurações</NativeTabs.Trigger.Label>
+                </NativeTabs.Trigger>
+
+                {/* Só monta o acessório nativo quando há áudio tocando — senão fica
+                    uma cápsula de vidro vazia flutuando acima da tab bar. */}
+                {repertorieID ? (
+                    <NativeTabs.BottomAccessory>
+                        <AudioPlayer />
+                    </NativeTabs.BottomAccessory>
+                ) : null}
+            </NativeTabs>
+        </ThemeProvider>
     );
 }

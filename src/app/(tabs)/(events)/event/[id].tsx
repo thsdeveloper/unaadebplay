@@ -1,543 +1,369 @@
 import React, { useContext, useCallback, useMemo, useState, useEffect } from 'react';
-import { ActivityIndicator, Share, Platform, Linking, ScrollView } from 'react-native';
-import { EventsTypes } from "@/types/EventsTypes";
-import { getUser } from "@/services/user";
-import { UserTypes } from "@/types/UserTypes";
-import AlertContext from "@/contexts/AlertContext";
-import AuthContext from "@/contexts/AuthContext";
-import TranslationContext from "@/contexts/TranslationContext";
-import { Text } from "@/components/ui/text";
-import { Heading } from "@/components/ui/heading";
-import { MaterialCommunityIcons, Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { useGlobalSearchParams, Stack, useRouter } from "expo-router";
+import { View, Text as RNText, Pressable, ScrollView, ActivityIndicator, Share, Platform, Linking, StyleSheet } from 'react-native';
+import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Box } from "@/components/ui/box";
-import { VStack } from "@/components/ui/vstack";
-import { HStack } from "@/components/ui/hstack";
-import { Badge, BadgeText } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Icon } from "@/components/ui/icon";
-import { Center } from "@/components/ui/center";
-import { Avatar, AvatarImage, AvatarFallbackText } from "@/components/ui/avatar";
-import { Divider } from "@/components/ui/divider";
-import { Pressable } from "@/components/ui/pressable";
-import { LinearGradient } from 'expo-linear-gradient';
+import {
+  ArrowLeft, Share2, Heart, Calendar, Clock, MapPin, Navigation, CalendarPlus,
+  Info, User, CheckCircle2, Users, Music, GraduationCap, CalendarDays,
+} from 'lucide-react-native';
+import * as ExpoCalendar from 'expo-calendar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AlertContext from '@/contexts/AlertContext';
 import { DirectusImage } from '@/components/DirectusImage';
+import { GradientButton } from '@/components/atoms/GradientButton';
+import { EventListCard } from '@/components/events/EventListCard';
 import { useEventDetails } from '@/hooks/useEvents';
-import * as Calendar from 'expo-calendar';
-import { Modal, ModalBackdrop, ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter } from '@/components/ui/modal';
 import { eventsService } from '@/services/events';
-import EventCard from '@/components/events/EventCard';
+import { SHEET } from '@/constants/sheetTokens';
+import type { EventsTypes } from '@/types/EventsTypes';
+
+const HERO_HEIGHT = 320;
+
+const TYPE_META: Record<string, { label: string; Icon: any }> = {
+  'congresso-geral': { label: 'Congresso Geral', Icon: Users },
+  ensaio: { label: 'Ensaio', Icon: Music },
+  palestras: { label: 'Palestras', Icon: GraduationCap },
+  'cpre-congresso': { label: 'Pré-Congresso', Icon: CalendarDays },
+  default: { label: 'Evento', Icon: CalendarDays },
+};
+
+const getInitials = (name: string) =>
+  name.split(' ').map((p) => p.charAt(0)).join('').toUpperCase().substring(0, 2);
+
+/** Linha de informação (data/horário) — dark, ícone em caixa com tint de marca. */
+const InfoRow: React.FC<{ Icon: any; label: string; value: string }> = ({ Icon, label, value }) => (
+  <View style={s.infoRow}>
+    <View style={s.infoIcon}><Icon size={18} color={SHEET.brand} /></View>
+    <View style={{ flex: 1 }}>
+      <RNText style={s.infoLabel}>{label}</RNText>
+      <RNText style={s.infoValue}>{value}</RNText>
+    </View>
+  </View>
+);
 
 const EventDetailsPage = React.memo(() => {
-    const { id } = useGlobalSearchParams();
-    const router = useRouter();
-    const { t } = useContext(TranslationContext);
-    const { user } = useContext(AuthContext);
-    const alert = useContext(AlertContext);
-    
-    const [organizer, setOrganizer] = useState<UserTypes | null>(null);
-    const [showShareModal, setShowShareModal] = useState(false);
-    const [relatedEvents, setRelatedEvents] = useState<EventsTypes[]>([]);
-    
-    const {
-        event,
-        loading,
-        isSubscribed,
-        isFavorite,
-        subscribe,
-        toggleFavorite,
-        subscribing,
-    } = useEventDetails({ eventId: id as string });
+  const { id } = useLocalSearchParams();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const alert = useContext(AlertContext);
+  const [related, setRelated] = useState<EventsTypes[]>([]);
 
-    const loadAdditionalData = useCallback(async () => {
-        if (!event) return;
-        
-        try {
-            const [organizerData, related] = await Promise.all([
-                getUser(event.organizer),
-                eventsService.getEvents({
-                    eventType: event.event_type,
-                }).then(events => events.filter(e => e.id !== event.id).slice(0, 3))
-            ]);
-            
-            setOrganizer(organizerData);
-            setRelatedEvents(related);
-        } catch (error) {
-            console.error('Error loading additional data:', error);
-        }
-    }, [event]);
-    
-    useEffect(() => {
-        if (event) {
-            loadAdditionalData();
-        }
-    }, [event, loadAdditionalData]);
+  const { event, loading, error, isSubscribed, isFavorite, subscribe, toggleFavorite, subscribing } = useEventDetails({ eventId: id as string });
 
-    const getInitials = useCallback((name: string): string => {
-        return name
-            .split(' ')
-            .map(part => part.charAt(0))
-            .join('')
-            .toUpperCase()
-            .substring(0, 2);
-    }, []);
-    
-    const eventTypeConfig = useMemo(() => {
-        const configs: Record<string, { label: string; colors: string[]; icon: string }> = {
-            'congresso-geral': {
-                label: 'Congresso Geral',
-                colors: ['#4A90E2', '#5E5CE6'],
-                icon: 'groups',
-            },
-            'ensaio': {
-                label: 'Ensaio',
-                colors: ['#F5A623', '#F27121'],
-                icon: 'music-note',
-            },
-            'palestras': {
-                label: 'Palestras',
-                colors: ['#7ED321', '#56AB2F'],
-                icon: 'school',
-            },
-            'cpre-congresso': {
-                label: 'Pré-Congresso',
-                colors: ['#BD10E0', '#9013FE'],
-                icon: 'event',
-            },
-        };
-        
-        return configs[event?.event_type || ''] || {
-            label: 'Evento',
-            colors: ['#50C878', '#00A86B'],
-            icon: 'event',
-        };
-    }, [event]);
+  useEffect(() => {
+    if (!event) return;
+    let alive = true;
+    eventsService
+      .getEvents({ eventType: event.event_type })
+      .then((evs) => { if (alive) setRelated(evs.filter((e) => e.id !== event.id).slice(0, 3)); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [event]);
 
-    const formattedDateTime = useMemo(() => {
-        if (!event) return { date: '', startTime: '', endTime: null, duration: null };
-        
-        const startDate = new Date(event.start_date_time);
-        const endDate = event.end_date_time ? new Date(event.end_date_time) : null;
-        
-        return {
-            date: format(startDate, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR }),
-            startTime: format(startDate, 'HH:mm'),
-            endTime: endDate ? format(endDate, 'HH:mm') : null,
-            duration: endDate ? 
-                `${Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60))}h` : 
-                null
-        };
-    }, [event]);
+  const meta = TYPE_META[event?.event_type ?? ''] ?? TYPE_META.default;
+  const TypeIcon = meta.Icon;
 
-    const handleShare = useCallback(async () => {
-        if (!event) return;
-        
-        try {
-            const message = `${event.title}\n${formattedDateTime.date} às ${formattedDateTime.startTime}\n${event.location}\n\nConfira mais detalhes no app UNAADEB!`;
-            
-            await Share.share({
-                message,
-                title: event.title,
-            });
-        } catch (error) {
-            console.error('Error sharing:', error);
-        }
-    }, [event, formattedDateTime]);
-    
-    const addToCalendar = useCallback(async () => {
-        if (!event) return;
-        
-        try {
-            const { status } = await Calendar.requestCalendarPermissionsAsync();
-            if (status !== 'granted') {
-                alert.error(t('calendar_permission_denied') || 'Permissão para acessar calendário negada');
-                return;
-            }
-            
-            const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
-            const defaultCalendar = calendars.find(cal => cal.isPrimary) || calendars[0];
-            
-            if (!defaultCalendar) {
-                alert.error(t('no_calendar_found') || 'Nenhum calendário encontrado');
-                return;
-            }
-            
-            const eventData = {
-                title: event.title,
-                startDate: new Date(event.start_date_time),
-                endDate: event.end_date_time ? new Date(event.end_date_time) : new Date(event.start_date_time),
-                location: event.location,
-                notes: event.description,
-                calendarId: defaultCalendar.id,
-            };
-            
-            await Calendar.createEventAsync(defaultCalendar.id, eventData);
-            alert.success(t('event_added_to_calendar') || 'Evento adicionado ao calendário!');
-        } catch (error) {
-            console.error('Error adding to calendar:', error);
-            alert.error(t('error_adding_to_calendar') || 'Erro ao adicionar ao calendário');
-        }
-    }, [event, alert, t]);
-    
-    const openInMaps = useCallback(() => {
-        if (!event?.location) return;
-        
-        const encodedLocation = encodeURIComponent(event.location);
-        const url = Platform.select({
-            ios: `maps:0,0?q=${encodedLocation}`,
-            android: `geo:0,0?q=${encodedLocation}`,
-        });
-        
-        if (url) {
-            Linking.openURL(url).catch(() => {
-                const webUrl = `https://www.google.com/maps/search/?api=1&query=${encodedLocation}`;
-                Linking.openURL(webUrl);
-            });
-        }
-    }, [event]);
+  const dt = useMemo(() => {
+    if (!event) return { date: '', time: '' };
+    const start = new Date(event.start_date_time);
+    const end = event.end_date_time ? new Date(event.end_date_time) : null;
+    const okStart = !isNaN(start.getTime());
+    const okEnd = !!end && !isNaN(end.getTime());
+    const dur = okStart && okEnd ? Math.round((end!.getTime() - start.getTime()) / 3600000) : null;
+    return {
+      date: okStart
+        ? format(start, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR }).replace(/^\w/, (c) => c.toUpperCase())
+        : 'Data a definir',
+      time: okStart
+        ? `${format(start, 'HH:mm')}${okEnd ? ` – ${format(end!, 'HH:mm')}` : ''}${dur ? ` · ${dur}h` : ''}`
+        : '--:--',
+    };
+  }, [event]);
 
-    if (loading) {
-        return (
-            <>
-                <Stack.Screen
-                    options={{
-                        title: t('event_details') || 'Detalhes do Evento',
-                        headerBackTitle: t('back') || 'Voltar',
-                        headerShown: true,
-                        headerStyle: { backgroundColor: '#7c3aed' },
-                        headerTintColor: '#fff',
-                        headerTitleStyle: { fontWeight: 'bold' },
-                    }}
-                />
-                <Center className="flex-1 bg-gray-50">
-                    <ActivityIndicator size="large" color="#7c3aed" />
-                    <Text className="mt-2 text-gray-600">
-                        {t('loading_event') || 'Carregando evento...'}
-                    </Text>
-                </Center>
-            </>
-        );
+  const onShare = useCallback(async () => {
+    if (!event) return;
+    try {
+      await Share.share({ title: event.title, message: `${event.title}\n${dt.date} às ${dt.time}\n${event.location}\n\nConfira no app UNAADEB!` });
+    } catch {
+      /* usuário cancelou */
     }
+  }, [event, dt]);
 
+  const onAddCalendar = useCallback(async () => {
+    if (!event) return;
+    try {
+      const { status } = await ExpoCalendar.requestCalendarPermissionsAsync();
+      if (status !== 'granted') { alert.error('Permissão de calendário negada'); return; }
+      const cals = await ExpoCalendar.getCalendarsAsync(ExpoCalendar.EntityTypes.EVENT);
+      const cal = cals.find((c) => c.isPrimary) || cals[0];
+      if (!cal) { alert.error('Nenhum calendário encontrado'); return; }
+      await ExpoCalendar.createEventAsync(cal.id, {
+        title: event.title,
+        startDate: new Date(event.start_date_time),
+        endDate: event.end_date_time ? new Date(event.end_date_time) : new Date(event.start_date_time),
+        location: event.location,
+        notes: event.description,
+      });
+      alert.success('Evento adicionado ao calendário!');
+    } catch {
+      alert.error('Erro ao adicionar ao calendário');
+    }
+  }, [event, alert]);
+
+  const openMaps = useCallback(() => {
+    if (!event?.location) return;
+    const q = encodeURIComponent(event.location);
+    const url = Platform.select({ ios: `maps:0,0?q=${q}`, android: `geo:0,0?q=${q}` });
+    if (url) Linking.openURL(url).catch(() => Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${q}`));
+  }, [event]);
+
+  const noop = useCallback(() => {}, []);
+
+  // Header CUSTOM sobreposto (não o nativo): no iOS 26 o header do native-stack coloca
+  // um "vidro" (Liquid Glass) atrás dos botões da barra, que aparecia como uma segunda
+  // forma desalinhada atrás das nossas pílulas. Com headerShown:false desenhamos as
+  // pílulas nós mesmos, como overlay absoluto — uma forma só, previsível.
+  const renderHeader = useCallback((right?: React.ReactNode) => (
+    <View style={[h.bar, { paddingTop: insets.top + 6 }]} pointerEvents="box-none">
+      <Pressable onPress={() => router.back()} hitSlop={8} style={h.pill} accessibilityRole="button" accessibilityLabel="Voltar">
+        <ArrowLeft size={21} color={SHEET.textPrimary} strokeWidth={2.5} />
+      </Pressable>
+      {right ?? <View style={h.spacer} />}
+    </View>
+  ), [router, insets.top]);
+
+  if (loading) {
     return (
-        <>
-            <Stack.Screen
-                options={{
-                    title: '',
-                    headerTransparent: true,
-                    headerStyle: {
-                        backgroundColor: 'transparent',
-                    },
-                    headerLeft: () => (
-                        <Pressable
-                            onPress={() => router.back()}
-                            className="bg-black/20 rounded-full p-2 ml-4"
-                        >
-                            <Icon as={MaterialIcons} name="arrow-back" size="sm" className="text-white" />
-                        </Pressable>
-                    ),
-                    headerRight: () => (
-                        <HStack className="space-x-2 mr-4">
-                            <Pressable
-                                onPress={handleShare}
-                                className="bg-black/20 rounded-full p-2"
-                            >
-                                <Icon as={MaterialIcons} name="share" size="sm" className="text-white" />
-                            </Pressable>
-                            <Pressable
-                                onPress={toggleFavorite}
-                                className="bg-black/20 rounded-full p-2"
-                            >
-                                <Icon
-                                    as={MaterialIcons}
-                                    name={isFavorite ? 'favorite' : 'favorite-border'}
-                                    size="sm"
-                                    className={isFavorite ? 'text-red-500' : 'text-white'}
-                                />
-                            </Pressable>
-                        </HStack>
-                    ),
-                }}
-            />
-            
-            <ScrollView className="flex-1 bg-gray-50">
-                <Box className="relative">
-                    {event?.image_cover ? (
-                        <DirectusImage
-                            assetId={event.image_cover}
-                            preset="event-detail"
-                            style={{ height: 300, width: '100%' }}
-                        />
-                    ) : (
-                        <LinearGradient
-                            colors={eventTypeConfig.colors}
-                            style={{ height: 300, width: '100%', justifyContent: 'center', alignItems: 'center' }}
-                        >
-                            <Icon
-                                as={MaterialIcons}
-                                name={eventTypeConfig.icon as any}
-                                size="6xl"
-                                className="text-white opacity-50"
-                            />
-                        </LinearGradient>
-                    )}
-                    
-                    <LinearGradient
-                        colors={['transparent', 'rgba(0,0,0,0.8)']}
-                        style={{
-                            position: 'absolute',
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            height: 150,
-                            justifyContent: 'flex-end',
-                            paddingHorizontal: 20,
-                            paddingBottom: 20,
-                        }}
-                    >
-                        <Badge variant="solid" className="bg-white/20 self-start mb-3">
-                            <HStack className="items-center space-x-1">
-                                <Icon
-                                    as={MaterialIcons}
-                                    name={eventTypeConfig.icon as any}
-                                    size="xs"
-                                    className="text-white"
-                                />
-                                <BadgeText className="text-white text-xs">{eventTypeConfig.label}</BadgeText>
-                            </HStack>
-                        </Badge>
-                        <Heading className="text-3xl font-bold text-white mb-2">
-                            {event?.title}
-                        </Heading>
-                        {event?.subtitle && (
-                            <Text className="text-lg text-gray-200">
-                                {event.subtitle}
-                            </Text>
-                        )}
-                    </LinearGradient>
-                </Box>
-
-                <VStack className="p-4 space-y-4">
-                    <HStack className="space-x-3">
-                        {!isSubscribed ? (
-                            <Button
-                                className="flex-1 bg-purple-600 py-3 rounded-xl"
-                                onPress={subscribe}
-                                isDisabled={subscribing}
-                            >
-                                <HStack className="items-center justify-center space-x-2">
-                                    <Icon as={MaterialCommunityIcons} name="calendar-check" size="sm" className="text-white" />
-                                    <Text className="text-white font-semibold text-base">
-                                        {subscribing ? t('subscribing') || 'Inscrevendo...' : t('subscribe_now') || 'Inscrever-se'}
-                                    </Text>
-                                </HStack>
-                            </Button>
-                        ) : (
-                            <Box className="flex-1 bg-green-50 border border-green-200 rounded-xl p-4">
-                                <HStack className="items-center justify-center space-x-2">
-                                    <Icon as={Ionicons} name="checkmark-circle" size="lg" className="text-green-600" />
-                                    <Text className="text-green-800 font-medium text-center">
-                                        {t('already_subscribed') || 'Inscrito!'}
-                                    </Text>
-                                </HStack>
-                            </Box>
-                        )}
-                        
-                        <Pressable
-                            onPress={addToCalendar}
-                            className="bg-gray-100 rounded-xl p-4"
-                        >
-                            <Icon as={MaterialIcons} name="event" size="sm" className="text-gray-700" />
-                        </Pressable>
-                    </HStack>
-
-                    <Box className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                        <VStack>
-                            <Pressable
-                                onPress={() => {}}
-                                className="p-4 border-b border-gray-100"
-                            >
-                                <HStack className="items-center justify-between">
-                                    <HStack className="items-center space-x-3">
-                                        <Box className="bg-purple-100 rounded-xl p-2">
-                                            <Icon as={MaterialCommunityIcons} name="calendar" size="sm" className="text-purple-600" />
-                                        </Box>
-                                        <VStack>
-                                            <Text className="text-xs text-gray-500 uppercase">
-                                                {t('date') || 'Data'}
-                                            </Text>
-                                            <Text className="font-semibold text-gray-900 capitalize">
-                                                {formattedDateTime.date}
-                                            </Text>
-                                        </VStack>
-                                    </HStack>
-                                    <Icon as={MaterialIcons} name="chevron-right" size="sm" className="text-gray-400" />
-                                </HStack>
-                            </Pressable>
-
-                            <Pressable
-                                onPress={() => {}}
-                                className="p-4 border-b border-gray-100"
-                            >
-                                <HStack className="items-center justify-between">
-                                    <HStack className="items-center space-x-3">
-                                        <Box className="bg-purple-100 rounded-xl p-2">
-                                            <Icon as={MaterialCommunityIcons} name="clock-outline" size="sm" className="text-purple-600" />
-                                        </Box>
-                                        <VStack>
-                                            <Text className="text-xs text-gray-500 uppercase">
-                                                {t('time') || 'Horário'}
-                                            </Text>
-                                            <Text className="font-semibold text-gray-900">
-                                                {formattedDateTime.startTime}
-                                                {formattedDateTime.endTime && ` - ${formattedDateTime.endTime}`}
-                                                {formattedDateTime.duration && ` (${formattedDateTime.duration})`}
-                                            </Text>
-                                        </VStack>
-                                    </HStack>
-                                    <Icon as={MaterialIcons} name="chevron-right" size="sm" className="text-gray-400" />
-                                </HStack>
-                            </Pressable>
-
-                            <Pressable
-                                onPress={openInMaps}
-                                className="p-4"
-                            >
-                                <HStack className="items-center justify-between">
-                                    <HStack className="items-center space-x-3 flex-1">
-                                        <Box className="bg-purple-100 rounded-xl p-2">
-                                            <Icon as={MaterialCommunityIcons} name="map-marker" size="sm" className="text-purple-600" />
-                                        </Box>
-                                        <VStack className="flex-1">
-                                            <Text className="text-xs text-gray-500 uppercase">
-                                                {t('location') || 'Local'}
-                                            </Text>
-                                            <Text className="font-semibold text-gray-900" numberOfLines={2}>
-                                                {event?.location}
-                                            </Text>
-                                        </VStack>
-                                    </HStack>
-                                    <Icon as={MaterialIcons} name="directions" size="sm" className="text-purple-600" />
-                                </HStack>
-                            </Pressable>
-                        </VStack>
-                    </Box>
-
-                    {event?.description && (
-                        <Box className="bg-white rounded-2xl p-4 shadow-sm">
-                            <HStack className="items-center space-x-2 mb-3">
-                                <Icon as={MaterialIcons} name="info-outline" size="sm" className="text-purple-600" />
-                                <Text className="font-semibold text-gray-800">
-                                    {t('about_event') || 'Sobre o evento'}
-                                </Text>
-                            </HStack>
-                            <Text className="text-gray-600 leading-relaxed">
-                                {event.description}
-                            </Text>
-                        </Box>
-                    )}
-
-                    <Box className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                        <Box className="p-4 border-b border-gray-100">
-                            <HStack className="items-center space-x-2">
-                                <Icon as={MaterialIcons} name="person-outline" size="sm" className="text-purple-600" />
-                                <Text className="font-semibold text-gray-800">
-                                    {t('organizer') || 'Organizador'}
-                                </Text>
-                            </HStack>
-                        </Box>
-                        <Pressable
-                            onPress={() => organizer?.id && router.push(`/(tabs)/(home)/(profile)/${organizer.id}`)}
-                            className="p-4"
-                        >
-                            <HStack className="items-center justify-between">
-                                <HStack className="items-center space-x-3">
-                                    <Avatar size="lg" className="bg-purple-100">
-                                        {organizer?.avatar ? (
-                                            <AvatarImage source={{ uri: organizer.avatar }} alt={organizer.first_name} />
-                                        ) : (
-                                            <AvatarFallbackText className="text-purple-700 font-semibold">
-                                                {getInitials(organizer?.first_name || event?.organizer || 'ORG')}
-                                            </AvatarFallbackText>
-                                        )}
-                                    </Avatar>
-                                    <VStack>
-                                        <Text className="font-semibold text-gray-900">
-                                            {organizer?.first_name} {organizer?.last_name}
-                                        </Text>
-                                        {event?.organizer_contact_info && (
-                                            <Text className="text-sm text-gray-600">
-                                                {event.organizer_contact_info}
-                                            </Text>
-                                        )}
-                                    </VStack>
-                                </HStack>
-                                <Icon as={MaterialIcons} name="chevron-right" size="sm" className="text-gray-400" />
-                            </HStack>
-                        </Pressable>
-                    </Box>
-                    
-                    {relatedEvents.length > 0 && (
-                        <VStack className="space-y-3">
-                            <HStack className="items-center justify-between px-1">
-                                <Text className="font-semibold text-gray-800">
-                                    {t('related_events') || 'Eventos relacionados'}
-                                </Text>
-                                <Pressable onPress={() => router.push('/(tabs)/(events)')}>
-                                    <Text className="text-sm text-purple-600">
-                                        {t('see_all') || 'Ver todos'}
-                                    </Text>
-                                </Pressable>
-                            </HStack>
-                            {relatedEvents.map((relatedEvent) => (
-                                <EventCard
-                                    key={relatedEvent.id}
-                                    event={relatedEvent}
-                                    isCompact
-                                />
-                            ))}
-                        </VStack>
-                    )}
-                </VStack>
-            </ScrollView>
-            
-            <Modal
-                isOpen={showShareModal}
-                onClose={() => setShowShareModal(false)}
-                size="sm"
-            >
-                <ModalBackdrop />
-                <ModalContent>
-                    <ModalHeader>
-                        <Heading size="lg">{t('share_event') || 'Compartilhar Evento'}</Heading>
-                        <ModalCloseButton>
-                            <Icon as={MaterialIcons} name="close" size="sm" />
-                        </ModalCloseButton>
-                    </ModalHeader>
-                    <ModalBody>
-                        <VStack className="space-y-4">
-                            <Pressable
-                                onPress={() => {
-                                    handleShare();
-                                    setShowShareModal(false);
-                                }}
-                                className="flex-row items-center space-x-3 p-3 bg-gray-50 rounded-lg"
-                            >
-                                <Icon as={MaterialIcons} name="share" size="sm" className="text-gray-700" />
-                                <Text className="flex-1 font-medium text-gray-700">
-                                    {t('share_via_apps') || 'Compartilhar via aplicativos'}
-                                </Text>
-                            </Pressable>
-                        </VStack>
-                    </ModalBody>
-                </ModalContent>
-            </Modal>
-        </>
+      <View style={s.screen}>
+        <Stack.Screen options={{ headerShown: false }} />
+        {renderHeader()}
+        <View style={s.centered}>
+          <ActivityIndicator size="large" color={SHEET.brand} />
+          <RNText style={s.loadingText}>Carregando evento...</RNText>
+        </View>
+      </View>
     );
+  }
+
+  if (!event) {
+    return (
+      <View style={s.screen}>
+        <Stack.Screen options={{ headerShown: false }} />
+        {renderHeader()}
+        <View style={s.centered}>
+          <View style={s.emptyIcon}><CalendarDays size={30} color={SHEET.danger} /></View>
+          <RNText style={s.emptyTitle}>Evento não encontrado</RNText>
+          <RNText style={s.emptyDesc}>{error || 'Não foi possível carregar este evento.'}</RNText>
+          <Pressable onPress={() => router.back()} style={s.emptyBtn}><RNText style={s.emptyBtnText}>Voltar</RNText></Pressable>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={s.screen}>
+      <Stack.Screen options={{ headerShown: false }} />
+
+      <ScrollView style={s.screen} contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
+        <View style={s.hero}>
+          {event.image_cover ? (
+            <DirectusImage
+              assetId={event.image_cover}
+              bucket="images"
+              resizeMode="cover"
+              priority="high"
+              style={s.heroImg}
+              placeholder={<View style={s.heroPlaceholder} />}
+              fallback={<View style={s.heroPlaceholder} />}
+            />
+          ) : (
+            <View style={[s.heroImg, s.heroFallback]}><TypeIcon size={56} color={SHEET.textFaint} /></View>
+          )}
+          <LinearGradient colors={['transparent', 'rgba(13,15,23,0.55)', SHEET.bg]} style={s.heroScrim} />
+          <View style={s.heroContent}>
+            <View style={s.typePill}>
+              <TypeIcon size={13} color={SHEET.textPrimary} />
+              <RNText style={s.typeText}>{meta.label}</RNText>
+            </View>
+            <RNText style={s.heroTitle} numberOfLines={3}>{event.title}</RNText>
+          </View>
+        </View>
+
+        <View style={s.body}>
+          <View style={s.actions}>
+            {isSubscribed ? (
+              <View style={s.subscribed}>
+                <CheckCircle2 size={20} color={SHEET.brand} />
+                <RNText style={s.subscribedText}>Inscrito</RNText>
+              </View>
+            ) : (
+              <View style={{ flex: 1 }}>
+                <GradientButton label={subscribing ? 'Inscrevendo...' : 'Inscrever-se'} onPress={subscribe} />
+              </View>
+            )}
+            <Pressable onPress={onAddCalendar} style={s.calBtn} accessibilityRole="button" accessibilityLabel="Adicionar ao calendário">
+              <CalendarPlus size={22} color={SHEET.textPrimary} />
+            </Pressable>
+          </View>
+
+          <View style={s.card}>
+            <InfoRow Icon={Calendar} label="DATA" value={dt.date} />
+            <View style={s.divider} />
+            <InfoRow Icon={Clock} label="HORÁRIO" value={dt.time} />
+            {!!event.location && (
+              <>
+                <View style={s.divider} />
+                <Pressable onPress={openMaps} style={s.infoRow} accessibilityRole="button" accessibilityLabel="Abrir no mapa">
+                  <View style={s.infoIcon}><MapPin size={18} color={SHEET.brand} /></View>
+                  <View style={{ flex: 1 }}>
+                    <RNText style={s.infoLabel}>LOCAL</RNText>
+                    <RNText style={s.infoValue} numberOfLines={2}>{event.location}</RNText>
+                  </View>
+                  <Navigation size={18} color={SHEET.brand} />
+                </Pressable>
+              </>
+            )}
+          </View>
+
+          {!!event.description && (
+            <View style={s.card}>
+              <View style={s.sectionHeader}>
+                <Info size={17} color={SHEET.brand} />
+                <RNText style={s.sectionTitle}>Sobre o evento</RNText>
+              </View>
+              <RNText style={s.description}>{event.description}</RNText>
+            </View>
+          )}
+
+          {(!!event.organizer || !!event.organizer_contact_info) && (
+            <View style={s.card}>
+              <View style={s.sectionHeader}>
+                <User size={17} color={SHEET.brand} />
+                <RNText style={s.sectionTitle}>Organização</RNText>
+              </View>
+              <View style={s.organizerRow}>
+                <View style={s.orgAvatar}><RNText style={s.orgInitials}>{getInitials(event.organizer || 'ORG')}</RNText></View>
+                <View style={{ flex: 1 }}>
+                  {!!event.organizer && <RNText style={s.orgName}>{event.organizer}</RNText>}
+                  {!!event.organizer_contact_info && <RNText style={s.orgContact}>{event.organizer_contact_info}</RNText>}
+                </View>
+              </View>
+            </View>
+          )}
+        </View>
+
+        {related.length > 0 && (
+          <View style={s.relatedWrap}>
+            <View style={s.relatedHeader}>
+              <RNText style={s.sectionTitle}>Eventos relacionados</RNText>
+              <Pressable onPress={() => router.push('/(tabs)/(events)')} accessibilityRole="button" accessibilityLabel="Ver todos">
+                <RNText style={s.seeAll}>Ver todos</RNText>
+              </Pressable>
+            </View>
+            {related.map((ev) => (
+              <EventListCard key={ev.id} event={ev} isFavorite={false} onToggleFavorite={noop} />
+            ))}
+          </View>
+        )}
+      </ScrollView>
+
+      {renderHeader(
+        <View style={h.rightCapsule}>
+          <Pressable onPress={onShare} hitSlop={6} style={h.capsuleBtn} accessibilityRole="button" accessibilityLabel="Compartilhar">
+            <Share2 size={18} color={SHEET.textPrimary} strokeWidth={2.4} />
+          </Pressable>
+          <View style={h.capsuleDivider} />
+          <Pressable onPress={toggleFavorite} hitSlop={6} style={h.capsuleBtn} accessibilityRole="button" accessibilityLabel={isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}>
+            <Heart size={18} color={isFavorite ? SHEET.brand : SHEET.textPrimary} fill={isFavorite ? SHEET.brand : 'transparent'} strokeWidth={2.4} />
+          </Pressable>
+        </View>
+      )}
+    </View>
+  );
 });
 
 EventDetailsPage.displayName = 'EventDetailsPage';
 
 export default EventDetailsPage;
+
+const PILL_BG = 'rgba(10,12,20,0.58)';
+const PILL_BORDER = 'rgba(255,255,255,0.22)';
+
+// Pílulas do header: scrim ESCURO SÓLIDO (View com backgroundColor) + borda hairline.
+// Nada de vidro aqui: o GlassView nativo (Liquid Glass) desenha camadas material/tint
+// desalinhadas em controles pequenos e arredondados, e o BlurView não é recortado pelo
+// overflow:hidden do pai (o blur "vaza" pra um retângulo). Uma View sólida recorta
+// perfeitamente pelo borderRadius = uma forma limpa, previsível e com bom contraste.
+const h = StyleSheet.create({
+  // Barra do header como overlay absoluto sobre o hero (header nativo desligado).
+  bar: {
+    position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingBottom: 6,
+  },
+  spacer: { width: 40, height: 40 },
+  pill: {
+    width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: PILL_BG,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: PILL_BORDER,
+  },
+  rightCapsule: {
+    flexDirection: 'row', alignItems: 'center', height: 40, borderRadius: 20,
+    backgroundColor: PILL_BG,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: PILL_BORDER,
+  },
+  capsuleBtn: { width: 44, height: 40, alignItems: 'center', justifyContent: 'center' },
+  capsuleDivider: { width: StyleSheet.hairlineWidth, height: 20, backgroundColor: PILL_BORDER },
+});
+
+const s = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: SHEET.bg },
+  scroll: { paddingBottom: 40 },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 },
+  loadingText: { color: SHEET.textMuted, fontSize: 14, marginTop: 12 },
+
+  hero: { height: HERO_HEIGHT, width: '100%', backgroundColor: SHEET.bgDeep },
+  heroImg: { height: HERO_HEIGHT, width: '100%', backgroundColor: SHEET.bgDeep },
+  heroPlaceholder: { flex: 1, backgroundColor: SHEET.bgDeep },
+  heroFallback: { alignItems: 'center', justifyContent: 'center' },
+  heroScrim: { position: 'absolute', left: 0, right: 0, bottom: 0, height: HERO_HEIGHT * 0.75 },
+  heroContent: { position: 'absolute', left: 16, right: 16, bottom: 14, gap: 10 },
+  typePill: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 999, backgroundColor: SHEET.brand },
+  typeText: { color: SHEET.textPrimary, fontSize: 12, fontWeight: '700' },
+  heroTitle: { color: SHEET.textPrimary, fontSize: 26, fontWeight: '800', lineHeight: 32 },
+
+  body: { paddingHorizontal: 16, paddingTop: 16, gap: 14 },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  subscribed: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 58, borderRadius: 18, backgroundColor: SHEET.brandTint, borderWidth: 1, borderColor: SHEET.brand },
+  subscribedText: { color: SHEET.brand, fontSize: 15, fontWeight: '800' },
+  calBtn: { width: 58, height: 58, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: SHEET.glass, borderWidth: 1, borderColor: SHEET.border },
+
+  card: { borderRadius: 18, backgroundColor: SHEET.glass, borderWidth: 1, borderColor: SHEET.border, padding: 14 },
+  divider: { height: 1, backgroundColor: SHEET.hairline, marginVertical: 12 },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  infoIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: SHEET.brandTint },
+  infoLabel: { color: SHEET.textFaint, fontSize: 10.5, letterSpacing: 1, fontWeight: '700' },
+  infoValue: { color: SHEET.textPrimary, fontSize: 14.5, fontWeight: '600', marginTop: 2 },
+
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  sectionTitle: { color: SHEET.textPrimary, fontSize: 15.5, fontWeight: '800' },
+  description: { color: SHEET.textSecondary, fontSize: 14.5, lineHeight: 22 },
+
+  organizerRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  orgAvatar: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: SHEET.brandTint },
+  orgInitials: { color: SHEET.brand, fontSize: 15, fontWeight: '800' },
+  orgName: { color: SHEET.textPrimary, fontSize: 15, fontWeight: '700' },
+  orgContact: { color: SHEET.textMuted, fontSize: 13, marginTop: 2 },
+
+  relatedWrap: { marginTop: 18 },
+  relatedHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 12 },
+  seeAll: { color: SHEET.brand, fontSize: 13.5, fontWeight: '700' },
+
+  emptyIcon: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center', backgroundColor: SHEET.glass, borderWidth: 1, borderColor: SHEET.border, marginBottom: 16 },
+  emptyTitle: { color: SHEET.textPrimary, fontSize: 17, fontWeight: '700', textAlign: 'center' },
+  emptyDesc: { color: SHEET.textMuted, fontSize: 13.5, textAlign: 'center', marginTop: 6, lineHeight: 19 },
+  emptyBtn: { marginTop: 18, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 999, backgroundColor: SHEET.glass, borderWidth: 1, borderColor: SHEET.border },
+  emptyBtnText: { color: SHEET.textPrimary, fontSize: 14, fontWeight: '700' },
+});

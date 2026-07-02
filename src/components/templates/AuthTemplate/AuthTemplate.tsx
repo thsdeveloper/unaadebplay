@@ -5,6 +5,8 @@ import {
   Keyboard,
   StatusBar,
   Animated,
+  View,
+  StyleSheet,
 } from 'react-native';
 import { Box } from '@/components/ui/box';
 import { Center } from '@/components/ui/center';
@@ -31,7 +33,7 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
   isLoading = false,
   title,
   subtitle,
-  gradientColors = ['#0f172a', '#1e293b', '#334155'],
+  gradientColors = ['#0B1120', '#0E1424', '#131A2E'],
 }) => {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -93,6 +95,9 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
     <Box className="flex-1">
       <StatusBar barStyle="light-content" />
       <GradientBackground colors={gradientColors}>
+        {/* Glow orbs decorativos (efeito aurora) */}
+        <View pointerEvents="none" style={glowStyles.glowTop} />
+        <View pointerEvents="none" style={glowStyles.glowBottom} />
         <KeyboardAvoidingView
           className="flex-1"
           behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -124,3 +129,32 @@ export const AuthTemplate: React.FC<AuthTemplateProps> = ({
 };
 
 AuthTemplate.displayName = 'AuthTemplate';
+
+const glowStyles = StyleSheet.create({
+  glowTop: {
+    position: 'absolute',
+    top: -160,
+    left: -80,
+    width: 360,
+    height: 360,
+    borderRadius: 180,
+    backgroundColor: 'rgba(229,28,68,0.22)',
+    shadowColor: '#E51C44',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.7,
+    shadowRadius: 120,
+  },
+  glowBottom: {
+    position: 'absolute',
+    bottom: -180,
+    right: -120,
+    width: 380,
+    height: 380,
+    borderRadius: 190,
+    backgroundColor: 'rgba(124,58,237,0.16)',
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 120,
+  },
+});

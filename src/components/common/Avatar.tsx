@@ -9,6 +9,7 @@ import {
 import { Box } from "@/components/ui/box";
 import { Spinner } from "@/components/ui/spinner";
 import ConfigContext from "@/contexts/ConfigContext"; // Configure seu arquivo de configuração com variáveis de ambiente
+import { getStorageUrl } from "@/services/storage";
 
 type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | number;
 
@@ -103,12 +104,11 @@ export const CommonAvatar: React.FC<CommonAvatarProps> = ({
         if (src) return { uri: src };
         if (uri) return { uri };
         if (userAvatarID) {
-            return { uri: `${config.url_api}/assets/${userAvatarID}` };
+            const url = getStorageUrl(userAvatarID, 'avatars');
+            return url ? { uri: url } : null;
         }
         return null;
     }, [src, uri, userAvatarID]);
-
-    console.log('imageSource', imageSource)
 
     // Gerar texto de fallback a partir do nome
     const getFallbackText = () => {

@@ -1,52 +1,50 @@
-// Serviço de traduções atualizado com suporte a versionamento
+// Serviço de traduções com suporte a versionamento
 // src/services/translations.ts
 
-import directusClient from "./api";
-import { readTranslations, readItems } from "@directus/sdk";
+import { supabase } from "./supabase";
 
-// Função para obter todas as traduções
-export async function getTranslation() {
-    try {
-        return await directusClient.request(readTranslations());
-    } catch (error) {
-        throw error;
-    }
+export interface Translation {
+    id: string;
+    language: string;
+    key: string;
+    value: string;
 }
 
-// Função para obter a versão atual das traduções
-// Esta função consulta a última data de modificação das traduções
-// Função atualizada para obter a versão atual das traduções sem depender de date_updated
-export async function getTranslationVersion() {
+// Função para obter todas as traduções
+export async function getTranslation(): Promise<Translation[]> {
+    const { data, error } = await supabase
+        .from('translations')
+        .select('id, language, key, value');
+
+    if (error) throw error;
+
+    return data ?? [];
+}
+
+// Função para obter a versão atual das traduções.
+// Combina a contagem total com o timestamp de atualização mais recente:
+// quando qualquer linha é inserida, removida ou alterada, a versão muda.
+export async function getTranslationVersion(): Promise<string> {
     try {
-        // Abordagem 1: Obter uma contagem de itens na coleção de traduções
-        // Quando o número total muda, sabemos que houve alterações
-        const result = await directusClient.request(
-            readItems('translations', {
-                aggregate: { count: 'id' },
-                limit: 1
-            })
-        );
+        const [{ count, error: countError }, lastUpdated] = await Promise.all([
+            supabase
+                .from('translations')
+                .select('id', { count: 'exact', head: true }),
+            supabase
+                .from('translations')
+                .select('updated_at')
+                .order('updated_at', { ascending: false })
+                .limit(1)
+                .maybeSingle(),
+        ]);
 
-        if (result && result.length > 0) {
-            // Usar a contagem total como versão
-            return `count-${result[0].count || 0}`;
-        }
+        if (countError) throw countError;
+        if (lastUpdated.error) throw lastUpdated.error;
 
-        // Se a abordagem acima falhar, tentamos uma segunda estratégia
-        const sample = await directusClient.request(
-            readItems('translations', {
-                limit: 1,
-                fields: ['id']
-            })
-        );
+        const total = count ?? 0;
+        const updatedAt = lastUpdated.data?.updated_at ?? '0';
 
-        if (sample && sample.length > 0) {
-            // Usar um ID de amostra + timestamp atual como versão
-            return `id-${sample[0].id}-${Date.now()}`;
-        }
-
-        // Fallback final
-        return `timestamp-${Date.now()}`;
+        return `count-${total}-updated-${updatedAt}`;
     } catch (error) {
         // Versão de fallback usando apenas o timestamp atual
         console.warn('Usando fallback para versão das traduções:', error);
@@ -55,16 +53,13 @@ export async function getTranslationVersion() {
 }
 
 // Função auxiliar para buscar traduções de um idioma específico
-export async function getTranslationByLanguage(langCode: string) {
-    try {
-        return await directusClient.request(
-            readItems('translations', {
-                filter: {
-                    language: { _eq: langCode }
-                }
-            })
-        );
-    } catch (error) {
-        throw error;
-    }
+export async function getTranslationByLanguage(langCode: string): Promise<Translation[]> {
+    const { data, error } = await supabase
+        .from('translations')
+        .select('id, language, key, value')
+        .eq('language', langCode);
+
+    if (error) throw error;
+
+    return data ?? [];
 }
