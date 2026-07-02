@@ -9,9 +9,9 @@ import {
   Info, User, CheckCircle2, Users, Music, GraduationCap, CalendarDays,
 } from 'lucide-react-native';
 import * as ExpoCalendar from 'expo-calendar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AlertContext from '@/contexts/AlertContext';
 import { DirectusImage } from '@/components/DirectusImage';
-import { GlassSurface } from '@/components/atoms/GlassSurface';
 import { GradientButton } from '@/components/atoms/GradientButton';
 import { EventListCard } from '@/components/events/EventListCard';
 import { useEventDetails } from '@/hooks/useEvents';
@@ -46,6 +46,7 @@ const InfoRow: React.FC<{ Icon: any; label: string; value: string }> = ({ Icon, 
 const EventDetailsPage = React.memo(() => {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const alert = useContext(AlertContext);
   const [related, setRelated] = useState<EventsTypes[]>([]);
 
@@ -120,17 +121,24 @@ const EventDetailsPage = React.memo(() => {
 
   const noop = useCallback(() => {}, []);
 
-  const backPill = useCallback(() => (
-    <Pressable onPress={() => router.back()} style={[h.pill, h.pillLeft]} accessibilityRole="button" accessibilityLabel="Voltar">
-      <GlassSurface style={h.fill} glassEffectStyle="regular" pointerEvents="none" fallbackColor="rgba(0,0,0,0.4)" />
-      <ArrowLeft size={20} color={SHEET.textPrimary} />
-    </Pressable>
-  ), [router]);
+  // Header CUSTOM sobreposto (não o nativo): no iOS 26 o header do native-stack coloca
+  // um "vidro" (Liquid Glass) atrás dos botões da barra, que aparecia como uma segunda
+  // forma desalinhada atrás das nossas pílulas. Com headerShown:false desenhamos as
+  // pílulas nós mesmos, como overlay absoluto — uma forma só, previsível.
+  const renderHeader = useCallback((right?: React.ReactNode) => (
+    <View style={[h.bar, { paddingTop: insets.top + 6 }]} pointerEvents="box-none">
+      <Pressable onPress={() => router.back()} hitSlop={8} style={h.pill} accessibilityRole="button" accessibilityLabel="Voltar">
+        <ArrowLeft size={21} color={SHEET.textPrimary} strokeWidth={2.5} />
+      </Pressable>
+      {right ?? <View style={h.spacer} />}
+    </View>
+  ), [router, insets.top]);
 
   if (loading) {
     return (
       <View style={s.screen}>
-        <Stack.Screen options={{ title: '', headerTransparent: true, headerTintColor: SHEET.textPrimary, headerLeft: backPill }} />
+        <Stack.Screen options={{ headerShown: false }} />
+        {renderHeader()}
         <View style={s.centered}>
           <ActivityIndicator size="large" color={SHEET.brand} />
           <RNText style={s.loadingText}>Carregando evento...</RNText>
@@ -142,7 +150,8 @@ const EventDetailsPage = React.memo(() => {
   if (!event) {
     return (
       <View style={s.screen}>
-        <Stack.Screen options={{ title: '', headerTransparent: true, headerTintColor: SHEET.textPrimary, headerLeft: backPill }} />
+        <Stack.Screen options={{ headerShown: false }} />
+        {renderHeader()}
         <View style={s.centered}>
           <View style={s.emptyIcon}><CalendarDays size={30} color={SHEET.danger} /></View>
           <RNText style={s.emptyTitle}>Evento não encontrado</RNText>
@@ -155,26 +164,7 @@ const EventDetailsPage = React.memo(() => {
 
   return (
     <View style={s.screen}>
-      <Stack.Screen
-        options={{
-          title: '',
-          headerTransparent: true,
-          headerTintColor: SHEET.textPrimary,
-          headerLeft: backPill,
-          headerRight: () => (
-            <View style={h.right}>
-              <Pressable onPress={onShare} style={h.pill} accessibilityRole="button" accessibilityLabel="Compartilhar">
-                <GlassSurface style={h.fill} glassEffectStyle="regular" pointerEvents="none" fallbackColor="rgba(0,0,0,0.4)" />
-                <Share2 size={19} color={SHEET.textPrimary} />
-              </Pressable>
-              <Pressable onPress={toggleFavorite} style={h.pill} accessibilityRole="button" accessibilityLabel={isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}>
-                <GlassSurface style={h.fill} glassEffectStyle="regular" pointerEvents="none" fallbackColor="rgba(0,0,0,0.4)" />
-                <Heart size={19} color={isFavorite ? SHEET.brand : SHEET.textPrimary} fill={isFavorite ? SHEET.brand : 'transparent'} />
-              </Pressable>
-            </View>
-          ),
-        }}
-      />
+      <Stack.Screen options={{ headerShown: false }} />
 
       <ScrollView style={s.screen} contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         <View style={s.hero}>
@@ -278,6 +268,18 @@ const EventDetailsPage = React.memo(() => {
           </View>
         )}
       </ScrollView>
+
+      {renderHeader(
+        <View style={h.rightCapsule}>
+          <Pressable onPress={onShare} hitSlop={6} style={h.capsuleBtn} accessibilityRole="button" accessibilityLabel="Compartilhar">
+            <Share2 size={18} color={SHEET.textPrimary} strokeWidth={2.4} />
+          </Pressable>
+          <View style={h.capsuleDivider} />
+          <Pressable onPress={toggleFavorite} hitSlop={6} style={h.capsuleBtn} accessibilityRole="button" accessibilityLabel={isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}>
+            <Heart size={18} color={isFavorite ? SHEET.brand : SHEET.textPrimary} fill={isFavorite ? SHEET.brand : 'transparent'} strokeWidth={2.4} />
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 });
@@ -286,11 +288,34 @@ EventDetailsPage.displayName = 'EventDetailsPage';
 
 export default EventDetailsPage;
 
+const PILL_BG = 'rgba(10,12,20,0.58)';
+const PILL_BORDER = 'rgba(255,255,255,0.22)';
+
+// Pílulas do header: scrim ESCURO SÓLIDO (View com backgroundColor) + borda hairline.
+// Nada de vidro aqui: o GlassView nativo (Liquid Glass) desenha camadas material/tint
+// desalinhadas em controles pequenos e arredondados, e o BlurView não é recortado pelo
+// overflow:hidden do pai (o blur "vaza" pra um retângulo). Uma View sólida recorta
+// perfeitamente pelo borderRadius = uma forma limpa, previsível e com bom contraste.
 const h = StyleSheet.create({
-  pill: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginLeft: 8 },
-  pillLeft: { marginLeft: 12 },
-  fill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
-  right: { flexDirection: 'row', alignItems: 'center', marginRight: 8 },
+  // Barra do header como overlay absoluto sobre o hero (header nativo desligado).
+  bar: {
+    position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingBottom: 6,
+  },
+  spacer: { width: 40, height: 40 },
+  pill: {
+    width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: PILL_BG,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: PILL_BORDER,
+  },
+  rightCapsule: {
+    flexDirection: 'row', alignItems: 'center', height: 40, borderRadius: 20,
+    backgroundColor: PILL_BG,
+    borderWidth: StyleSheet.hairlineWidth, borderColor: PILL_BORDER,
+  },
+  capsuleBtn: { width: 44, height: 40, alignItems: 'center', justifyContent: 'center' },
+  capsuleDivider: { width: StyleSheet.hairlineWidth, height: 20, backgroundColor: PILL_BORDER },
 });
 
 const s = StyleSheet.create({
