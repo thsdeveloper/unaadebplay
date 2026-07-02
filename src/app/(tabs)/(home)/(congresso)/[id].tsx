@@ -1,5 +1,5 @@
 import React, {useContext, useEffect, useLayoutEffect, useState} from "react";
-import {Link, useGlobalSearchParams, useNavigation} from "expo-router";
+import {Link, useLocalSearchParams, useNavigation} from "expo-router";
 import {getItem, getItems} from "@/services/items";
 import {supabase} from "@/services/supabase";
 import {BlurView} from "expo-blur";
@@ -30,7 +30,7 @@ export default function CongressoPage() {
     const [congress, setCongress] = useState<CongressType | null>(null);
     const [convidados, setConvidados] = useState<any[] | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
-    const {id} = useGlobalSearchParams();
+    const {id} = useLocalSearchParams();
     const {user} = useAuth();
     const navigation = useNavigation()
     const alert = useContext(AlertContext);

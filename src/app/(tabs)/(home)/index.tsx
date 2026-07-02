@@ -1,6 +1,10 @@
 import React, { useCallback } from 'react';
-import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
+import { View, StyleSheet, ListRenderItem, RefreshControl } from 'react-native';
+import Animated, { useSharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { HomeHeader, HOME_HEADER_H } from '@/components/home/HomeHeader';
 import { useHomeFeed } from '@/hooks/useHomeFeed';
 import { HomeHero } from '@/components/organisms/HomeHero';
 import { QuickAccessBento } from '@/components/organisms/QuickAccessBento';
@@ -32,6 +36,13 @@ const SECTIONS: Section[] = [
  */
 export default function HomeScreen() {
   const feed = useHomeFeed();
+  const insets = useSafeAreaInsets();
+
+  // Scroll compartilhado (UI thread) → o HomeHeader colapsa os chips e revela a hairline.
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler({
+    onScroll: (e) => { scrollY.value = e.contentOffset.y; },
+  });
 
   // Callbacks estáveis -> o React.memo do MediaRail consegue pular trilhos inalterados.
   const renderEventCard = useCallback((e: EventsTypes) => <EventCard event={e} />, []);
@@ -84,21 +95,33 @@ export default function HomeScreen() {
   );
 
   return (
-    <>
+    <View style={{ flex: 1, backgroundColor: BG }}>
+      {/* Degradê ambiente (só na Home) — tom mais claro vindo do canto direito, à la Netflix. */}
+      <LinearGradient
+        colors={['#1E2A47', '#12182B', '#0D0F17']}
+        locations={[0, 0.42, 0.88]}
+        start={{ x: 1, y: 0.02 }}
+        end={{ x: 0.05, y: 0.62 }}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
       <StatusBar style="light" />
-      <FlatList
-        style={{ backgroundColor: BG }}
+      <Animated.FlatList
+        style={{ backgroundColor: 'transparent' }}
         data={SECTIONS}
         keyExtractor={(s) => s.key}
         renderItem={renderItem}
         ListHeaderComponent={<HomeHero slides={feed.heroSlides} status={feed.heroStatus} />}
-        contentContainerStyle={{ paddingBottom: 12 }}
+        contentContainerStyle={{ paddingTop: insets.top + HOME_HEADER_H + 16, paddingBottom: 12 }}
+        contentInsetAdjustmentBehavior="never"
         showsVerticalScrollIndicator={false}
         removeClippedSubviews
         windowSize={5}
         initialNumToRender={3}
         maxToRenderPerBatch={3}
         updateCellsBatchingPeriod={50}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={feed.refreshing}
@@ -109,6 +132,7 @@ export default function HomeScreen() {
           />
         }
       />
-    </>
+      <HomeHeader scrollY={scrollY} />
+    </View>
   );
 }

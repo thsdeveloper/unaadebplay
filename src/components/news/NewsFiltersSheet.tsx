@@ -7,33 +7,19 @@ import {
   ActionsheetDragIndicatorWrapper,
   ActionsheetDragIndicator,
 } from '@/components/ui/actionsheet';
-import { Users, Music, GraduationCap, CalendarDays, MapPin } from 'lucide-react-native';
-import { DatePicker } from '@/components/molecules/DatePicker';
+import { Star, Tag as TagIcon } from 'lucide-react-native';
 import { GradientButton } from '@/components/atoms/GradientButton';
-import { SHEET } from '@/constants/sheetTokens';
 import { GlassSurface } from '@/components/atoms/GlassSurface';
-import { EventFilters } from '@/services/events';
-import { useEventFilters } from '@/hooks/useEvents';
+import { SHEET } from '@/constants/sheetTokens';
+import type { NewsFilters, NewsTag } from '@/types/NewsTypes';
 
-interface EventFiltersSheetProps {
+interface NewsFiltersSheetProps {
   isOpen: boolean;
   onClose: () => void;
-  onApplyFilters: (filters: EventFilters) => void;
-  activeFilters: EventFilters;
-  onClearFilters: () => void;
+  onApplyFilters: (filters: NewsFilters) => void;
+  activeFilters: NewsFilters;
+  tags: NewsTag[];
 }
-
-const EVENT_TYPES: { value: string; label: string; Icon: any }[] = [
-  { value: 'congresso-geral', label: 'Congresso Geral', Icon: Users },
-  { value: 'ensaio', label: 'Ensaio', Icon: Music },
-  { value: 'palestras', label: 'Palestras', Icon: GraduationCap },
-  { value: 'cpre-congresso', label: 'Pré-Congresso', Icon: CalendarDays },
-];
-const STATUS: { value: string; label: string }[] = [
-  { value: 'active', label: 'Ativo' },
-  { value: 'pending', label: 'Pendente' },
-  { value: 'cancelled', label: 'Cancelado' },
-];
 
 const Chip: React.FC<{ label: string; Icon?: any; active: boolean; onPress: () => void }> = ({ label, Icon, active, onPress }) => (
   <Pressable onPress={onPress} style={[ch.chip, active && ch.chipActive]} accessibilityRole="button" accessibilityLabel={label}>
@@ -42,23 +28,37 @@ const Chip: React.FC<{ label: string; Icon?: any; active: boolean; onPress: () =
   </Pressable>
 );
 
-/** Bottom sheet de filtros — dark, chips (tipo/status/local) + período (DatePicker). */
-export const EventFiltersSheet: React.FC<EventFiltersSheetProps> = ({ isOpen, onClose, onApplyFilters, activeFilters, onClearFilters }) => {
-  const [temp, setTemp] = useState<EventFilters>(activeFilters);
-  const { locations } = useEventFilters();
+/** Bottom sheet de filtros de notícias — dark/glass, tags (multi) + toggle de destaques. */
+export const NewsFiltersSheet: React.FC<NewsFiltersSheetProps> = ({ isOpen, onClose, onApplyFilters, activeFilters, tags }) => {
+  const [temp, setTemp] = useState<NewsFilters>(activeFilters);
 
   useEffect(() => {
     if (isOpen) setTemp(activeFilters);
   }, [isOpen, activeFilters]);
 
-  const toggle = useCallback((key: keyof EventFilters, value: string) => {
-    setTemp((prev) => ({ ...prev, [key]: prev[key] === value ? undefined : value }));
+  const toggleTag = useCallback((id: string) => {
+    setTemp((prev) => {
+      const cur = prev.tags ?? [];
+      const next = cur.includes(id) ? cur.filter((t) => t !== id) : [...cur, id];
+      return { ...prev, tags: next.length ? next : undefined };
+    });
+  }, []);
+
+  const toggleFeatured = useCallback(() => {
+    setTemp((p) => ({ ...p, featured: p.featured ? undefined : true }));
   }, []);
 
   const apply = useCallback(() => { onApplyFilters(temp); onClose(); }, [temp, onApplyFilters, onClose]);
-  const clear = useCallback(() => { setTemp({}); onClearFilters(); onClose(); }, [onClearFilters, onClose]);
 
-  const count = Object.entries(temp).filter(([k, v]) => k !== 'search' && v).length;
+  // "Limpar" remove só tags/destaques — categoria e busca ficam (são controladas fora do sheet).
+  const clear = useCallback(() => {
+    const { tags: _t, featured: _f, ...rest } = activeFilters;
+    setTemp(rest);
+    onApplyFilters(rest);
+    onClose();
+  }, [activeFilters, onApplyFilters, onClose]);
+
+  const count = (temp.tags?.length ?? 0) + (temp.featured ? 1 : 0);
 
   return (
     <Actionsheet isOpen={isOpen} onClose={onClose}>
@@ -73,7 +73,7 @@ export const EventFiltersSheet: React.FC<EventFiltersSheetProps> = ({ isOpen, on
 
         <View style={f.body}>
           <View style={f.header}>
-            <RNText style={f.heading}>Filtrar eventos</RNText>
+            <RNText style={f.heading}>Filtrar notícias</RNText>
             {count > 0 && (
               <View style={f.countBadge}>
                 <RNText style={f.countText}>{count} {count === 1 ? 'ativo' : 'ativos'}</RNText>
@@ -81,37 +81,18 @@ export const EventFiltersSheet: React.FC<EventFiltersSheetProps> = ({ isOpen, on
             )}
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 430 }} keyboardShouldPersistTaps="handled">
-            <RNText style={f.label}>Tipo de evento</RNText>
+          <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 420 }} keyboardShouldPersistTaps="handled">
+            <RNText style={f.label}>Destaques</RNText>
             <View style={f.chips}>
-              {EVENT_TYPES.map((o) => (
-                <Chip key={o.value} label={o.label} Icon={o.Icon} active={temp.eventType === o.value} onPress={() => toggle('eventType', o.value)} />
-              ))}
+              <Chip label="Somente destaques" Icon={Star} active={!!temp.featured} onPress={toggleFeatured} />
             </View>
 
-            <RNText style={f.label}>Status</RNText>
-            <View style={f.chips}>
-              {STATUS.map((o) => (
-                <Chip key={o.value} label={o.label} active={temp.status === o.value} onPress={() => toggle('status', o.value)} />
-              ))}
-            </View>
-
-            <RNText style={f.label}>Período</RNText>
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              <View style={{ flex: 1 }}>
-                <DatePicker value={temp.dateFrom} onChange={(d) => setTemp((p) => ({ ...p, dateFrom: d }))} placeholder="Data inicial" maximumDate={temp.dateTo || undefined} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <DatePicker value={temp.dateTo} onChange={(d) => setTemp((p) => ({ ...p, dateTo: d }))} placeholder="Data final" minimumDate={temp.dateFrom || undefined} />
-              </View>
-            </View>
-
-            {locations.length > 0 && (
+            {tags.length > 0 && (
               <>
-                <RNText style={f.label}>Local</RNText>
+                <RNText style={f.label}>Tags</RNText>
                 <View style={f.chips}>
-                  {locations.map((loc) => (
-                    <Chip key={loc} label={loc} Icon={MapPin} active={temp.location === loc} onPress={() => toggle('location', loc)} />
+                  {tags.map((tag) => (
+                    <Chip key={tag.id} label={tag.name} Icon={TagIcon} active={temp.tags?.includes(tag.id) ?? false} onPress={() => toggleTag(tag.id)} />
                   ))}
                 </View>
               </>
@@ -133,7 +114,7 @@ export const EventFiltersSheet: React.FC<EventFiltersSheetProps> = ({ isOpen, on
   );
 };
 
-export default EventFiltersSheet;
+export default NewsFiltersSheet;
 
 const ch = StyleSheet.create({
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 999, backgroundColor: SHEET.glass, borderWidth: 1, borderColor: SHEET.border },

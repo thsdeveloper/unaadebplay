@@ -1,96 +1,58 @@
-import React, { useState, useCallback, useContext, useRef } from 'react';
-import { TextInput, Animated } from 'react-native';
-import { Box } from '@/components/ui/box';
-import { HStack } from '@/components/ui/hstack';
-import { Icon } from '@/components/ui/icon';
-import { Pressable } from '@/components/ui/pressable';
-import { MaterialIcons, Ionicons } from '@expo/vector-icons';
-import TranslationContext from '@/contexts/TranslationContext';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Pressable } from 'react-native';
+import { Search, X } from 'lucide-react-native';
+import { GlassInput } from '@/components/molecules/GlassInput';
+import { SHEET } from '@/constants/sheetTokens';
 
-interface EventSearchBarProps {
-  onSearch: (query: string) => void;
+interface SearchProps {
+  onSearch: (q: string) => void;
   placeholder?: string;
-  value?: string;
+  debounceMs?: number;
 }
 
-export const EventSearchBar: React.FC<EventSearchBarProps> = ({
-  onSearch,
-  placeholder,
-  value = '',
-}) => {
-  const [searchQuery, setSearchQuery] = useState(value);
-  const [isFocused, setIsFocused] = useState(false);
-  const { t } = useContext(TranslationContext);
-  const scaleAnim = useRef(new Animated.Value(1)).current;
+/** Busca de eventos — wrapper escuro sobre o GlassInput, com debounce de 250ms. */
+export const EventSearchBar = React.memo<SearchProps>(({ onSearch, placeholder = 'Buscar eventos...', debounceMs = 250 }) => {
+  const [value, setValue] = useState('');
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleFocus = useCallback(() => {
-    setIsFocused(true);
-    Animated.spring(scaleAnim, {
-      toValue: 1.02,
-      useNativeDriver: true,
-    }).start();
-  }, [scaleAnim]);
+  const emit = useCallback((q: string) => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => onSearch(q), debounceMs);
+  }, [onSearch, debounceMs]);
 
-  const handleBlur = useCallback(() => {
-    setIsFocused(false);
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      useNativeDriver: true,
-    }).start();
-  }, [scaleAnim]);
+  const onChange = useCallback((t: string) => {
+    setValue(t);
+    emit(t.trim());
+  }, [emit]);
 
-  const handleSearch = useCallback((text: string) => {
-    setSearchQuery(text);
-    onSearch(text);
-  }, [onSearch]);
-
-  const handleClear = useCallback(() => {
-    setSearchQuery('');
+  const clear = useCallback(() => {
+    if (timer.current) clearTimeout(timer.current);
+    setValue('');
     onSearch('');
   }, [onSearch]);
 
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+
   return (
-    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-      <Box
-        className={`mx-4 mb-4 bg-white rounded-xl shadow-sm border ${
-          isFocused ? 'border-purple-500' : 'border-gray-200'
-        }`}
-      >
-        <HStack className="items-center px-4 py-2">
-          <Icon
-            as={Ionicons}
-            name="search"
-            size="md"
-            className={isFocused ? 'text-purple-600' : 'text-gray-400'}
-          />
-          
-          <TextInput
-            value={searchQuery}
-            onChangeText={handleSearch}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            placeholder={placeholder || t('search_events') || 'Buscar eventos...'}
-            placeholderTextColor="#9CA3AF"
-            className="flex-1 ml-3 text-base text-gray-900"
-            returnKeyType="search"
-            autoCorrect={false}
-            autoCapitalize="none"
-          />
-          
-          {searchQuery.length > 0 && (
-            <Pressable onPress={handleClear} className="p-1">
-              <Icon
-                as={MaterialIcons}
-                name="clear"
-                size="sm"
-                className="text-gray-400"
-              />
-            </Pressable>
-          )}
-        </HStack>
-      </Box>
-    </Animated.View>
+    <GlassInput
+      icon={<Search size={20} color={SHEET.textMuted} />}
+      placeholder={placeholder}
+      value={value}
+      onChangeText={onChange}
+      returnKeyType="search"
+      autoCapitalize="none"
+      accessibilityLabel="Buscar eventos"
+      rightSlot={
+        value ? (
+          <Pressable onPress={clear} hitSlop={12} accessibilityRole="button" accessibilityLabel="Limpar busca">
+            <X size={18} color={SHEET.textMuted} />
+          </Pressable>
+        ) : undefined
+      }
+    />
   );
-};
+});
+
+EventSearchBar.displayName = 'EventSearchBar';
 
 export default EventSearchBar;

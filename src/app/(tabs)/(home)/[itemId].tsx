@@ -1,10 +1,10 @@
 import { Text } from 'react-native';
-import {useGlobalSearchParams, useNavigation} from "expo-router";
+import {useLocalSearchParams, useNavigation} from "expo-router";
 import {useLayoutEffect} from "react";
 
 export default function Details() {
     const navigation = useNavigation()
-    const { itemId } = useGlobalSearchParams<{itemId: string}>();
+    const { itemId } = useLocalSearchParams<{itemId: string}>();
 
     useLayoutEffect(() => {
         navigation.setOptions({

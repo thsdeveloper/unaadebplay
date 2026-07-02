@@ -4,7 +4,7 @@ import { UserTypes } from "@/types/UserTypes";
 import { Avatar } from "@/components/Avatar";
 import { ScrollView } from "react-native";
 import { LoadingLottier } from "@/components/LoadingLottier";
-import { useGlobalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import LikedIcon from "@/components/LikedIcon";
 import { useThemedColors } from "@/hooks/useThemedColors";
 import SectionInfo from "@/components/SectionInfo";
@@ -17,7 +17,7 @@ import { Text } from "@/components/ui/text";
 export default function UserProfile() {
     const colors = useThemedColors();
     const [user, setUser] = useState<UserTypes | null>(null);
-    const { id } = useGlobalSearchParams<{ id: string }>();
+    const { id } = useLocalSearchParams<{ id: string }>();
 
     useEffect(() => {
         const fetchUser = async () => {

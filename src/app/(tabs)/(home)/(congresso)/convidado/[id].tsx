@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {useGlobalSearchParams, useNavigation} from "expo-router";
+import {useLocalSearchParams, useNavigation} from "expo-router";
 import {CongressType} from "@/types/CongressType";
 import {Box} from "@/components/ui/box";
 
@@ -7,7 +7,7 @@ export default function ConvidadoPage() {
     const [congress, setCongress] = useState<CongressType | null>(null);
     const [convidados, setConvidados] = useState<any[] | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
-    const {id} = useGlobalSearchParams();
+    const {id} = useLocalSearchParams();
     const navigation = useNavigation()
 
 

@@ -21,6 +21,10 @@ import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {ToastProvider} from '@/components/ui/toast';
 // import {FeedbackToast, useFeedbackToast} from '@/components/FeedbackToast';
 import {View} from 'react-native';
+import {AnimatedSplash} from '@/components/AnimatedSplash';
+
+// Mantém o splash NATIVO até o splash animado custom assumir (handoff sem flash).
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 // Wrapper para gerenciar o Toast globalmente
 const ToastWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -42,6 +46,7 @@ const ToastWrapper = ({ children }: { children: React.ReactNode }) => {
 
 export default function RootLayout() {
     const [appIsReady, setAppIsReady] = useState(false);
+    const [splashGone, setSplashGone] = useState(false);
     const [config, setConfig] = useState({});
 
     // Registrar o tratador de erros de API
@@ -52,9 +57,6 @@ export default function RootLayout() {
             try {
                 console.log('🚀 [App] Iniciando app...');
                 console.log('🔗 [App] API URL:', process.env.EXPO_PUBLIC_API_URL);
-
-                // Mantém a tela de splash enquanto estamos preparando os recursos
-                await SplashScreen.preventAutoHideAsync();
 
                 // Carrega todas as configurações
                 console.log('⚙️  [App] Carregando configurações...');
@@ -74,18 +76,9 @@ export default function RootLayout() {
         ''
     }, []);
 
-    useEffect(() => {
-        if (appIsReady) {
-            SplashScreen.hideAsync();
-        }
-    }, [appIsReady]);
-
-    if (!appIsReady) {
-        return null;
-    }
-
     return (
         <GestureHandlerRootView style={{flex: 1}}>
+            {appIsReady && (
             <ThemeProvider>
                 <ThemedGluestackProvider>
                     <ToastProvider>
@@ -110,6 +103,11 @@ export default function RootLayout() {
                     </ToastProvider>
                 </ThemedGluestackProvider>
             </ThemeProvider>
+            )}
+
+            {!splashGone && (
+                <AnimatedSplash appReady={appIsReady} onExitComplete={() => setSplashGone(true)} />
+            )}
         </GestureHandlerRootView>
     );
 }

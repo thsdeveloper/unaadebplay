@@ -5,7 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import RenderHtml from "react-native-render-html";
-import { useGlobalSearchParams, Stack } from "expo-router";
+import { useLocalSearchParams, Stack } from "expo-router";
 import { useNewsItem } from "@/hooks/useNews";
 import { NewsCard } from "@/components/NewsCard";
 import { NewsDetailSkeleton } from "@/components/Skeletons/NewsSkeletons";
@@ -26,7 +26,7 @@ export default function Post() {
     const colorScheme = useColorScheme();
     const isDark = colorScheme === 'dark';
     const { t } = useContext(TranslationContext);
-    const { id } = useGlobalSearchParams();
+    const { id } = useLocalSearchParams();
 
     const { news, relatedNews, isLoading, error } = useNewsItem(id as string);
 

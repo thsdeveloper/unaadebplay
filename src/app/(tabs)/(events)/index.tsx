@@ -1,412 +1,271 @@
-import React, { useContext, useCallback, useMemo, useState } from 'react';
-import { RefreshControl, SectionList, Dimensions, SectionListData, ScrollView } from 'react-native';
-import TranslationContext from "@/contexts/TranslationContext";
-import AuthContext from "@/contexts/AuthContext";
-import { MaterialIcons, Ionicons } from '@expo/vector-icons';
-import { useThemedColors } from "@/hooks/useThemedColors";
-import { EventsTypes } from "@/types/EventsTypes";
-import { HStack } from "@/components/ui/hstack";
-import { Box } from "@/components/ui/box";
-import { Text } from "@/components/ui/text";
-import { Heading } from "@/components/ui/heading";
-import { Center } from "@/components/ui/center";
-import { Pressable } from "@/components/ui/pressable";
-import { Icon } from "@/components/ui/icon";
-import { VStack } from "@/components/ui/vstack";
-import { Badge, BadgeText } from "@/components/ui/badge";
-import { format } from 'date-fns';
+import React, { memo, useCallback, useMemo, useState } from 'react';
+import { View, Text as RNText, Pressable, SectionList, RefreshControl, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { useFocusEffect } from 'expo-router';
+import { SlidersHorizontal, List, CalendarClock, Heart, CalendarX, HeartOff, SearchX, RotateCw } from 'lucide-react-native';
+import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { LinearGradient } from 'expo-linear-gradient';
-import EventCard from '@/components/events/EventCard';
-import EventListSkeletons from '@/components/Skeletons/EventListSkeletons';
-import EventSearchBar from '@/components/events/EventSearchBar';
+import { SHEET } from '@/constants/sheetTokens';
+import { GlassSurface } from '@/components/atoms/GlassSurface';
+import { EventSearchBar } from '@/components/events/EventSearchBar';
+import { EventListCard } from '@/components/events/EventListCard';
 import EventFiltersSheet from '@/components/events/EventFiltersSheet';
+import EventListSkeletons from '@/components/Skeletons/EventListSkeletons';
 import { useEvents } from '@/hooks/useEvents';
 import { eventsService } from '@/services/events';
-import { useFocusEffect } from 'expo-router';
+import type { EventsTypes } from '@/types/EventsTypes';
 
-const { width } = Dimensions.get('window');
+type TabId = 'all' | 'upcoming' | 'favorites';
+type Section = { key: string; title: string; isToday: boolean; data: EventsTypes[] };
 
-type EventSection = {
-    title: string;
-    data: EventsTypes[];
-    formattedDate: string;
-    isToday?: boolean;
-    isPast?: boolean;
+const TABS: { id: TabId; label: string; Icon: any }[] = [
+  { id: 'all', label: 'Todos', Icon: List },
+  { id: 'upcoming', label: 'Próximos', Icon: CalendarClock },
+  { id: 'favorites', label: 'Favoritos', Icon: Heart },
+];
+
+interface ListHeaderProps {
+  tab: TabId;
+  favoritesCount: number;
+  activeFilterCount: number;
+  onSearch: (q: string) => void;
+  onSelectTab: (id: TabId) => void;
+  onOpenFilters: () => void;
 }
 
-interface TabItem {
-    id: 'all' | 'upcoming' | 'favorites';
-    label: string;
-    icon: string;
-    badge?: number;
-}
-
-const EventPage = React.memo(() => {
-    const { t } = useContext(TranslationContext);
-    const { user } = useContext(AuthContext);
-    const [activeTab, setActiveTab] = useState<'all' | 'upcoming' | 'favorites'>('all');
-    const [favoriteEvents, setFavoriteEvents] = useState<Set<string>>(new Set());
-    const [showFilters, setShowFilters] = useState(false);
-    const colors = useThemedColors();
-
-    const {
-        events,
-        loading,
-        refreshing,
-        refresh,
-        searchEvents,
-        applyFilters,
-        clearFilters,
-        activeFilters,
-    } = useEvents({ autoLoad: true });
-
-    const loadFavorites = useCallback(async () => {
-        try {
-            const favorites = await eventsService.getFavorites();
-            setFavoriteEvents(new Set(favorites));
-        } catch (error) {
-            console.error('Error loading favorites:', error);
-        }
-    }, []);
-
-    useFocusEffect(
-        useCallback(() => {
-            loadFavorites();
-        }, [])
-    );
-
-    const handleFavoriteToggle = useCallback(async (eventId: string) => {
-        try {
-            if (favoriteEvents.has(eventId)) {
-                await eventsService.removeFromFavorites(eventId);
-                setFavoriteEvents(prev => {
-                    const newSet = new Set(prev);
-                    newSet.delete(eventId);
-                    return newSet;
-                });
-            } else {
-                await eventsService.addToFavorites(eventId);
-                setFavoriteEvents(prev => new Set(prev).add(eventId));
-            }
-        } catch (error) {
-            console.error('Error toggling favorite:', error);
-        }
-    }, [favoriteEvents]);
-
-    const filteredEvents = useMemo(() => {
-        let filtered = events;
-        
-        if (activeTab === 'upcoming') {
-            const now = new Date();
-            filtered = events.filter(event => new Date(event.start_date_time) >= now);
-        } else if (activeTab === 'favorites') {
-            filtered = events.filter(event => favoriteEvents.has(event.id));
-        }
-        
-        return filtered;
-    }, [events, activeTab, favoriteEvents]);
-    
-    const sections = useMemo<EventSection[]>(() => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        const eventsByDate = filteredEvents.reduce<Record<string, { events: EventsTypes[], formattedDate: string, date: Date }>>((groups, event) => {
-            const eventDate = new Date(event.start_date_time);
-            const formattedDate = format(eventDate, "EEEE, dd 'de' MMMM", { locale: ptBR });
-            const dateKey = eventDate.toISOString().split('T')[0];
-
-            if (!groups[dateKey]) {
-                groups[dateKey] = {
-                    events: [],
-                    formattedDate: formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1),
-                    date: eventDate
-                };
-            }
-
-            groups[dateKey].events.push(event);
-            return groups;
-        }, {});
-
-        return Object.entries(eventsByDate)
-            .sort(([, a], [, b]) => a.date.getTime() - b.date.getTime())
-            .map(([dateKey, group]) => {
-                const sectionDate = new Date(dateKey);
-                sectionDate.setHours(0, 0, 0, 0);
-                
-                return {
-                    title: dateKey,
-                    formattedDate: group.formattedDate,
-                    data: group.events,
-                    isToday: sectionDate.getTime() === today.getTime(),
-                    isPast: sectionDate < today
-                };
-            });
-    }, [filteredEvents]);
-
-    const tabs = useMemo<TabItem[]>(() => [
-        { id: 'all', label: t('all_events') || 'Todos', icon: 'event' },
-        { id: 'upcoming', label: t('upcoming_events') || 'Próximos', icon: 'update' },
-        { id: 'favorites', label: t('favorite_events') || 'Favoritos', icon: 'favorite', badge: favoriteEvents.size },
-    ], [t, favoriteEvents.size]);
-    
-    const renderItem = useCallback(({ item }: { item: EventsTypes }) => (
-        <EventCard
-            event={item}
-            isFavorite={favoriteEvents.has(item.id)}
-            onFavoriteToggle={handleFavoriteToggle}
-        />
-    ), [favoriteEvents, handleFavoriteToggle]);
-
-    const renderSectionHeader = useCallback(({ section }: { section: SectionListData<EventsTypes, EventSection> }) => (
-        <Box className={`px-5 py-3 mb-2 ${section.isPast ? 'bg-gray-100' : 'bg-white'}`}>
-            <HStack className="items-center space-x-2">
-                <Icon 
-                    as={MaterialIcons} 
-                    name={section.isToday ? "today" : "event"} 
-                    size="sm" 
-                    className={section.isToday ? "text-purple-600" : section.isPast ? "text-gray-500" : "text-gray-700"} 
-                />
-                <Text className={`font-semibold text-base ${section.isToday ? "text-purple-700" : section.isPast ? "text-gray-600" : "text-gray-800"}`}>
-                    {section.isToday ? `Hoje - ${section.formattedDate}` : section.formattedDate}
-                </Text>
-                {section.isToday && (
-                    <Badge className="bg-purple-100">
-                        <BadgeText className="text-purple-700 text-xs">Hoje</BadgeText>
-                    </Badge>
-                )}
-            </HStack>
-        </Box>
-    ), []);
-
-    const renderEmptyComponent = useCallback(() => {
-        const emptyMessages = {
-            all: {
-                title: t('text_no_events') || 'Nenhum evento disponível',
-                description: t('text_no_events_description') || 'Não há eventos agendados.',
-                icon: 'event-busy',
-            },
-            upcoming: {
-                title: t('no_upcoming_events') || 'Sem eventos próximos',
-                description: t('no_upcoming_events_desc') || 'Não há eventos futuros agendados.',
-                icon: 'schedule',
-            },
-            favorites: {
-                title: t('no_favorite_events') || 'Sem favoritos',
-                description: t('no_favorite_events_desc') || 'Você ainda não adicionou eventos aos favoritos.',
-                icon: 'favorite-border',
-            },
-        };
-        
-        const message = emptyMessages[activeTab];
-        
-        return (
-            <Center className="flex-1 p-10">
-                <Box className="bg-gray-100 rounded-full p-6 mb-6">
-                    <Icon
-                        as={MaterialIcons}
-                        name={message.icon as any}
-                        size="6xl"
-                        className="text-gray-400"
-                    />
-                </Box>
-                <Heading className="text-lg text-gray-700 mb-2 text-center">
-                    {message.title}
-                </Heading>
-                <Text className="text-center text-gray-500 mb-6 px-4">
-                    {message.description}
-                </Text>
-                {activeTab === 'all' && (
-                    <Pressable
-                        className="bg-purple-600 px-6 py-3 rounded-full"
-                        onPress={refresh}
-                    >
-                        <HStack className="items-center space-x-2">
-                            <Icon as={MaterialIcons} name="refresh" size="sm" className="text-white" />
-                            <Text className="text-white font-semibold">
-                                {t('text_refresh') || "Atualizar"}
-                            </Text>
-                        </HStack>
-                    </Pressable>
-                )}
-            </Center>
-        );
-    }, [t, activeTab, refresh]);
-
-    const keyExtractor = useCallback((item: EventsTypes) => item.id, []);
-
-    const getItemLayout = useCallback((_: any, index: number) => ({
-        length: 300,
-        offset: 300 * index,
-        index,
-    }), []);
-
-    const contentContainerStyle = useMemo(() =>
-        sections.length === 0 ? { flex: 1 } : { paddingBottom: 100 },
-        [sections.length]
-    );
-    
-    const ListHeaderComponent = useCallback(() => (
-        <VStack className="bg-white pt-4">
-            <EventSearchBar onSearch={searchEvents} />
-            
-            {Object.keys(activeFilters).filter(key => activeFilters[key as keyof typeof activeFilters]).length > 0 && (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 mb-2">
-                    <HStack className="space-x-2">
-                        {activeFilters.eventType && (
-                            <Badge variant="outline" className="border-purple-600">
-                                <BadgeText className="text-purple-600 text-xs">
-                                    {activeFilters.eventType}
-                                </BadgeText>
-                            </Badge>
-                        )}
-                        {activeFilters.status && (
-                            <Badge variant="outline" className="border-purple-600">
-                                <BadgeText className="text-purple-600 text-xs">
-                                    {activeFilters.status}
-                                </BadgeText>
-                            </Badge>
-                        )}
-                        {activeFilters.location && (
-                            <Badge variant="outline" className="border-purple-600">
-                                <BadgeText className="text-purple-600 text-xs">
-                                    {activeFilters.location}
-                                </BadgeText>
-                            </Badge>
-                        )}
-                        {activeFilters.dateFrom && (
-                            <Badge variant="outline" className="border-purple-600">
-                                <BadgeText className="text-purple-600 text-xs">
-                                    Desde {new Date(activeFilters.dateFrom).toLocaleDateString()}
-                                </BadgeText>
-                            </Badge>
-                        )}
-                        <Pressable onPress={clearFilters}>
-                            <Badge className="bg-gray-200">
-                                <HStack className="items-center space-x-1">
-                                    <Icon as={MaterialIcons} name="clear" size="xs" className="text-gray-600" />
-                                    <BadgeText className="text-gray-600 text-xs">Limpar</BadgeText>
-                                </HStack>
-                            </Badge>
-                        </Pressable>
-                    </HStack>
-                </ScrollView>
-            )}
-            
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 mb-6">
-                <HStack className="space-x-3" space={'sm'}>
-                    {tabs.map(tab => (
-                        <Pressable
-                            key={tab.id}
-                            onPress={() => setActiveTab(tab.id)}
-                            className={`px-4 py-2 rounded-full flex-row items-center space-x-2 ${
-                                activeTab === tab.id ? 'bg-purple-600' : 'bg-gray-100'
-                            }`}
-                        >
-                            <Icon
-                                as={MaterialIcons}
-                                name={tab.icon as any}
-                                size="sm"
-                                className={` ${
-                                    activeTab === tab.id ? 'text-amber-600' : 'text-gray-600'
-                                }`}
-                            />
-                            <Text
-                                className={`font-medium ml-2 ${
-                                    activeTab === tab.id ? 'text-white' : 'text-gray-700'
-                                }`}
-                            >
-                                {tab.label}
-                            </Text>
-                            {tab.badge && tab.badge > 0 && (
-                                <Badge className={activeTab === tab.id ? 'bg-white' : 'bg-purple-600'}>
-                                    <BadgeText className={activeTab === tab.id ? 'text-purple-600 text-xs' : 'text-white text-xs'}>
-                                        {tab.badge}
-                                    </BadgeText>
-                                </Badge>
-                            )}
-                        </Pressable>
-                    ))}
-                </HStack>
-            </ScrollView>
-        </VStack>
-    ), [tabs, activeTab, searchEvents, applyFilters, activeFilters, clearFilters]);
-
-    return (
-        <Box className="flex-1 bg-gray-50">
-            <LinearGradient
-                    colors={['#7c3aed', '#6d28d9']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={{ paddingTop: 50, paddingBottom: 20 }}
-                >
-                    <VStack className="px-5">
-                        <HStack className="items-center justify-between">
-                            <VStack className="flex-1">
-                                <Heading className="text-2xl font-bold text-white mb-2">
-                                    {t('events_title') || 'Eventos'}
-                                </Heading>
-                                <Text className="text-purple-100">
-                                    {t('events_subtitle') || 'Descubra e participe dos próximos eventos'}
-                                </Text>
-                            </VStack>
-                            <Pressable
-                                onPress={() => setShowFilters(true)}
-                                className="bg-white/20 rounded-full p-3 relative"
-                            >
-                                <Icon as={MaterialIcons} name="filter-list" size="sm" className="text-white" />
-                                {Object.keys(activeFilters).filter(key => activeFilters[key as keyof typeof activeFilters]).length > 0 && (
-                                    <Badge className="absolute -top-1 -right-1 bg-red-500 min-w-[20px] h-5 items-center justify-center">
-                                        <BadgeText className="text-white text-xs">
-                                            {Object.keys(activeFilters).filter(key => activeFilters[key as keyof typeof activeFilters]).length}
-                                        </BadgeText>
-                                    </Badge>
-                                )}
-                            </Pressable>
-                        </HStack>
-                    </VStack>
-                </LinearGradient>
-            
-            {loading && sections.length === 0 ? (
-                <EventListSkeletons count={5} />
-            ) : (
-                <SectionList<EventsTypes, EventSection>
-                    sections={sections}
-                    keyExtractor={keyExtractor}
-                    renderItem={renderItem}
-                    renderSectionHeader={renderSectionHeader}
-                    ListHeaderComponent={ListHeaderComponent}
-                    contentContainerStyle={contentContainerStyle}
-                    stickySectionHeadersEnabled={true}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={refresh}
-                            tintColor={colors.primary}
-                            colors={[colors.primary]}
-                        />
-                    }
-                    ListEmptyComponent={renderEmptyComponent}
-                    getItemLayout={getItemLayout}
-                    removeClippedSubviews={true}
-                    maxToRenderPerBatch={10}
-                    updateCellsBatchingPeriod={50}
-                    windowSize={10}
-                    initialNumToRender={5}
-                />
-            )}
-            
-            <EventFiltersSheet
-                isOpen={showFilters}
-                onClose={() => setShowFilters(false)}
-                onApplyFilters={applyFilters}
-                activeFilters={activeFilters}
-                onClearFilters={clearFilters}
-            />
-        </Box>
-    );
+/**
+ * Header da lista em nível de módulo (tipo ESTÁVEL), passado como ELEMENTO à SectionList.
+ * Assim, trocar de aba / favoritar apenas RE-RENDERIZA o header em vez de remontá-lo —
+ * os GlassView (UIVisualEffectView) permanecem montados e o EventSearchBar não perde
+ * texto/foco. Ver revisão adversarial do glass.
+ */
+const EventsListHeader = memo(function EventsListHeader({
+  tab, favoritesCount, activeFilterCount, onSearch, onSelectTab, onOpenFilters,
+}: ListHeaderProps) {
+  return (
+    <View style={s.listHeader}>
+      <View style={s.searchRow}>
+        <View style={{ flex: 1 }}><EventSearchBar onSearch={onSearch} /></View>
+        <Pressable onPress={onOpenFilters} style={s.filterBtn} accessibilityRole="button" accessibilityLabel="Filtrar eventos">
+          <GlassSurface style={s.fill} glassEffectStyle="regular" pointerEvents="none" />
+          <SlidersHorizontal size={20} color={SHEET.textPrimary} />
+          {activeFilterCount > 0 && <View style={s.filterDot} />}
+        </Pressable>
+      </View>
+      <View style={s.tabs}>
+        <GlassSurface style={s.fill} glassEffectStyle="regular" pointerEvents="none" />
+        {TABS.map(({ id, label, Icon }) => {
+          const active = tab === id;
+          const count = id === 'favorites' ? favoritesCount : 0;
+          return (
+            <Pressable key={id} onPress={() => onSelectTab(id)} style={[s.tab, active && s.tabActive]}>
+              <Icon size={15} color={active ? SHEET.textPrimary : SHEET.textMuted} fill={id === 'favorites' && active ? SHEET.textPrimary : 'transparent'} />
+              <RNText style={[s.tabText, active && s.tabTextActive]}>{label}</RNText>
+              {count > 0 && (
+                <View style={[s.tabBadge, active && s.tabBadgeActive]}>
+                  <RNText style={[s.tabBadgeText, active && s.tabBadgeTextActive]}>{count}</RNText>
+                </View>
+              )}
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
 });
 
-EventPage.displayName = 'EventPage';
+export default function EventsScreen() {
+  const [tab, setTab] = useState<TabId>('all');
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [showFilters, setShowFilters] = useState(false);
+  const { events, loading, refreshing, refresh, searchEvents, applyFilters, clearFilters, activeFilters } = useEvents({ autoLoad: true });
 
-export default EventPage;
+  const hasSearch = !!activeFilters.search?.trim();
+  const activeFilterCount = useMemo(
+    () => Object.entries(activeFilters).filter(([k, v]) => k !== 'search' && v).length,
+    [activeFilters],
+  );
+
+  const loadFavorites = useCallback(async () => {
+    try {
+      setFavorites(new Set(await eventsService.getFavorites()));
+    } catch (e) {
+      console.warn('Erro ao carregar favoritos:', e);
+    }
+  }, []);
+  useFocusEffect(useCallback(() => { loadFavorites(); }, [loadFavorites]));
+
+  const toggleFavorite = useCallback(async (id: string) => {
+    const isFav = favorites.has(id);
+    setFavorites((prev) => {
+      const n = new Set(prev);
+      if (isFav) n.delete(id); else n.add(id);
+      return n;
+    });
+    try {
+      if (isFav) await eventsService.removeFromFavorites(id);
+      else await eventsService.addToFavorites(id);
+    } catch {
+      setFavorites((prev) => {
+        const n = new Set(prev);
+        if (isFav) n.add(id); else n.delete(id);
+        return n;
+      });
+    }
+  }, [favorites]);
+
+  const visibleEvents = useMemo(() => {
+    if (tab === 'upcoming') {
+      const now = Date.now();
+      return events.filter((e) => new Date(e.start_date_time).getTime() >= now);
+    }
+    if (tab === 'favorites') return events.filter((e) => favorites.has(e.id));
+    return events;
+  }, [events, tab, favorites]);
+
+  const sections = useMemo<Section[]>(() => {
+    const groups = new Map<string, EventsTypes[]>();
+    for (const e of visibleEvents) {
+      const d = new Date(e.start_date_time);
+      const key = isNaN(d.getTime()) ? 'sem-data' : d.toISOString().slice(0, 10);
+      const arr = groups.get(key);
+      if (arr) arr.push(e); else groups.set(key, [e]);
+    }
+    const today = new Date();
+    return [...groups.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, data]) => {
+        const d = new Date(data[0].start_date_time);
+        const valid = !isNaN(d.getTime());
+        const title = valid
+          ? format(d, "EEEE, dd 'de' MMMM", { locale: ptBR }).replace(/^\w/, (ch) => ch.toUpperCase())
+          : 'Data a definir';
+        return { key, title, isToday: valid && isSameDay(d, today), data };
+      });
+  }, [visibleEvents]);
+
+  const renderItem = useCallback(({ item }: { item: EventsTypes }) => (
+    <EventListCard event={item} isFavorite={favorites.has(item.id)} onToggleFavorite={toggleFavorite} />
+  ), [favorites, toggleFavorite]);
+
+  const renderSectionHeader = useCallback(({ section }: { section: Section }) => (
+    <View style={s.secHeader}>
+      <RNText style={s.secTitle}>{section.title}</RNText>
+      {section.isToday && <View style={s.todayPill}><RNText style={s.todayText}>Hoje</RNText></View>}
+    </View>
+  ), []);
+
+  const keyExtractor = useCallback((it: EventsTypes) => it.id, []);
+
+  const renderEmpty = useCallback(() => {
+    let Icon = CalendarX;
+    let title = 'Nenhum evento por aqui';
+    let desc = 'Assim que novos eventos forem publicados, eles aparecem aqui.';
+    if (hasSearch) {
+      Icon = SearchX; title = 'Nada encontrado'; desc = `Nenhum evento corresponde a "${activeFilters.search}".`;
+    } else if (tab === 'upcoming') {
+      Icon = CalendarClock; title = 'Sem eventos futuros'; desc = 'Você está em dia. Não há eventos próximos agendados.';
+    } else if (tab === 'favorites') {
+      Icon = HeartOff; title = 'Nenhum favorito ainda'; desc = 'Toque no coração de um evento para salvá-lo aqui.';
+    }
+    return (
+      <View style={s.empty}>
+        <View style={s.emptyIcon}><Icon size={30} color={SHEET.textMuted} /></View>
+        <RNText style={s.emptyTitle}>{title}</RNText>
+        <RNText style={s.emptyDesc}>{desc}</RNText>
+        {hasSearch ? (
+          <Pressable onPress={() => searchEvents('')} style={s.emptyBtn}>
+            <RNText style={s.emptyBtnText}>Limpar busca</RNText>
+          </Pressable>
+        ) : tab === 'all' ? (
+          <Pressable onPress={refresh} style={s.emptyBtn}>
+            <RotateCw size={16} color={SHEET.textPrimary} />
+            <RNText style={s.emptyBtnText}>Atualizar</RNText>
+          </Pressable>
+        ) : null}
+      </View>
+    );
+  }, [hasSearch, tab, activeFilters.search, searchEvents, refresh]);
+
+  const openFilters = useCallback(() => setShowFilters(true), []);
+
+  return (
+    <SafeAreaView style={s.safe} edges={['top']}>
+      <StatusBar style="light" />
+      <View style={s.header}>
+        <RNText style={s.eyebrow}>AGENDA</RNText>
+        <RNText style={s.title}>Eventos</RNText>
+      </View>
+      {loading && events.length === 0 ? (
+        <EventListSkeletons count={4} />
+      ) : (
+        <SectionList
+          sections={sections}
+          keyExtractor={keyExtractor}
+          renderItem={renderItem}
+          renderSectionHeader={renderSectionHeader}
+          ListHeaderComponent={
+            <EventsListHeader
+              tab={tab}
+              favoritesCount={favorites.size}
+              activeFilterCount={activeFilterCount}
+              onSearch={searchEvents}
+              onSelectTab={setTab}
+              onOpenFilters={openFilters}
+            />
+          }
+          ListEmptyComponent={renderEmpty}
+          stickySectionHeadersEnabled
+          contentContainerStyle={sections.length === 0 ? s.emptyContainer : s.listContent}
+          showsVerticalScrollIndicator={false}
+          initialNumToRender={4}
+          maxToRenderPerBatch={6}
+          windowSize={9}
+          removeClippedSubviews
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={SHEET.brand} colors={[SHEET.brand]} />}
+        />
+      )}
+      <EventFiltersSheet
+        isOpen={showFilters}
+        onClose={() => setShowFilters(false)}
+        onApplyFilters={applyFilters}
+        activeFilters={activeFilters}
+        onClearFilters={clearFilters}
+      />
+    </SafeAreaView>
+  );
+}
+
+const s = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: SHEET.bg },
+  header: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
+  eyebrow: { color: SHEET.textFaint, fontSize: 11, letterSpacing: 1.5, fontWeight: '600' },
+  title: { color: SHEET.textPrimary, fontSize: 28, fontWeight: '800', marginTop: 4 },
+  listContent: { paddingTop: 8, paddingBottom: 120 },
+  emptyContainer: { flexGrow: 1, paddingBottom: 120 },
+  listHeader: { paddingBottom: 8 },
+  searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, marginBottom: 14 },
+  filterBtn: { width: 58, height: 58, borderRadius: 18, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 1, borderColor: SHEET.border },
+  filterDot: { position: 'absolute', top: 12, right: 12, width: 9, height: 9, borderRadius: 5, backgroundColor: SHEET.brand, borderWidth: 1, borderColor: SHEET.bg },
+  fill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  tabs: { flexDirection: 'row', gap: 8, marginHorizontal: 16, padding: 4, borderRadius: 999, borderWidth: 1, borderColor: SHEET.border, overflow: 'hidden' },
+  tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 999 },
+  tabActive: { backgroundColor: SHEET.brand },
+  tabText: { color: SHEET.textMuted, fontSize: 13.5, fontWeight: '600' },
+  tabTextActive: { color: SHEET.textPrimary },
+  tabBadge: { minWidth: 18, height: 18, paddingHorizontal: 5, borderRadius: 9, backgroundColor: SHEET.brandTint, alignItems: 'center', justifyContent: 'center' },
+  tabBadgeActive: { backgroundColor: 'rgba(255,255,255,0.22)' },
+  tabBadgeText: { color: SHEET.brand, fontSize: 11, fontWeight: '800' },
+  tabBadgeTextActive: { color: SHEET.textPrimary },
+  secHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: SHEET.bg, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 8 },
+  secTitle: { color: SHEET.textSecondary, fontSize: 13.5, fontWeight: '700' },
+  todayPill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: SHEET.brandTint },
+  todayText: { color: SHEET.brand, fontSize: 11, fontWeight: '800' },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40, paddingTop: 60 },
+  emptyIcon: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center', backgroundColor: SHEET.glass, borderWidth: 1, borderColor: SHEET.border, marginBottom: 16 },
+  emptyTitle: { color: SHEET.textPrimary, fontSize: 17, fontWeight: '700', textAlign: 'center' },
+  emptyDesc: { color: SHEET.textMuted, fontSize: 13.5, textAlign: 'center', marginTop: 6, lineHeight: 19 },
+  emptyBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 18, paddingHorizontal: 18, paddingVertical: 11, borderRadius: 999, backgroundColor: SHEET.glass, borderWidth: 1, borderColor: SHEET.border },
+  emptyBtnText: { color: SHEET.textPrimary, fontSize: 14, fontWeight: '700' },
+});

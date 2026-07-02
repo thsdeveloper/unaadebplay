@@ -21,6 +21,7 @@ export interface UserTypes extends GenericItem{
     sector: string
     gender: string
     phone: string
+    created_at?: string
 }
 
 // Export type alias for consistency

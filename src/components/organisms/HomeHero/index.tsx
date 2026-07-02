@@ -7,43 +7,39 @@ import { Text } from '@/components/ui/text';
 import { DirectusImage } from '@/components/DirectusImage';
 import { HeroCTAButtons } from '@/components/molecules/HeroCTAButtons';
 import { hexToRgba, darken } from '@/utils/color';
+import { SHEET } from '@/constants/sheetTokens';
 import type { HeroSlide } from './buildHeroSlides';
 import type { SectionStatus } from '@/hooks/useHomeFeed';
 
-const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
-const HERO_H = Math.round(SCREEN_H * 0.62);
+const { width: SCREEN_W } = Dimensions.get('window');
+const CARD_MARGIN = 20;
+const CARD_W = SCREEN_W - CARD_MARGIN * 2;
+const CARD_H = Math.round(CARD_W * 1.42); // cartaz retrato (estilo Netflix)
+const RADIUS = 22;
 const BG = '#0D0F17';
 const GOLD = '#FFD700';
 
-/** Um slide do hero: imagem full-bleed + scrims + wash de marca + conteúdo. */
+/** Um slide do hero como CARTAZ: card inset arredondado com imagem + scrims + conteúdo. */
 const HeroSlideView = memo<{ slide: HeroSlide }>(({ slide }) => (
-  <View style={{ width: SCREEN_W, height: HERO_H, backgroundColor: BG }}>
+  <View style={styles.card}>
     {slide.image ? (
       <DirectusImage
         assetId={slide.image}
         bucket={slide.bucket}
-        width={SCREEN_W}
-        height={HERO_H}
+        width={CARD_W}
+        height={CARD_H}
         resizeMode="cover"
         priority="high"
       />
     ) : (
-      <LinearGradient
-        colors={[slide.primaryColor, darken(slide.primaryColor, 60)]}
-        style={StyleSheet.absoluteFill}
-      />
+      <LinearGradient colors={[slide.primaryColor, darken(slide.primaryColor, 60)]} style={StyleSheet.absoluteFill} />
     )}
 
-    {/* Scrim superior — legibilidade do header transparente */}
+    {/* Scrim inferior + wash de marca para legibilidade do conteúdo dentro do cartaz */}
     <LinearGradient
-      colors={['rgba(13,15,23,0.55)', 'transparent']}
-      style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 150 }}
-    />
-    {/* Scrim inferior + wash de marca, derretendo no fundo do feed */}
-    <LinearGradient
-      colors={['transparent', hexToRgba(slide.secondColor, 0.45), 'rgba(13,15,23,0.85)', BG]}
-      locations={[0, 0.5, 0.82, 1]}
-      style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: Math.round(HERO_H * 0.78) }}
+      colors={['transparent', hexToRgba(slide.secondColor, 0.35), 'rgba(13,15,23,0.92)']}
+      locations={[0, 0.55, 1]}
+      style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: Math.round(CARD_H * 0.72) }}
     />
 
     <View style={styles.content}>
@@ -83,7 +79,7 @@ interface Props {
   status: SectionStatus;
 }
 
-/** Billboard cinematográfico do topo. Estático com 1 slide; carrossel com >1. */
+/** Cartaz principal (billboard) da Home — card inset arredondado. Carrossel com >1 slide. */
 export const HomeHero = memo<Props>(({ slides, status }) => {
   const [reduceMotion, setReduceMotion] = useState(false);
   const [screenReader, setScreenReader] = useState(false);
@@ -99,43 +95,77 @@ export const HomeHero = memo<Props>(({ slides, status }) => {
   }, []);
 
   if (status === 'loading') {
-    return <View style={{ width: SCREEN_W, height: HERO_H, backgroundColor: '#111827' }} />;
+    return (
+      <View style={styles.stage}>
+        <View style={[styles.card, { backgroundColor: '#111827' }]} />
+      </View>
+    );
   }
 
   if (!slides.length) {
     return (
-      <View style={{ width: SCREEN_W, height: Math.round(HERO_H * 0.7) }}>
-        <LinearGradient colors={['#E51C44', '#B0143A']} style={StyleSheet.absoluteFill} />
-        <View style={styles.splash}>
-          <Text style={styles.splashText}>Unaadeb Play</Text>
+      <View style={styles.stage}>
+        <View style={styles.card}>
+          <LinearGradient colors={['#E51C44', '#B0143A']} style={StyleSheet.absoluteFill} />
+          <View style={styles.splash}>
+            <Text style={styles.splashText}>Unaadeb Play</Text>
+          </View>
         </View>
       </View>
     );
   }
 
   if (slides.length === 1) {
-    return <HeroSlideView slide={slides[0]} />;
+    return (
+      <View style={styles.stage}>
+        <HeroSlideView slide={slides[0]} />
+      </View>
+    );
   }
 
   return (
-    <Carousel
-      data={slides}
-      renderItem={({ item }: { item: HeroSlide }) => <HeroSlideView slide={item} />}
-      width={SCREEN_W}
-      height={HERO_H}
-      loop
-      autoPlay={!reduceMotion && !screenReader}
-      autoPlayInterval={6000}
-      scrollAnimationDuration={800}
-    />
+    <View style={styles.carouselWrap}>
+      <Carousel
+        data={slides}
+        renderItem={({ item }: { item: HeroSlide }) => (
+          <View style={styles.page}>
+            <HeroSlideView slide={item} />
+          </View>
+        )}
+        width={SCREEN_W}
+        height={CARD_H}
+        loop
+        autoPlay={!reduceMotion && !screenReader}
+        autoPlayInterval={6000}
+        scrollAnimationDuration={800}
+        onConfigurePanGesture={(g: any) => {
+          // Só ativa o swipe HORIZONTAL do carrossel; o arrasto vertical passa para a
+          // FlatList — senão o gesto do carrossel bloqueia o scroll sobre o cartaz.
+          g.activeOffsetX([-12, 12]);
+          g.failOffsetY([-12, 12]);
+        }}
+      />
+    </View>
   );
 });
 HomeHero.displayName = 'HomeHero';
 
 const styles = StyleSheet.create({
-  content: { position: 'absolute', left: 20, right: 20, bottom: 24 },
+  stage: { alignItems: 'center', marginBottom: 10 },
+  carouselWrap: { marginBottom: 10 },
+  page: { width: SCREEN_W, alignItems: 'center' },
+  card: {
+    width: CARD_W,
+    height: CARD_H,
+    borderRadius: RADIUS,
+    overflow: 'hidden',
+    backgroundColor: BG,
+    borderWidth: 1,
+    borderColor: SHEET.border,
+  },
+  content: { position: 'absolute', left: 18, right: 18, bottom: 20 },
   eyebrow: { color: GOLD, fontSize: 12, fontWeight: '800', letterSpacing: 1.5, marginBottom: 6 },
-  title: { color: '#F9FAFB', fontSize: 32, fontWeight: '800', lineHeight: 37 },
+  title: { color: '#F9FAFB', fontSize: 30, fontWeight: '800', lineHeight: 35 },
   theme: { color: '#D1D5DB', fontSize: 15, marginTop: 6, lineHeight: 20 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
   chip: {

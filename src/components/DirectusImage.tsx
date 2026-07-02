@@ -120,7 +120,7 @@ const LoadingState = memo(({ placeholder, dimensions, borderRadius }: {
     borderRadius?: number;
 }) => (
     <View
-        className="absolute inset-0 justify-center items-center bg-gray-100 dark:bg-gray-800"
+        className="absolute inset-0 justify-center items-center bg-transparent"
         style={{ borderRadius }}
     >
         {placeholder || (
@@ -139,7 +139,7 @@ const ErrorState = memo(({ fallback, dimensions, borderRadius }: {
     borderRadius?: number;
 }) => (
     <View
-        className="absolute inset-0 justify-center items-center bg-gray-100 dark:bg-gray-800"
+        className="absolute inset-0 justify-center items-center bg-transparent"
         style={{ borderRadius }}
     >
         {fallback || (
@@ -278,7 +278,7 @@ const DirectusImage = memo(({
     if (!assetId || !imageUrl) {
         return (
             <View
-                className={cn("relative overflow-hidden bg-gray-100 dark:bg-gray-800", className)}
+                className={cn("relative overflow-hidden bg-transparent", className)}
                 style={containerStyle}
                 testID={testID}
                 accessible={true}
@@ -312,7 +312,7 @@ const DirectusImage = memo(({
 
     return (
         <View
-            className={cn("relative overflow-hidden bg-gray-100 dark:bg-gray-800", className)}
+            className={cn("relative overflow-hidden bg-transparent", className)}
             style={containerStyle}
             testID={testID}
         >

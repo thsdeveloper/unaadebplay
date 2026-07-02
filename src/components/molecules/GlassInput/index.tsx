@@ -22,6 +22,9 @@ export interface GlassInputProps {
   rightSlot?: React.ReactNode;
   /** Rótulo de acessibilidade do campo (lido pelo leitor de tela). */
   accessibilityLabel?: string;
+  /** Campo de múltiplas linhas (ex.: "sobre você") — cresce em altura. */
+  multiline?: boolean;
+  numberOfLines?: number;
 }
 
 /**
@@ -32,18 +35,18 @@ export interface GlassInputProps {
 export const GlassInput: React.FC<GlassInputProps> = ({
   icon, placeholder, value, onChangeText, onBlur, error, password,
   inputRef, keyboardType, returnKeyType, autoCapitalize = 'none', onSubmitEditing, rightSlot,
-  accessibilityLabel,
+  accessibilityLabel, multiline, numberOfLines,
 }) => {
   const [focused, setFocused] = useState(false);
   const [show, setShow] = useState(false);
 
   return (
     <View>
-      <View style={[styles.wrap, focused && styles.wrapFocused, !!error && styles.wrapError]}>
-        {!!icon && <View style={styles.leading}>{icon}</View>}
+      <View style={[styles.wrap, multiline && styles.wrapMulti, focused && styles.wrapFocused, !!error && styles.wrapError]}>
+        {!!icon && <View style={[styles.leading, multiline && styles.leadingMulti]}>{icon}</View>}
         <TextInput
           ref={inputRef}
-          style={styles.input}
+          style={[styles.input, multiline && styles.inputMulti]}
           accessibilityLabel={accessibilityLabel}
           placeholder={placeholder}
           placeholderTextColor="rgba(226,232,240,0.45)"
@@ -58,6 +61,9 @@ export const GlassInput: React.FC<GlassInputProps> = ({
           returnKeyType={returnKeyType}
           onSubmitEditing={onSubmitEditing}
           selectionColor={BRAND}
+          multiline={multiline}
+          numberOfLines={multiline ? (numberOfLines ?? 4) : undefined}
+          textAlignVertical={multiline ? 'top' : undefined}
         />
         {password ? (
           <Pressable onPress={() => setShow((s) => !s)} hitSlop={10} style={styles.trailing}>
@@ -86,9 +92,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.09)',
   },
   wrapError: { borderColor: 'rgba(244,63,94,0.7)' },
+  wrapMulti: { height: undefined, minHeight: 110, alignItems: 'flex-start', paddingVertical: 14 },
   leading: { marginRight: 12 },
+  leadingMulti: { marginTop: 2 },
   trailing: { marginLeft: 8, padding: 2 },
   input: { flex: 1, color: '#F8FAFC', fontSize: 16, height: '100%' },
+  inputMulti: { height: undefined, minHeight: 80, textAlignVertical: 'top', paddingTop: 0 },
   errorText: { color: '#FCA5A5', fontSize: 12, marginTop: 6, marginLeft: 4 },
 });
 
