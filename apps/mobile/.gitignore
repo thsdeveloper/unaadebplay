@@ -1,0 +1,12 @@
+# Expo / native (CNG prebuild — regenerated)
+/ios
+/android
+.expo/
+web-build/
+dist/
+
+# @generated expo-cli
+expo-env.d.ts
+
+# misc
+*.orig.*

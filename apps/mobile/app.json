@@ -1,0 +1,86 @@
+{
+  "expo": {
+    "name": "Unaadeb Play",
+    "slug": "unaadebplay",
+    "version": "1.1.0",
+    "scheme": "unaadebplay",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "owner": "thsdeveloper",
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The $(PRODUCT_NAME) app accesses your photos to allow you to share them on your profile."
+        }
+      ],
+      [
+        "expo-updates",
+        {
+          "username": "thsdeveloper"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#E51C44"
+        }
+      ],
+      "expo-router",
+      "expo-asset",
+      "expo-secure-store",
+      "expo-font",
+      "@react-native-community/datetimepicker",
+      "expo-image",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#E51C44"
+        }
+      ],
+      "expo-status-bar",
+      "expo-audio",
+      "expo-apple-authentication"
+    ],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "experiments": {
+      "typedRoutes": true,
+      "tsconfigPaths": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "7a5a2114-b085-4afe-b2c7-a3cfec041131"
+      }
+    },
+    "runtimeVersion": "exposdk:56.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/7a5a2114-b085-4afe-b2c7-a3cfec041131"
+    },
+    "android": {
+      "package": "com.unaadebplay",
+      "versionCode": 7,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.unaadebplay",
+      "buildNumber": "1.0.3",
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "UIBackgroundModes": ["audio"]
+      }
+    }
+  }
+}

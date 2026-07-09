@@ -1,0 +1,21 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# pnpm 10+ reads its settings here (the package.json "pnpm" field and some
+# .npmrc pnpm-settings are no longer honored). node-linker is ALSO kept in
+# .npmrc so an older pnpm (e.g. on EAS build images) still gets a flat layout.
+nodeLinker: hoisted
+autoInstallPeers: true
+strictPeerDependencies: false
+
+# Pin a single copy of React/zod across mobile + admin + api so the hoisted
+# node_modules never forks them (RN breaks with duplicate React).
+overrides:
+  react: 19.2.3
+  react-dom: 19.2.3
+  zod: 3.25.36
+
+allowBuilds:
+  esbuild: true
+  sharp: true
